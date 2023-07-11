@@ -7,7 +7,7 @@ open AbsSyn
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
 %token LPAREN RPAREN AND_ OR
-%token IF THEN ELSE LET IN END NIL AND FUN
+%token IF THEN ELSE LET IN END NIL AND FUN REC
 
 %right OR
 %right AND_
@@ -28,8 +28,8 @@ let exp :=
   | NIL;                                        { NilExp }
   | int=INT;                                    { IntExp int }
   | LPAREN; ~=exp; RPAREN;                      { exp }
-  | func=exp; arg=exp;                          { AppExp{func; arg} }
-  | FUN; var=id; body=exp;                      { LamExp{var; body} }
+  | fcn=exp; arg=exp;                           { AppExp{fcn; arg} }
+  | FUN; vars=list(id); body=exp;               { LamExp{vars; body} }
   | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; oper=MinusOp; right} }
   | left=exp; PLUS; right=exp;                  { OpExp{left; oper=PlusOp; right} }
   | left=exp; MINUS; right=exp;                 { OpExp{left; oper=MinusOp; right} }
@@ -46,6 +46,7 @@ let exp :=
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
                                                 { IfExp{test; then'=then_; else'=else_} }
   | LET; ~=decs; IN; body=exp; END;             { LetExp{decs; body} }
+  | LET; REC; ~=decs; IN; body=exp; END;        { LetrecExp{decs; body} }
 
 let decs ==
   | separated_nonempty_list(AND, dec)

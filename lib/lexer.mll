@@ -28,6 +28,7 @@ rule token = parse
 | "nil"         { NIL }
 | "and"         { AND }
 | "fun"         { FUN }
+| "rec"         { REC }
 
 (* reserved symbols *)
 | "("           { LPAREN }
