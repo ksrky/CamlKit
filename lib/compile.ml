@@ -1,8 +1,8 @@
 open Instrs
 
 let builtins : (Sexp.id * t) list =
-  [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
-  ; ("div", DIV) ]
+  [ ("CAR", CAR); ("CDR", CDR); ("CONS", CONS); ("ADD", ADD); ("SUB", SUB); ("MUL", MUL)
+  ; ("DIV", DIV) ]
 
 let rec compile (e : Sexp.exp) (n : Sexp.id list list) (c : t list) : t list =
   match e with
