@@ -26,10 +26,10 @@ type t =
 let rec load_instr i = function
   | NIL -> alloc i 0
   | LDC x ->
-      let j = alloc i x in
+      let j = makeCons (makeInt x) i in
       alloc j 1
   | LD (x, y) ->
-      let j = makeCons (makeInt x) (makeInt y) in
+      let j = makeCons (makeCons (makeInt x) (makeInt y)) i in
       alloc j 2
   | ATOM -> alloc i 3
   | CAR -> alloc i 4
@@ -44,9 +44,9 @@ let rec load_instr i = function
       let ct = makeCons (load_instrs (List.rev ts)) cf in
       alloc ct 11
   | JOIN -> alloc i 12
-  | LDF f ->
-      let j = load_instrs f in
-      alloc j 13
+  | LDF es ->
+      let f = makeCons (load_instrs es) i in
+      alloc f 13
   | RTN -> alloc i 14
   | AP -> alloc i 15
   | DUM -> alloc i 16
@@ -125,7 +125,8 @@ let run_instr () : unit =
       push (makeInt x) s
   | 20 (* WRITEC *) ->
       let x = pop s in
-      print_endline (string_of_int (getInt x))
+      print_endline (string_of_int (getInt x));
+      push (makeInt 0) s (* tmp *)
   | _ -> ErrorMsg.impossible "Invalid operation"
 
 let rec run_instrs () : unit = if !c == 0 then () else (run_instr (); run_instrs ())
