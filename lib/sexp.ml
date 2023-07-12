@@ -40,7 +40,7 @@ let rec abs2sexp : AbsSyn.exp -> exp = function
       Special
         (Let
            ( List.map (fun {AbsSyn.name; _} -> name) decs
-           , List.map (fun {AbsSyn.body; _} -> abs2sexp body) decs
+           , List.map (fun {AbsSyn.params; AbsSyn.body; _} -> Lam (params, abs2sexp body)) decs
            , abs2sexp body ) )
   | AbsSyn.LetrecExp {decs; body} ->
       Special
