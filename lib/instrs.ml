@@ -129,3 +129,32 @@ let run_instr () : unit =
   | _ -> failwith "Invalid operation"
 
 let rec run_instrs () : unit = if !c == 0 then () else (run_instr (); run_instrs ())
+
+let rec show_instrs (instrs : t list) : string =
+  match instrs with
+  | [] -> ""
+  | [instr] -> show_instr instr
+  | instr :: rest -> show_instr instr ^ " " ^ show_instrs rest
+
+and show_instr : t -> string = function
+  | NIL -> "NIL"
+  | LDC x -> "LDC " ^ string_of_int x
+  | LD (i, j) -> "LD " ^ string_of_int i ^ "." ^ string_of_int j ^ ""
+  | CAR -> "CAR"
+  | CDR -> "CDR"
+  | CONS -> "CONS"
+  | ATOM -> "ATOM"
+  | ADD -> "ADD"
+  | SUB -> "SUB"
+  | MUL -> "MUL"
+  | DIV -> "DIV"
+  | SEL (ct, cf) -> "SEL " ^ show_instrs ct ^ " " ^ show_instrs cf
+  | JOIN -> "JOIN"
+  | LDF f -> "LDF " ^ show_instrs f
+  | RTN -> "RTN"
+  | AP -> "AP"
+  | DUM -> "DUM"
+  | RAP -> "RAP"
+  | STOP -> "STOP"
+  | READC -> "READC"
+  | WRITEC -> "WRITEC"
