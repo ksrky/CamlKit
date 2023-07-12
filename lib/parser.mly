@@ -6,7 +6,7 @@ open AbsSyn
 %token <string> ID
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-%token LPAREN RPAREN AND_ OR
+%token LPAREN RPAREN AND_ OR ARROW
 %token IF THEN ELSE LET IN END NIL AND FUN REC
 
 %right OR
@@ -29,7 +29,7 @@ let exp :=
   | int=INT;                                    { IntExp int }
   | LPAREN; ~=exp; RPAREN;                      { exp }
   | fcn=exp; arg=exp;                           { AppExp{fcn; arg} }
-  | FUN; vars=list(id); body=exp;               { LamExp{vars; body} }
+  | FUN; vars=list(id); ARROW; body=exp;        { LamExp{vars; body} }
   | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; oper=MinusOp; right} }
   | left=exp; PLUS; right=exp;                  { OpExp{left; oper=PlusOp; right} }
   | left=exp; MINUS; right=exp;                 { OpExp{left; oper=MinusOp; right} }

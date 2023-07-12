@@ -45,6 +45,7 @@ rule token = parse
 | ">="          { GE }
 | "&"           { AND_ }
 | "|"           { OR }
+| "->"          { ARROW }
 
 (* integer and identifier *)
 | decimal as i  { INT (int_of_string i) }

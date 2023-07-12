@@ -1,2 +1,6 @@
-(test
- (name CamlKit))
+(library
+ (name test)
+ (libraries CamlKit)
+ (inline_tests)
+ (preprocess
+  (pps ppx_inline_test)))
