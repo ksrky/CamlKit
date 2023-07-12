@@ -39,13 +39,13 @@ let rec load_instr i = function
   | SUB -> alloc i 8
   | MUL -> alloc i 9
   | DIV -> alloc i 10
-  | SEL (ct, cf) ->
-      let j = load_instrs i ct in
-      let k = load_instrs j cf in
-      alloc k 11
+  | SEL (ts, fs) ->
+      let cf = makeCons (load_instrs (List.rev fs)) i in
+      let ct = makeCons (load_instrs (List.rev ts)) cf in
+      alloc ct 11
   | JOIN -> alloc i 12
   | LDF f ->
-      let j = load_instrs i f in
+      let j = load_instrs f in
       alloc j 13
   | RTN -> alloc i 14
   | AP -> alloc i 15
@@ -55,9 +55,9 @@ let rec load_instr i = function
   | READC -> alloc i 19
   | WRITEC -> alloc i 20
 
-and load_instrs i = List.fold_left load_instr i
+and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 
-let load_instrs instrs : unit = c := load_instrs 0 (List.rev instrs)
+let load_instrs instrs : unit = c := load_instrs instrs
 
 let run_instr () : unit =
   match getInt (pop c) with
@@ -68,7 +68,7 @@ let run_instr () : unit =
   | 2 (* LD *) ->
       let ij = pop c in
       push (locate ij !e) s
-  | 3 (* ATOM *) -> failwith "Invalid operation"
+  | 3 (* ATOM *) -> ErrorMsg.impossible "Invalid operation"
   | 4 (* CAR *) ->
       let a = pop s in
       push (car a) s
@@ -126,7 +126,7 @@ let run_instr () : unit =
   | 20 (* WRITEC *) ->
       let x = pop s in
       print_endline (string_of_int (getInt x))
-  | _ -> failwith "Invalid operation"
+  | _ -> ErrorMsg.impossible "Invalid operation"
 
 let rec run_instrs () : unit = if !c == 0 then () else (run_instr (); run_instrs ())
 
@@ -148,9 +148,9 @@ and show_instr : t -> string = function
   | SUB -> "SUB"
   | MUL -> "MUL"
   | DIV -> "DIV"
-  | SEL (ct, cf) -> "SEL " ^ show_instrs ct ^ " " ^ show_instrs cf
+  | SEL (ct, cf) -> "SEL (" ^ show_instrs ct ^ ", " ^ show_instrs cf ^ ")"
   | JOIN -> "JOIN"
-  | LDF f -> "LDF " ^ show_instrs f
+  | LDF f -> "LDF (" ^ show_instrs f ^ ")"
   | RTN -> "RTN"
   | AP -> "AP"
   | DUM -> "DUM"

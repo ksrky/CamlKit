@@ -17,7 +17,8 @@ let makeInt (n : int) : int =
   f := i + 1;
   i
 
-let getInt (i : int) : int = match cells.(i) with Int n -> n | _ -> failwith "Int required"
+let getInt (i : int) : int =
+  match cells.(i) with Int n -> n | _ -> ErrorMsg.impossible "Int required"
 
 let makeCons (i : int) (j : int) : int =
   let n = !f in
@@ -26,7 +27,7 @@ let makeCons (i : int) (j : int) : int =
   n
 
 let getCons (i : int) : int * int =
-  match cells.(i) with Cons (n, j) -> (n, j) | _ -> failwith "Cons required"
+  match cells.(i) with Cons (n, j) -> (n, j) | _ -> ErrorMsg.impossible "Cons required"
 
 let push (i : int) (r : int ref) : unit = r := makeCons i !r
 
@@ -35,11 +36,13 @@ let pop (r : int ref) : int =
   | Cons (i, j) ->
       r := j;
       i
-  | _ -> failwith " Cons required"
+  | _ -> ErrorMsg.impossible "Cons required"
 
-let car (i : int) : int = match cells.(i) with Cons (i, _) -> i | _ -> failwith "Cons required"
+let car (i : int) : int =
+  match cells.(i) with Cons (i, _) -> i | _ -> ErrorMsg.impossible "Cons required"
 
-let cdr (i : int) : int = match cells.(i) with Cons (_, j) -> j | _ -> failwith "Cons required"
+let cdr (i : int) : int =
+  match cells.(i) with Cons (_, j) -> j | _ -> ErrorMsg.impossible "Cons required"
 
 let locate (ij : int) (r : int) =
   let rec loc (y, z) = if y == 1 then car z else loc (y - 1, cdr z) in
