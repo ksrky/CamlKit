@@ -21,10 +21,10 @@ open AbsSyn
 %%
 
 let prog :=
-  | ~=exp; EOF;                           <>
+  | ~=exp; EOF;                                 <>
 
 let exp :=
-  | ~=aexp;                                      { aexp }
+  | ~=aexp;                                     { aexp }
   | fcn=exp; arg=aexp;                          { AppExp{fcn; arg} }
   | FUN; vars=list(id); ARROW; body=exp;        { LamExp{vars; body} }
   | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; oper=MinusOp; right} }

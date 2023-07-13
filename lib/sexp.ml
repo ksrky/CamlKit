@@ -34,7 +34,16 @@ let rec abs2sexp : AbsSyn.exp -> exp = function
       Special (Builtin ("DIV", [abs2sexp left; abs2sexp right]))
   | AbsSyn.OpExp {left; oper= EqOp; right} ->
       Special (Builtin ("EQ", [abs2sexp left; abs2sexp right]))
-  | AbsSyn.OpExp _ -> failwith "not implemented"
+  | AbsSyn.OpExp {left; oper= NeqOp; right} ->
+      Special (Builtin ("NE", [abs2sexp left; abs2sexp right]))
+  | AbsSyn.OpExp {left; oper= LtOp; right} ->
+      Special (Builtin ("LT", [abs2sexp left; abs2sexp right]))
+  | AbsSyn.OpExp {left; oper= LeOp; right} ->
+      Special (Builtin ("LE", [abs2sexp left; abs2sexp right]))
+  | AbsSyn.OpExp {left; oper= GtOp; right} ->
+      Special (Builtin ("LT", [abs2sexp right; abs2sexp left]))
+  | AbsSyn.OpExp {left; oper= GeOp; right} ->
+      Special (Builtin ("LE", [abs2sexp right; abs2sexp left]))
   | AbsSyn.IfExp {test; then'; else'} -> Special (If (abs2sexp test, abs2sexp then', abs2sexp else'))
   | AbsSyn.LetExp {decs; body} ->
       Special
