@@ -46,7 +46,7 @@ let rec pretty prec exp =
   if prec >= precOf exp then "(" ^ s ^ ")" else s
 
 and pretty_dec ({name; params; body} : dec) : string =
-  name ^ " " ^ String.concat " " params ^ " = " ^ pretty (-1) body
+  String.concat " " (name :: params) ^ " = " ^ pretty (-1) body
 
 and pretty_oper : oper -> string = function
   | PlusOp -> "+"

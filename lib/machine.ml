@@ -51,7 +51,7 @@ let locate (ij : int) (r : int) =
 let binOp (r : int ref) (op : int -> int -> int) : unit =
   let a = pop r in
   let b = pop r in
-  push (makeInt (op a b)) r
+  push (op a b) r
 
 let rplaca (x : int) (y : int) : int =
   cells.(x) <- Cons (y, cdr x);

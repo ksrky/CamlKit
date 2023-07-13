@@ -29,7 +29,7 @@ let rec load_instr i = function
       let j = makeCons (makeInt x) i in
       alloc j 1
   | LD (x, y) ->
-      let j = makeCons (makeCons (makeInt x) (makeInt y)) i in
+      let j = makeCons (makeCons x y) i in
       alloc j 2
   | ATOM -> alloc i 3
   | CAR -> alloc i 4
@@ -76,10 +76,10 @@ let run_instr () : unit =
       let a = pop s in
       push (cdr a) s
   | 6 (* CONS *) -> binOp s makeCons
-  | 7 (* ADD *) -> binOp s (fun a b -> getInt a + getInt b)
-  | 8 (* SUB *) -> binOp s (fun a b -> getInt a - getInt b)
-  | 9 (* MUL *) -> binOp s (fun a b -> getInt a * getInt b)
-  | 10 (* DIV *) -> binOp s (fun a b -> getInt a / getInt b)
+  | 7 (* ADD *) -> binOp s (fun a b -> makeInt (getInt a + getInt b))
+  | 8 (* SUB *) -> binOp s (fun a b -> makeInt (getInt a - getInt b))
+  | 9 (* MUL *) -> binOp s (fun a b -> makeInt (getInt a * getInt b))
+  | 10 (* DIV *) -> binOp s (fun a b -> makeInt (getInt a / getInt b))
   | 11 (* SEL *) ->
       let x = match getInt (pop s) with 0 -> false | _ -> true in
       let ct = pop c in
