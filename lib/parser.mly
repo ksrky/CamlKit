@@ -14,7 +14,7 @@ open AbsSyn
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS
 %left TIMES DIVIDE
-%nonassoc UMINUS
+%left UMINUS
 
 %start <exp> prog
 
