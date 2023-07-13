@@ -24,11 +24,8 @@ let prog :=
   | ~=exp; EOF;                           <>
 
 let exp :=
-  | ~=id;                                       { VarExp id }
-  | NIL;                                        { NilExp }
-  | int=INT;                                    { IntExp int }
-  | LPAREN; ~=exp; RPAREN;                      { exp }
-  | fcn=exp; arg=exp;                           { AppExp{fcn; arg} }
+  | ~=aexp;                                      { aexp }
+  | fcn=exp; arg=aexp;                          { AppExp{fcn; arg} }
   | FUN; vars=list(id); ARROW; body=exp;        { LamExp{vars; body} }
   | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; oper=MinusOp; right} }
   | left=exp; PLUS; right=exp;                  { OpExp{left; oper=PlusOp; right} }
@@ -47,6 +44,12 @@ let exp :=
                                                 { IfExp{test; then'=then_; else'=else_} }
   | LET; ~=decs; IN; body=exp; END;             { LetExp{decs; body} }
   | LET; REC; ~=decs; IN; body=exp; END;        { LetrecExp{decs; body} }
+
+let aexp := 
+  | ~=id;                                       { VarExp id }
+  | NIL;                                        { NilExp }
+  | int=INT;                                    { IntExp int }
+  | LPAREN; ~=exp; RPAREN;                      { exp }
 
 let decs ==
   | separated_nonempty_list(AND, dec)
