@@ -15,7 +15,7 @@ let%test _ =
   Parse.parse_line "if 1 then 0 else 1" = IfExp {test= IntExp 1; then'= IntExp 0; else'= IntExp 1}
 
 let%test _ =
-  Parse.parse_line "let f x y = y in f 1 end"
+  Parse.parse_line "let f x y = y in f 1"
   = LetExp
       { decs= [{name= "f"; params= ["x"; "y"]; body= VarExp "y"}]
       ; body= AppExp {fcn= VarExp "f"; arg= IntExp 1} }

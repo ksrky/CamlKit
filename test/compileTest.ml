@@ -13,5 +13,5 @@ let%test _ =
   = [LDF [LD (1, 2); LD (1, 1); ADD; RTN]; STOP]
 
 let%test _ =
-  Compile.compile (Special (Let (["x"], [Int 1], Special (Builtin ("PRINT", [Var "x"])))))
+  Compile.compile (Special (Let (["x"], [Int 1], Special (Builtin ("WRITEC", [Var "x"])))))
   = [NIL; LDC 1; CONS; LDF [LD (1, 1); WRITEC; RTN]; AP; STOP]

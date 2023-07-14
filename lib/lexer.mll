@@ -21,7 +21,6 @@ rule token = parse
 (* reserved keywords *)
 | "let"         { LET }
 | "in"          { IN }
-| "end"         { END }
 | "if"          { IF }
 | "then"        { THEN }
 | "else"        { ELSE }

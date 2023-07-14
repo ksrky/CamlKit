@@ -19,7 +19,7 @@ let rec abs2sexp : AbsSyn.exp -> exp = function
   | AbsSyn.AppExp _ as exp ->
       let rec loop acc = function
         | AbsSyn.AppExp {fcn; arg} -> loop (abs2sexp arg :: acc) fcn
-        | VarExp "print" -> Special (Builtin ("PRINT", acc))
+        | VarExp "print_int" -> Special (Builtin ("WRITEC", acc))
         | fcn -> Seq (abs2sexp fcn :: acc)
       in
       loop [] exp

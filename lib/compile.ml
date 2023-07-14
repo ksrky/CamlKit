@@ -4,7 +4,7 @@ exception ScopeError of Sexp.id
 
 let builtins : (Sexp.id * t) list =
   [ ("CAR", CAR); ("CDR", CDR); ("CONS", CONS); ("ADD", ADD); ("SUB", SUB); ("MUL", MUL)
-  ; ("DIV", DIV); ("EQ", EQ); ("NE", NE); ("LT", LT); ("LE", LE); ("PRINT", WRITEC) ]
+  ; ("DIV", DIV); ("EQ", EQ); ("NE", NE); ("LT", LT); ("LE", LE); ("WRITEC", WRITEC) ]
 
 let rec compile (e : Sexp.exp) (n : Sexp.id list list) (c : t list) : t list =
   match e with
