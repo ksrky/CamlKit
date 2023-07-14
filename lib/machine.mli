@@ -8,13 +8,13 @@ val d : int ref
 
 val init : unit -> unit
 
-val makeInt : int -> int
+val make_int : int -> int
 
-val getInt : int -> int
+val get_int : int -> int
 
-val makeCons : int -> int -> int
+val make_cons : int -> int -> int
 
-val getCons : int -> int * int
+val get_cons : int -> int * int
 
 val push : int -> int ref -> unit
 
@@ -28,7 +28,7 @@ val cdr : int -> int
 
 val locate : int -> int -> int
 
-val binOp : int ref -> (int -> int -> int) -> unit
+val binop : int ref -> (int -> int -> int) -> unit
 
 val rplaca : int -> int -> int
 

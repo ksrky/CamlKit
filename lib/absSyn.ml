@@ -15,7 +15,7 @@ and dec = {name: id; params: id list; body: exp}
 
 and oper = PlusOp | MinusOp | TimesOp | DivideOp | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
 
-let precOf = function
+let prec_of = function
   | VarExp _ -> 3
   | NilExp -> 3
   | IntExp _ -> 3
@@ -43,7 +43,7 @@ let rec pretty prec exp =
     | LetrecExp {decs; body} ->
         "let " ^ String.concat " and " (List.map pretty_dec decs) ^ " in " ^ pretty (-1) body
   in
-  if prec >= precOf exp then "(" ^ s ^ ")" else s
+  if prec >= prec_of exp then "(" ^ s ^ ")" else s
 
 and pretty_dec ({name; params; body} : dec) : string =
   String.concat " " (name :: params) ^ " = " ^ pretty (-1) body

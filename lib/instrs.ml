@@ -30,10 +30,10 @@ type t =
 let rec load_instr i = function
   | NIL -> alloc i 0
   | LDC x ->
-      let j = makeCons (makeInt x) i in
+      let j = make_cons (make_int x) i in
       alloc j 1
   | LD (x, y) ->
-      let j = makeCons (makeCons x y) i in
+      let j = make_cons (make_cons x y) i in
       alloc j 2
   | ATOM -> alloc i 3
   | CAR -> alloc i 4
@@ -48,12 +48,12 @@ let rec load_instr i = function
   | LT -> alloc i 13
   | LE -> alloc i 14
   | SEL (ts, fs) ->
-      let cf = makeCons (load_instrs fs) i in
-      let ct = makeCons (load_instrs ts) cf in
+      let cf = make_cons (load_instrs fs) i in
+      let ct = make_cons (load_instrs ts) cf in
       alloc ct 15
   | JOIN -> alloc i 16
   | LDF es ->
-      let f = makeCons (load_instrs es) i in
+      let f = make_cons (load_instrs es) i in
       alloc f 17
   | RTN -> alloc i 18
   | AP -> alloc i 19
@@ -68,8 +68,8 @@ and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 let load_instrs instrs : unit = c := load_instrs instrs
 
 let run_instr () : unit =
-  match getInt (pop c) with
-  | 0 (* NIL *) -> push (makeInt 0) s
+  match get_int (pop c) with
+  | 0 (* NIL *) -> push (make_int 0) s
   | 1 (* LDC *) ->
       let x = pop c in
       push x s
@@ -85,17 +85,17 @@ let run_instr () : unit =
   | 5 (* CDR *) ->
       let a = pop s in
       push (cdr a) s
-  | 6 (* CONS *) -> binOp s makeCons
-  | 7 (* ADD *) -> binOp s (fun a b -> makeInt (getInt a + getInt b))
-  | 8 (* SUB *) -> binOp s (fun a b -> makeInt (getInt a - getInt b))
-  | 9 (* MUL *) -> binOp s (fun a b -> makeInt (getInt a * getInt b))
-  | 10 (* DIV *) -> binOp s (fun a b -> makeInt (getInt a / getInt b))
-  | 11 (* EQ *) -> binOp s (fun a b -> makeInt (if getInt a = getInt b then 1 else 0))
-  | 12 (* NE *) -> binOp s (fun a b -> makeInt (if getInt a <> getInt b then 1 else 0))
-  | 13 (* LT *) -> binOp s (fun a b -> makeInt (if getInt a < getInt b then 1 else 0))
-  | 14 (* LE *) -> binOp s (fun a b -> makeInt (if getInt a <= getInt b then 1 else 0))
+  | 6 (* CONS *) -> binop s make_cons
+  | 7 (* ADD *) -> binop s (fun a b -> make_int (get_int a + get_int b))
+  | 8 (* SUB *) -> binop s (fun a b -> make_int (get_int a - get_int b))
+  | 9 (* MUL *) -> binop s (fun a b -> make_int (get_int a * get_int b))
+  | 10 (* DIV *) -> binop s (fun a b -> make_int (get_int a / get_int b))
+  | 11 (* EQ *) -> binop s (fun a b -> make_int (if get_int a = get_int b then 1 else 0))
+  | 12 (* NE *) -> binop s (fun a b -> make_int (if get_int a <> get_int b then 1 else 0))
+  | 13 (* LT *) -> binop s (fun a b -> make_int (if get_int a < get_int b then 1 else 0))
+  | 14 (* LE *) -> binop s (fun a b -> make_int (if get_int a <= get_int b then 1 else 0))
   | 15 (* SEL *) ->
-      let x = match getInt (pop s) with 0 -> false | _ -> true in
+      let x = match get_int (pop s) with 0 -> false | _ -> true in
       let ct = pop c in
       let cf = pop c in
       push !c d;
@@ -103,7 +103,7 @@ let run_instr () : unit =
   | 16 (* JOIN *) -> c := pop d
   | 17 (* LDF *) ->
       let f = pop c in
-      push (makeCons f !e) s
+      push (make_cons f !e) s
   | 18 (* RTN *) ->
       let x = pop s in
       s := pop d;
@@ -111,7 +111,7 @@ let run_instr () : unit =
       e := pop d;
       c := pop d
   | 19 (* AP *) ->
-      let f, e' = getCons (pop s) in
+      let f, e' = get_cons (pop s) in
       let v = pop s in
       push !c d;
       c := f;
@@ -136,11 +136,11 @@ let run_instr () : unit =
   | 22 (* STOP *) -> c := 0
   | 23 (* READC *) ->
       let x = read_int () in
-      push (makeInt x) s
+      push (make_int x) s
   | 24 (* WRITEC *) ->
       let x = pop s in
-      print_endline (string_of_int (getInt x));
-      push (makeInt 0) s (* tmp *)
+      print_endline (string_of_int (get_int x));
+      push (make_int 0) s (* tmp *)
   | _ -> ErrorMsg.impossible "Invalid operation"
 
 let rec run_instrs () : unit = if !c == 0 then () else (run_instr (); run_instrs ())
