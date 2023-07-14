@@ -48,8 +48,8 @@ let rec load_instr i = function
   | LT -> alloc i 13
   | LE -> alloc i 14
   | SEL (ts, fs) ->
-      let cf = makeCons (load_instrs (List.rev fs)) i in
-      let ct = makeCons (load_instrs (List.rev ts)) cf in
+      let cf = makeCons (load_instrs fs) i in
+      let ct = makeCons (load_instrs ts) cf in
       alloc ct 15
   | JOIN -> alloc i 16
   | LDF es ->
@@ -76,7 +76,9 @@ let run_instr () : unit =
   | 2 (* LD *) ->
       let ij = pop c in
       push (locate ij !e) s
-  | 3 (* ATOM *) -> ErrorMsg.impossible "Invalid operation"
+  | 3 (* ATOM *) ->
+      let a = pop s in
+      push (atom a) s
   | 4 (* CAR *) ->
       let a = pop s in
       push (car a) s
@@ -120,9 +122,9 @@ let run_instr () : unit =
       s := 0
   | 20 (* DUM *) -> push 0 e
   | 21 (* RAP *) ->
-      let closure = pop s in
-      let f = car closure in
-      let ne = car closure in
+      let clos = pop s in
+      let f = car clos in
+      let ne = car clos in
       let v = pop s in
       push !c d;
       c := f;

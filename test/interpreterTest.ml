@@ -19,3 +19,7 @@ let%expect_test _ =
 let%expect_test _ =
   Interpreter.eval "print (let f x y = x + y in f (2 * 3) (6 - 4) end)";
   [%expect {|  8  |}]
+
+let%expect_test _ =
+  Interpreter.eval "print (if 1 = 0 then 1 else 0)";
+  [%expect {|  0  |}]

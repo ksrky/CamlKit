@@ -38,6 +38,8 @@ let pop (r : int ref) : int =
       i
   | _ -> ErrorMsg.impossible "Cons required"
 
+let atom (i : int) : int = match cells.(i) with Int _ -> 1 | Cons _ -> 0
+
 let car (i : int) : int =
   match cells.(i) with Cons (i, _) -> i | _ -> ErrorMsg.impossible "Cons required"
 

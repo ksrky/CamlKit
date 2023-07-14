@@ -20,6 +20,8 @@ val push : int -> int ref -> unit
 
 val pop : int ref -> int
 
+val atom : int -> int
+
 val car : int -> int
 
 val cdr : int -> int
