@@ -24,7 +24,6 @@ rule token = parse
 | "if"          { IF }
 | "then"        { THEN }
 | "else"        { ELSE }
-| "nil"         { NIL }
 | "and"         { AND }
 | "fun"         { FUN }
 | "rec"         { REC }

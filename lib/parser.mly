@@ -7,7 +7,7 @@ open AbsSyn
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
 %token LPAREN RPAREN AND_ OR ARROW
-%token IF THEN ELSE LET IN NIL AND FUN REC
+%token IF THEN ELSE LET IN AND FUN REC
 
 %right OR
 %right AND_
@@ -47,7 +47,6 @@ let exp :=
 
 let aexp := 
   | ~=id;                                       { VarExp id }
-  | NIL;                                        { NilExp }
   | int=INT;                                    { IntExp int }
   | LPAREN; ~=exp; RPAREN;                      { exp }
 
