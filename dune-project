@@ -5,11 +5,11 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github ksrky/CamlKit))
 
-(authors "Author Name")
+(authors "ksrk")
 
-(maintainers "Maintainer Name")
+(maintainers "ksrk")
 
 (license LICENSE)
 
@@ -17,11 +17,12 @@
 
 (package
  (name CamlKit)
- (synopsis "A short synopsis")
+ (synopsis
+  "CamlKit is the name of OCaml's subset language and its compiler.")
  (description "A longer description")
  (depends ocaml dune)
  (tags
-  (topics "to describe" your project)))
+  ("compiler" "programming language" "ocaml" "secd machine")))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
 
