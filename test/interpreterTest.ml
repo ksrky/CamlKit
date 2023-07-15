@@ -23,3 +23,7 @@ let%expect_test _ =
 let%expect_test _ =
   Interpreter.eval "print_int (if 1 = 0 then 1 else 0)";
   [%expect {|  0  |}]
+
+let%expect_test _ =
+  Interpreter.eval "let rec fact n = if n = 0 then 1 else n * fact (n-1) in print_int (fact 5)";
+  [%expect {|  120  |}]

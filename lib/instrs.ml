@@ -122,15 +122,12 @@ let run_instr () : unit =
       s := 0
   | 20 (* DUM *) -> push 0 e
   | 21 (* RAP *) ->
-      let clos = pop s in
-      let f = car clos in
-      let ne = car clos in
+      let f, ne = get_cons (pop s) in
       let v = pop s in
       push !c d;
       c := f;
       push (cdr !e) d;
       e := rplaca ne v;
-      push v e;
       push !s d;
       s := 0
   | 22 (* STOP *) -> c := 0

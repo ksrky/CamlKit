@@ -42,13 +42,13 @@ and compile_app (args : Sexp.exp list) n c =
 and index (x : AbsSyn.id) (n : AbsSyn.id list list) : int * int = indx x n 1
 
 and indx (x : AbsSyn.id) (n : AbsSyn.id list list) (i : int) : int * int =
-  if n == [] then raise (ScopeError x)
+  if n = [] then raise (ScopeError x)
   else
     let rec indx2 (x : AbsSyn.id) (n : AbsSyn.id list) (j : int) =
-      if n == [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) j + 1
+      if n = [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) (j + 1)
     in
     let j = indx2 x (List.hd n) 1 in
-    if j == 0 then indx x (List.tl n) (i + 1) else (i, j)
+    if j = 0 then indx x (List.tl n) (i + 1) else (i, j)
 
 let compile (e : Sexp.exp) : Instrs.t list =
   try compile e [] [STOP]
