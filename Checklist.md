@@ -34,6 +34,7 @@
 ### Frontend
 
 - [ ] Attaching source locations to syntax tree
+- [ ] Scope checking
 - [ ] Semantic analysis
 - [ ] Static type checking
 
