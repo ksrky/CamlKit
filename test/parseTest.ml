@@ -17,3 +17,7 @@ let%test _ =
   = LetExp
       { decs= [{name= "f"; params= ["x"; "y"]; body= VarExp "y"}]
       ; body= AppExp {fcn= VarExp "f"; arg= IntExp 1} }
+
+let%test _ =
+  Parse.parse_line "- f x"
+  = OpExp {left= IntExp 0; oper= MinusOp; right= AppExp {fcn= VarExp "f"; arg= VarExp "x"}}
