@@ -1,6 +1,6 @@
 type cell = Int of int | Cons of int * int
 
-let cells : cell array = Array.make 100000 (Int 0)
+let cells : cell array = Array.make 1000000 (Int 0)
 
 let s, e, c, d, f = (ref 0, ref 0, ref 0, ref 0, ref 0)
 
@@ -11,6 +11,8 @@ let init () =
   d := 0;
   f := 0
 
+exception RuntimeError of string
+
 let make_int (n : int) : int =
   let i = !f in
   cells.(i) <- Int n;
@@ -18,7 +20,7 @@ let make_int (n : int) : int =
   i
 
 let get_int (i : int) : int =
-  match cells.(i) with Int n -> n | _ -> ErrorMsg.impossible "Int required"
+  match cells.(i) with Int n -> n | _ -> raise (RuntimeError "Int required")
 
 let make_cons (i : int) (j : int) : int =
   let n = !f in
@@ -27,7 +29,7 @@ let make_cons (i : int) (j : int) : int =
   n
 
 let get_cons (i : int) : int * int =
-  match cells.(i) with Cons (n, j) -> (n, j) | _ -> ErrorMsg.impossible "Cons required"
+  match cells.(i) with Cons (n, j) -> (n, j) | _ -> raise (RuntimeError "Cons required")
 
 let push (i : int) (r : int ref) : unit = r := make_cons i !r
 
@@ -36,15 +38,15 @@ let pop (r : int ref) : int =
   | Cons (i, j) ->
       r := j;
       i
-  | _ -> ErrorMsg.impossible "Cons required"
+  | _ -> raise (RuntimeError "Cons required")
 
 let atom (i : int) : int = match cells.(i) with Int _ -> 1 | Cons _ -> 0
 
 let car (i : int) : int =
-  match cells.(i) with Cons (i, _) -> i | _ -> ErrorMsg.impossible "Cons required"
+  match cells.(i) with Cons (i, _) -> i | _ -> raise (RuntimeError "Cons required")
 
 let cdr (i : int) : int =
-  match cells.(i) with Cons (_, j) -> j | _ -> ErrorMsg.impossible "Cons required"
+  match cells.(i) with Cons (_, j) -> j | _ -> raise (RuntimeError "Cons required")
 
 let locate (ij : int) (r : int) =
   let rec loc (y, z) = if y == 1 then car z else loc (y - 1, cdr z) in

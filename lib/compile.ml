@@ -1,4 +1,4 @@
-open Instrs
+open Machine
 
 exception ScopeError of Sexp.id
 
@@ -50,7 +50,7 @@ and indx (x : AbsSyn.id) (n : AbsSyn.id list list) (i : int) : int * int =
     let j = indx2 x (List.hd n) 1 in
     if j = 0 then indx x (List.tl n) (i + 1) else (i, j)
 
-let compile (e : Sexp.exp) : Instrs.t list =
+let compile (e : Sexp.exp) : Machine.t list =
   try compile e [] [STOP]
   with ScopeError x ->
     ErrorMsg.error ("Unbound value " ^ x);

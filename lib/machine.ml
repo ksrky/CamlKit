@@ -1,4 +1,4 @@
-open Machine
+open Stack
 
 type t =
   | NIL

@@ -1,6 +1,6 @@
 open CamlKit
 open Sexp
-open Instrs
+open Machine
 
 let%test _ = Compile.compile Nil = [NIL; STOP]
 
