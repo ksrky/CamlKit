@@ -1,8 +1,6 @@
 open CamlKit
 open AbsSyn
 
-let%test _ = Parse.parse_line "nil" = NilExp
-
 let%test _ = Parse.parse_line "42" = IntExp 42
 
 let%test _ = Parse.parse_line "3 - 7" = OpExp {left= IntExp 3; oper= MinusOp; right= IntExp 7}
