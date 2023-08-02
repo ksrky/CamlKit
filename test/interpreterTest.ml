@@ -25,3 +25,7 @@ let%expect_test _ =
 let%expect_test _ =
   Interpreter.eval "let rec fact n = if n = 0 then 1 else n * fact (n-1) in print_int (fact 5)";
   [%expect {|  120  |}]
+
+let%expect_test _ =
+  Interpreter.eval "let add2 n = 2 + n and double f x = f (f x) in print_int (double add2 3)";
+  [%expect {|  7  |}]
