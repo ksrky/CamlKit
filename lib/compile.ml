@@ -2,12 +2,12 @@ open Machine
 
 exception ScopeError of Sexp.id
 
-let builtins : (Sexp.id * t) list =
+let builtins : (string * t) list =
   [ ("CAR", CAR); ("CDR", CDR); ("CONS", CONS); ("ADD", ADD); ("SUB", SUB); ("MUL", MUL)
   ; ("DIV", DIV); ("EQ", EQ); ("NE", NE); ("LT", LT); ("LE", LE); ("READC", READC)
   ; ("WRITEC", WRITEC) ]
 
-let rec compile (e : Sexp.exp) (n : Sexp.id list list) (c : t list) : t list =
+let rec compile (e : Sexp.exp) (n : Ident.t list list) (c : t list) : t list =
   match e with
   | Sexp.Nil -> NIL :: c
   | Sexp.Int x -> LDC x :: c
@@ -40,12 +40,12 @@ and compile_if (test, tr, fa) n c =
 and compile_app (args : Sexp.exp list) n c =
   if args == [] then c else compile_app (List.tl args) n (compile (List.hd args) n (CONS :: c))
 
-and index (x : AbsSyn.id) (n : AbsSyn.id list list) : int * int = indx x n 1
+and index (x : Ident.t) (n : Ident.t list list) : int * int = indx x n 1
 
-and indx (x : AbsSyn.id) (n : AbsSyn.id list list) (i : int) : int * int =
+and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
   if n = [] then raise (ScopeError x)
   else
-    let rec indx2 (x : AbsSyn.id) (n : AbsSyn.id list) (j : int) =
+    let rec indx2 (x : Ident.t) (n : Ident.t list) (j : int) =
       if n = [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) (j + 1)
     in
     let j = indx2 x (List.hd n) 1 in
@@ -54,5 +54,5 @@ and indx (x : AbsSyn.id) (n : AbsSyn.id list list) (i : int) : int * int =
 let compile (e : Sexp.exp) : Machine.t list =
   try compile e [] [STOP]
   with ScopeError x ->
-    ErrorMsg.error ("Unbound value " ^ x);
+    ErrorMsg.error ("Unbound value " ^ Ident.to_string x);
     []

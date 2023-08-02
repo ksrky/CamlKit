@@ -1,4 +1,4 @@
-type id = string
+type id = Ident.t
 
 type ids = id list
 
@@ -7,7 +7,7 @@ type exps = exp list
 and exp = Int of int | Nil | Var of id | Seq of exps | Lam of ids * exp | Special of special
 
 and special =
-  | Builtin of id * exps
+  | Builtin of string * exps
   | Let of ids * exps * exp
   | Letrec of ids * exps * exp
   | If of exp * exp * exp
@@ -19,8 +19,8 @@ let rec abs2sexp : AbsSyn.exp -> exp = function
   | AbsSyn.AppExp _ as exp ->
       let rec loop acc = function
         | AbsSyn.AppExp {fcn; arg} -> loop (abs2sexp arg :: acc) fcn
-        | VarExp "read_int" -> Special (Builtin ("READC", acc))
-        | VarExp "print_int" -> Special (Builtin ("WRITEC", acc))
+        | VarExp id when Ident.to_string id == "read_int" -> Special (Builtin ("READC", acc))
+        | VarExp id when Ident.to_string id == "print_int" -> Special (Builtin ("WRITEC", acc))
         | fcn -> Seq (abs2sexp fcn :: acc)
       in
       loop [] exp

@@ -1,4 +1,4 @@
-type id = string
+type id = Ident.t
 
 type exp =
   | VarExp of id
@@ -30,13 +30,15 @@ let pretty_exp exp =
   let rec pretty prec exp =
     let s =
       match exp with
-      | VarExp x -> x
+      | VarExp id -> Ident.to_string id
       | NilExp -> "nil"
       | IntExp i -> string_of_int i
       | AppExp {fcn; arg} -> pretty 2 fcn ^ " " ^ pretty 1 arg
       | OpExp {left; oper; right} -> pretty 1 left ^ " " ^ pretty_oper oper ^ " " ^ pretty 1 right
       | LamExp {vars; body} ->
-          "fun " ^ String.concat " " (List.map (fun x -> x ^ " ") vars) ^ "-> " ^ pretty 0 body
+          "fun "
+          ^ String.concat " " (List.map (fun id -> Ident.to_string id ^ " ") vars)
+          ^ "-> " ^ pretty 0 body
       | IfExp {test; then'; else'} ->
           "if " ^ pretty 0 test ^ " then " ^ pretty 0 then' ^ " else " ^ pretty 0 else'
       | LetExp {decs; body} ->
@@ -46,7 +48,7 @@ let pretty_exp exp =
     in
     if prec >= prec_of exp then "(" ^ s ^ ")" else s
   and pretty_dec ({name; params; body} : dec) : string =
-    String.concat " " (name :: params) ^ " = " ^ pretty (-1) body
+    String.concat " " (List.map Ident.to_string (name :: params)) ^ " = " ^ pretty (-1) body
   and pretty_oper : oper -> string = function
     | PlusOp -> "+"
     | MinusOp -> "-"
