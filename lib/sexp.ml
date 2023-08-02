@@ -19,8 +19,8 @@ let rec abs2sexp : AbsSyn.exp -> exp = function
   | AbsSyn.AppExp _ as exp ->
       let rec loop acc = function
         | AbsSyn.AppExp {fcn; arg} -> loop (abs2sexp arg :: acc) fcn
-        | VarExp id when Ident.to_string id == "read_int" -> Special (Builtin ("READC", acc))
-        | VarExp id when Ident.to_string id == "print_int" -> Special (Builtin ("WRITEC", acc))
+        | VarExp id when Ident.to_string id = "read_int" -> Special (Builtin ("READC", acc))
+        | VarExp id when Ident.to_string id = "print_int" -> Special (Builtin ("WRITEC", acc))
         | fcn -> Seq (abs2sexp fcn :: acc)
       in
       loop [] exp
