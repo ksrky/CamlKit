@@ -1,4 +1,4 @@
-open Internal
+open IntSyn
 open Env
 
 let rec trans_exp env exp =

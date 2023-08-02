@@ -1,5 +1,5 @@
 open CamlKit
-open Internal
+open IntSyn
 open Machine
 
 let x = Ident.from_string "x"

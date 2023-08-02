@@ -1,6 +1,6 @@
 open CamlKit
 open AbsSyn
-open Internal
+open IntSyn
 open Semant
 
 let x = Ident.from_string "x"
