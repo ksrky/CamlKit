@@ -57,4 +57,4 @@ let dec :=
   | name=id;  params=list(id); EQ; body=exp;    { {name; params; body} }
 
 let id :=
-  | str=ID;                                     { Ident.from_string str }
+  | name=ID;                                     { Ident.from_string name }
