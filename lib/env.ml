@@ -1,14 +1,15 @@
 type binding = ValBind
 
-type env = (Ident.t * binding) list
+type env = binding Ident.Table.t
 
 exception Out_of_scope of Ident.t
 
-let empty : env = []
+let empty : env = Ident.Table.empty
 
-let extend id bind env = (id, bind) :: env
+let extend (id : Ident.t) (bind : binding) (env : env) = Ident.Table.add id bind env
 
-let lookup id env =
-  match List.assoc_opt id env with Some bind -> bind | None -> raise (Out_of_scope id)
+let lookup (id : Ident.t) (env : env) =
+  match Ident.Table.find_opt id env with Some bind -> bind | None -> raise (Out_of_scope id)
 
-let extend_list binds env = binds @ env
+let extend_list (binds : (Ident.t * binding) list) (env : env) =
+  List.fold_right (fun (id, bind) -> extend id bind) binds env

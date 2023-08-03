@@ -15,3 +15,9 @@ let from_string (name : string) : t =
       (name, !unique)
 
 let to_string : t -> string = fst
+
+module Table = Map.Make (struct
+  type nonrec t = t
+
+  let compare (_, u1) (_, u2) = compare u1 u2
+end)
