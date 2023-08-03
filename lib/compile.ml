@@ -1,7 +1,5 @@
 open Machine
 
-exception ScopeError of IntSyn.id
-
 let builtins : (string * t) list =
   [ ("CAR", CAR); ("CDR", CDR); ("CONS", CONS); ("ADD", ADD); ("SUB", SUB); ("MUL", MUL)
   ; ("DIV", DIV); ("EQ", EQ); ("NE", NE); ("LT", LT); ("LE", LE); ("READC", READC)
@@ -42,7 +40,8 @@ and compile_app (args : IntSyn.exp list) n c =
 and index (x : Ident.t) (n : Ident.t list list) : int * int = indx x n 1
 
 and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
-  if n = [] then raise (ScopeError x)
+  if n = [] then
+    ErrorMsg.impossible ("Occurance of '" ^ Ident.to_string x ^ "' must be scope-checked")
   else
     let rec indx2 (x : Ident.t) (n : Ident.t list) (j : int) =
       if n = [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) (j + 1)
@@ -50,8 +49,4 @@ and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
     let j = indx2 x (List.hd n) 1 in
     if j = 0 then indx x (List.tl n) (i + 1) else (i, j)
 
-let compile (e : IntSyn.exp) : Machine.t list =
-  try compile e [] [STOP]
-  with ScopeError x ->
-    ErrorMsg.error ("Unbound value " ^ Ident.to_string x);
-    []
+let compile (e : IntSyn.exp) : Machine.t list = compile e [] [STOP]

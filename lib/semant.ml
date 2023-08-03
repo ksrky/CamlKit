@@ -37,7 +37,7 @@ let rec trans_exp env exp =
           (List.map (fun {AbsSyn.name; _} -> name) decs, trans_decs env' decs, trans_exp env' body)
   in
   try trexp exp
-  with ScopeError id ->
+  with Out_of_scope id ->
     ErrorMsg.error ("Unbound value " ^ Ident.to_string id);
     Nil
 

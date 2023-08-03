@@ -1,7 +1,7 @@
 type binding = ValBind
 type env
 
-exception ScopeError of Ident.t
+exception Out_of_scope of Ident.t
 
 val empty : env
 val extend : Ident.t -> binding ->  env -> env
