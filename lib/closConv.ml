@@ -13,7 +13,7 @@ let rec free_vars : exp -> id list = function
   | Letrec (vars, exps, body) -> diff (List.concat_map free_vars exps @ free_vars body) vars
   | If (test, then', else') -> free_vars test @ free_vars then' @ free_vars else'
 
-let clos_conv globals = function
+let convert globals = function
   | Lam (vars, body) ->
       let fvs = diff (free_vars body) (globals @ vars) in
       App (Lam (fvs @ vars, body), List.map (fun fv -> Var fv) fvs)

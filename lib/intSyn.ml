@@ -14,3 +14,5 @@ and exp =
   | Let of ids * exps * exp
   | Letrec of ids * exps * exp
   | If of exp * exp * exp
+
+type def = {name: id; params: ids; body: exp}
