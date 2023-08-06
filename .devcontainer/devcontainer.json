@@ -1,0 +1,15 @@
+{
+  "name": "CamlKit DevContainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.tabSize": 2
+      },
+      "extensions": ["ocamllabs.ocaml-platform"]
+    }
+  }
+}
+      
