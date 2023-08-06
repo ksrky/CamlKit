@@ -1,7 +1,8 @@
 open IntSyn
 
+let defs : defs ref = ref []
+
 let rec lift_lam (exp : exp) : exp =
-  let defs : def list ref = ref [] in
   match exp with
   | Int _ -> exp
   | Nil -> exp
@@ -12,6 +13,14 @@ let rec lift_lam (exp : exp) : exp =
       defs := {name; params= vars; body} :: !defs;
       Var name
   | Builtin (fcn, args) -> Builtin (fcn, List.map lift_lam args)
-  | Let (vars, exps, body) -> Let (vars, List.map lift_lam exps, lift_lam body)
-  | Letrec (vars, exps, body) -> Letrec (vars, List.map lift_lam exps, lift_lam body)
+  | Let (vars, exps, body) ->
+      List.iteri (fun i v -> defs := {name= v; params= []; body= List.nth exps i} :: !defs) vars;
+      lift_lam body
+  | Letrec (vars, exps, body) ->
+      List.iteri (fun i v -> defs := {name= v; params= []; body= List.nth exps i} :: !defs) vars;
+      lift_lam body
   | If (test, then', else') -> If (lift_lam test, lift_lam then', lift_lam else')
+
+let f (exp : exp) : def list * exp =
+  let ans = lift_lam exp in
+  (!defs, ans)

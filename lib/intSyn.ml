@@ -16,3 +16,5 @@ and exp =
   | If of exp * exp * exp
 
 type def = {name: id; params: ids; body: exp}
+
+type defs = def list
