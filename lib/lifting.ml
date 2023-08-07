@@ -13,8 +13,14 @@ let rec lift_lam (exp : exp) : exp =
       defs := {name; params= vars; body} :: !defs;
       Var name
   | Builtin (fcn, args) -> Builtin (fcn, List.map lift_lam args)
+  | Let (vars, exps, Lam (params, body)) ->
+      List.iteri (fun i name -> defs := {name; params; body= List.nth exps i} :: !defs) vars;
+      lift_lam body
   | Let (vars, exps, body) ->
       List.iteri (fun i v -> defs := {name= v; params= []; body= List.nth exps i} :: !defs) vars;
+      lift_lam body
+  | Letrec (vars, exps, Lam (params, body)) ->
+      List.iteri (fun i name -> defs := {name; params; body= List.nth exps i} :: !defs) vars;
       lift_lam body
   | Letrec (vars, exps, body) ->
       List.iteri (fun i v -> defs := {name= v; params= []; body= List.nth exps i} :: !defs) vars;
