@@ -2,19 +2,19 @@ module V = Virtual
 
 let ilist : string list ref = ref []
 
-let pushc (i : int) : unit = ilist := ("\tpush\t" ^ string_of_int i ^ "\n") :: !ilist
+let pushc (i : int) : unit = ilist := ("\tpush\t" ^ string_of_int i ) :: !ilist
 
-let push (r : string) : unit = ilist := ("\tpush\t" ^ r ^ "\n") :: !ilist
+let push (r : string) : unit = ilist := ("\tpush\t" ^ r ) :: !ilist
 
 let pushm (r : string) (d : int) : unit =
-  ilist := ("\tpush\t[" ^ r ^ " + " ^ string_of_int d ^ "]\n") :: !ilist
+  ilist := ("\tpush\t[" ^ r ^ " + " ^ string_of_int d ^ "]") :: !ilist
 
-let pop (r : string) : unit = ilist := ("\tpop\t" ^ r ^ "\n") :: !ilist
+let pop (r : string) : unit = ilist := ("\tpop\t" ^ r ) :: !ilist
 
 let move dst src = ilist := ("\tmov\t" ^ dst ^ ", " ^ src) :: !ilist
 
 let binop (op : string) (r1 : string) (r2 : string) : unit =
-  ilist := (op ^ "\t" ^ r1 ^ ", " ^ r2 ^ "\n") :: !ilist
+  ilist := (op ^ "\t" ^ r1 ^ ", " ^ r2 ) :: !ilist
 
 let jump (j : string) (l : string) : unit = ilist := ("\t" ^ j ^ "\t" ^ l) :: !ilist
 

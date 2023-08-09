@@ -27,6 +27,7 @@ let rec lift_lam (exp : exp) : exp =
       lift_lam body
   | If (test, then', else') -> If (lift_lam test, lift_lam then', lift_lam else')
 
-let f (exp : exp) : def list * exp =
+let f (exp : exp) : def list =
   let ans = lift_lam exp in
-  (!defs, ans)
+  let main = Ident.from_string "main" in
+  {name= main; params= []; body= ans} :: !defs

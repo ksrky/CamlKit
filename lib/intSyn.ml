@@ -18,3 +18,9 @@ and exp =
 type def = {name: id; params: ids; body: exp}
 
 type defs = def list
+
+let arith = ["ADD"; "SUB"; "MUL"; "DIV"]
+
+let rel = ["EQ"; "NE"; "LT"; "LE"; "GT"; "GE"]
+
+let io = ["WRITEC"; "READC"]
