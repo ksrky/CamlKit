@@ -16,6 +16,8 @@ let from_string (name : string) : t =
 
 let to_string : t -> string = fst
 
+let unique : t -> int = snd
+
 let fresh () = from_string "?"
 
 module Table = Map.Make (struct
