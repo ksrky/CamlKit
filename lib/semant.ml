@@ -9,24 +9,24 @@ let rec trans_exp env exp =
     | AbsSyn.AppExp _ as exp ->
         let rec loop acc = function
           | AbsSyn.AppExp {fcn; arg} -> loop (trexp arg :: acc) fcn
-          | VarExp id when Ident.to_string id = "read_int" -> Builtin ("READC", acc)
-          | VarExp id when Ident.to_string id = "print_int" -> Builtin ("WRITEC", acc)
+          | VarExp id when Ident.to_string id = "read_int" -> Builtin ("readc", acc)
+          | VarExp id when Ident.to_string id = "print_int" -> Builtin ("writec", acc)
           | fcn -> App (trexp fcn, acc)
         in
         loop [] exp
     | AbsSyn.LamExp {vars; body} ->
         let env' = List.fold_right (fun id -> extend id ValBind) vars env in
         Lam (vars, trans_exp env' body)
-    | AbsSyn.OpExp {left; oper= PlusOp; right} -> Builtin ("ADD", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= MinusOp; right} -> Builtin ("SUB", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= TimesOp; right} -> Builtin ("MUL", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= DivideOp; right} -> Builtin ("DIV", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= EqOp; right} -> Builtin ("EQ", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= NeqOp; right} -> Builtin ("NE", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= LtOp; right} -> Builtin ("LT", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= LeOp; right} -> Builtin ("LE", [trexp left; trexp right])
-    | AbsSyn.OpExp {left; oper= GtOp; right} -> Builtin ("LT", [trexp right; trexp left])
-    | AbsSyn.OpExp {left; oper= GeOp; right} -> Builtin ("LE", [trexp right; trexp left])
+    | AbsSyn.OpExp {left; oper= PlusOp; right} -> Builtin ("add", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= MinusOp; right} -> Builtin ("sub", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= TimesOp; right} -> Builtin ("mul", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= DivideOp; right} -> Builtin ("div", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= EqOp; right} -> Builtin ("eq", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= NeqOp; right} -> Builtin ("ne", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= LtOp; right} -> Builtin ("lt", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= LeOp; right} -> Builtin ("le", [trexp left; trexp right])
+    | AbsSyn.OpExp {left; oper= GtOp; right} -> Builtin ("lt", [trexp right; trexp left])
+    | AbsSyn.OpExp {left; oper= GeOp; right} -> Builtin ("le", [trexp right; trexp left])
     | AbsSyn.IfExp {test; then'; else'} -> If (trexp test, trexp then', trexp else')
     | AbsSyn.LetExp {decs; body} ->
         let env' = List.fold_right (fun {AbsSyn.name; _} -> extend name ValBind) decs env in
