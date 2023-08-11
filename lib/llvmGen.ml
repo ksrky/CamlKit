@@ -39,14 +39,14 @@ let rec codegen_expr = function
       let i =
         (* Convert bool 0/1 to i64 0 or 1 *)
         match fcn with
-        | "eq" -> build_fcmp Fcmp.Ueq lhs_val rhs_val "eqtmp" builder
-        | "ne" -> build_fcmp Fcmp.Une lhs_val rhs_val "netmp" builder
-        | "lt" -> build_fcmp Fcmp.Ult lhs_val rhs_val "lttmp" builder
-        | "le" -> build_fcmp Fcmp.Ule lhs_val rhs_val "letmp" builder
-        | "gt" -> build_fcmp Fcmp.Ugt lhs_val rhs_val "gttmp" builder
-        | "ge" -> build_fcmp Fcmp.Uge lhs_val rhs_val "getmp" builder
+        | "eq" -> build_icmp Icmp.Eq lhs_val rhs_val "eqtmp" builder
+        | "ne" -> build_icmp Icmp.Ne lhs_val rhs_val "netmp" builder
+        | "lt" -> build_icmp Icmp.Ult lhs_val rhs_val "lttmp" builder
+        | "le" -> build_icmp Icmp.Ule lhs_val rhs_val "letmp" builder
+        | "gt" -> build_icmp Icmp.Ugt lhs_val rhs_val "gttmp" builder
+        | "ge" -> build_icmp Icmp.Uge lhs_val rhs_val "getmp" builder
       in
-      build_uitofp i int_type "booltmp" builder
+      build_intcast i int_type "booltmp" builder
   | Builtin (fcn, args) ->
       (* Look up the name in the module table. *)
       let callee =
@@ -61,7 +61,7 @@ let rec codegen_expr = function
       let cond' = codegen_expr cond in
       (* Convert condition to a bool by comparing equal to 0.0 *)
       let zero = const_int int_type 0 in
-      let cond_val = build_fcmp Fcmp.One cond' zero "ifcond" builder in
+      let cond_val = build_icmp Icmp.Ne cond' zero "ifcond" builder in
       (* Grab the first block so that we might later add the conditional branch
          * to it at the end of the function. *)
       let start_bb = insertion_block builder in
@@ -126,7 +126,7 @@ let codegen_func : IntSyn.def -> llvalue = function
       Hashtbl.clear named_values;
       let func = codegen_proto (Ident.to_string name, params) in
       (* Create a new basic block to start insertion into. *)
-      let bb = append_block context "entry" func in
+      let bb = append_block context (Ident.to_string name) func in
       position_at_end bb builder;
       try
         let ret_val = codegen_expr body in
@@ -136,3 +136,7 @@ let codegen_func : IntSyn.def -> llvalue = function
         Llvm_analysis.assert_valid_function func;
         func
       with e -> delete_function func; raise e )
+
+let codegen_builtins () =
+  Llvm.dump_value (codegen_proto ("writec", [Ident.from_string "x"]));
+  Llvm.dump_value (codegen_proto ("readc", [Ident.from_string "x"]))

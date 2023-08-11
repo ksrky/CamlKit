@@ -5,7 +5,6 @@ let compile (src : string) : unit =
   let intsyn' = ClosConv.f intsyn in
   let defs = Lifting.f intsyn' in
   (*print_endline (IntSyn.ppr_defs defs*)
-  Llvm.dump_value (LlvmGen.codegen_proto ("writec", [Ident.from_string "x"]));
-  Llvm.dump_value (LlvmGen.codegen_proto ("readc", [Ident.from_string "x"]));
+  LlvmGen.codegen_builtins ();
   List.iter (fun def -> Llvm.dump_value (LlvmGen.codegen_func def)) defs
 (*Llvm.dump_module LlvmGen.the_module*)

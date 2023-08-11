@@ -1,1 +1,1 @@
-let f x = x + 1 in f 2
+let f x = x + 1 in print_int (f 2)
