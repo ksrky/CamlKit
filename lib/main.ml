@@ -1,13 +1,15 @@
-let emit (frag : Virtual.frag) : unit =
-  let ilist = X86Gen.procEntryExit frag in
-  print_endline (String.concat "\n" ilist)
-
-let compile (src : string) : unit =
-  let abs = Parse.parse src in
+let run (path : string) =
+  let abs = Parse.parse path in
   (* print_endline (AbsSyn.pretty_exp abs); *)
-  let intsyn = Semant.trans_exp Env.empty abs in
-  let intsyn' = ClosConv.f intsyn in
-  let defs = Lifting.f intsyn' in
-  let frags = List.map Compile.compile_def defs in
+  let sexp = Semant.trans_exp Env.empty abs in
+  let instrs = Compile.compile sexp in
   (* print_endline (Machine.show_instrs instrs); *)
-  List.iter emit frags
+  Stack.init (); Machine.load_instrs instrs; Machine.run_instrs ()
+
+let eval (inp : string) =
+  let abs = Parse.parse_line inp in
+  (* print_endline (AbsSyn.pretty_exp abs); *)
+  let sexp = Semant.trans_exp Env.empty abs in
+  let instrs = Compile.compile sexp in
+  (* print_endline (Machine.show_instrs instrs); *)
+  Stack.init (); Machine.load_instrs instrs; Machine.run_instrs ()
