@@ -1,6 +1,6 @@
 (library
  (name CamlKit)
- (libraries llvm))
+ (libraries llvm llvm.analysis))
 
 (env
  (dev

@@ -34,12 +34,12 @@ let pretty_exp exp =
         parens ctx 0 ("if " ^ pretty 0 test ^ " then " ^ pretty 0 then' ^ " else " ^ pretty 0 else')
     | LetExp {decs; body} ->
         parens ctx 0
-          ("let " ^ String.concat " and " (List.map pretty_dec decs) ^ " in " ^ pretty (-1) body)
+          ("let " ^ String.concat " and " (List.map pretty_dec decs) ^ " in " ^ pretty 0 body)
     | LetrecExp {decs; body} ->
         parens ctx 0
-          ("let " ^ String.concat " and " (List.map pretty_dec decs) ^ " in " ^ pretty (-1) body)
+          ("let " ^ String.concat " and " (List.map pretty_dec decs) ^ " in " ^ pretty 0 body)
   and pretty_dec ({name; params; body} : dec) : string =
-    String.concat " " (List.map Ident.to_string (name :: params)) ^ " = " ^ pretty (-1) body
+    String.concat " " (List.map Ident.to_string (name :: params)) ^ " = " ^ pretty 0 body
   and pretty_oper : oper -> string = function
     | PlusOp -> "+"
     | MinusOp -> "-"

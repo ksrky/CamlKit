@@ -4,7 +4,7 @@ exception Error of string
 
 let context = global_context ()
 
-let the_module = create_module context "my cool jit"
+let the_module = create_module context "CamlKit"
 
 let builder = builder context
 
@@ -25,6 +25,38 @@ let rec codegen_expr = function
       in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
+  | IntSyn.Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
+      let lhs_val = codegen_expr lhs in
+      let rhs_val = codegen_expr rhs in
+      match fcn with
+      | "ADD" -> build_add lhs_val rhs_val "addtmp" builder
+      | "SUB" -> build_sub lhs_val rhs_val "subtmp" builder
+      | "MUL" -> build_mul lhs_val rhs_val "multmp" builder
+      | "DIV" -> build_sdiv lhs_val rhs_val "divtmp" builder )
+  | IntSyn.Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
+      let lhs_val = codegen_expr lhs in
+      let rhs_val = codegen_expr rhs in
+      let i =
+        (* Convert bool 0/1 to i64 0 or 1 *)
+        match fcn with
+        | "EQ" -> build_fcmp Fcmp.Ueq lhs_val rhs_val "eqtmp" builder
+        | "NE" -> build_fcmp Fcmp.Une lhs_val rhs_val "netmp" builder
+        | "LT" -> build_fcmp Fcmp.Ult lhs_val rhs_val "lttmp" builder
+        | "LE" -> build_fcmp Fcmp.Ule lhs_val rhs_val "letmp" builder
+        | "GT" -> build_fcmp Fcmp.Ugt lhs_val rhs_val "gttmp" builder
+        | "GE" -> build_fcmp Fcmp.Uge lhs_val rhs_val "getmp" builder
+      in
+      build_uitofp i int_type "booltmp" builder
+  | Builtin (fcn, args) ->
+      (* Look up the name in the module table. *)
+      let callee =
+        match lookup_function fcn the_module with
+        | Some callee -> callee
+        | None -> raise (Error "unknown function referenced")
+      in
+      let args' = Array.of_list (List.map codegen_expr args) in
+      build_call callee args' "calltmp" builder
+  | IntSyn.Lam _ | IntSyn.Let _ | IntSyn.Letrec _ -> raise (Error "should be removed")
   | IntSyn.If (cond, then_, else_) ->
       let cond' = codegen_expr cond in
       (* Convert condition to a bool by comparing equal to 0.0 *)
@@ -66,28 +98,33 @@ let rec codegen_expr = function
       (* Finally, set the builder to the end of the merge block. *)
       position_at_end merge_bb builder;
       phi
+  | _ -> raise (Error "not allowed")
+
+and codegen_proto (name, params) : llvalue =
+  (* Make the function type: double(double,double) etc. *)
+  let param_tys = Array.make (List.length params) int_type in
+  let func_ty = function_type int_type param_tys in
+  let func =
+    match lookup_function name the_module with
+    | None ->
+        declare_function name func_ty the_module
+        (* If 'f' conflicted, there was already something named 'name'. If it
+           * has a body, don't allow redefinition or reextern. *)
+    | Some _ -> raise (Error "redefinition of function")
+  in
+  (* Set names for all arguments. *)
+  Array.iteri
+    (fun i a ->
+      let id = List.nth params i in
+      set_value_name (Ident.to_string id) a;
+      Hashtbl.add named_values id a )
+    (Llvm.params func);
+  func
 
 let codegen_func : IntSyn.def -> llvalue = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
-      (* Make the function type: double(double,double) etc. *)
-      let param_tys = Array.make (List.length params) int_type in
-      let func_ty = function_type int_type param_tys in
-      let func =
-        match lookup_function (Ident.to_string name) the_module with
-        | None ->
-            declare_function (Ident.to_string name) func_ty the_module
-            (* If 'f' conflicted, there was already something named 'name'. If it
-               * has a body, don't allow redefinition or reextern. *)
-        | Some _ -> raise (Error "redefinition of function")
-      in
-      (* Set names for all arguments. *)
-      Array.iteri
-        (fun i a ->
-          let id = List.nth params i in
-          set_value_name (Ident.to_string id) a;
-          Hashtbl.add named_values id a )
-        (Llvm.params func);
+      let func = codegen_proto (Ident.to_string name, params) in
       (* Create a new basic block to start insertion into. *)
       let bb = append_block context "entry" func in
       position_at_end bb builder;
