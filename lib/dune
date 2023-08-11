@@ -1,5 +1,6 @@
 (library
- (name CamlKit))
+ (name CamlKit)
+ (libraries llvm))
 
 (env
  (dev
