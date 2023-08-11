@@ -1,49 +1,52 @@
-module V = Virtual
+open Machine
 
-let lab_num = ref (-1)
+let builtins : (string * t) list =
+  [ ("CAR", CAR); ("CDR", CDR); ("CONS", CONS); ("ADD", ADD); ("SUB", SUB); ("MUL", MUL)
+  ; ("DIV", DIV); ("EQ", EQ); ("NE", NE); ("LT", LT); ("LE", LE); ("READC", READC)
+  ; ("WRITEC", WRITEC) ]
 
-let new_label () =
-  incr lab_num;
-  "L" ^ string_of_int !lab_num
+let rec compile (e : IntSyn.exp) (n : Ident.t list list) (c : t list) : t list =
+  match e with
+  | IntSyn.Nil -> NIL :: c
+  | IntSyn.Int x -> LDC x :: c
+  | IntSyn.Var x ->
+      let i, j = index x n in
+      LD (i, j) :: c
+  | IntSyn.App (fcn, args) -> NIL :: compile_app args n (compile fcn n (AP :: c))
+  | IntSyn.Lam (vars, body) ->
+      let n' = vars :: n in
+      compile_lambda body n' c
+  | IntSyn.Builtin (f, args) -> compile_builtin args n (List.assoc f builtins :: c)
+  | IntSyn.If (test, then', else') -> compile_if (test, then', else') n c
+  | IntSyn.Let (vars, vals, body) ->
+      let newn = vars :: n in
+      NIL :: compile_app vals n (compile_lambda body newn (AP :: c))
+  | IntSyn.Letrec (vars, vals, body) ->
+      let newn = vars :: n in
+      DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
 
-let result gen =
-  let t = Ident.fresh () in
-  gen t; t
+and compile_builtin (args : IntSyn.exp list) (n : IntSyn.id list list) (c : t list) =
+  if args == [] then c else compile_builtin (List.tl args) n (compile (List.hd args) n c)
 
-let rv : int = 0
+and compile_lambda (body : IntSyn.exp) (n : IntSyn.id list list) (c : t list) : t list =
+  LDF (compile body n [RTN]) :: c
 
-let index (x : Ident.t) (env : Ident.t list) : int =
-  let rec loop i = function
-    | [] -> raise Not_found
-    | hd :: tl -> if x = hd then i else loop (i + 1) tl
-  in
-  loop 0 env
+and compile_if (test, tr, fa) n c =
+  compile test n [SEL (compile tr n [JOIN], compile fa n [JOIN])] @ c
 
-let rec compile_def ({name; params; body} : IntSyn.def) : Virtual.frag =
-  let args = params in
-  let rec compile_exp (e : IntSyn.exp) : V.instr list =
-    match e with
-    | Int i -> [V.Push (V.Const, i)]
-    | Nil -> [V.Push (V.Const, 0)]
-    | Var id -> [V.Push (V.Arg, index id args)]
-    | App (Var f, args) -> compile_args args @ [V.Call (Ident.to_string f, List.length args)]
-    | App _ | Lam _ | Let _ | Letrec _ -> ErrorMsg.impossible "should be removed in Lifting module"
-    | Builtin (f, args) when List.mem f IntSyn.arith ->
-        let op = match f with "ADD" -> V.Add | "SUB" -> V.Sub | "MUL" -> V.Mul | "DIV" -> V.Div in
-        compile_args args @ [V.Arith op]
-    | Builtin (f, args) when List.mem f IntSyn.rel ->
-        let op = match f with "EQ" -> V.Eq | "NE" -> V.Neq | "LT" -> V.Lt | "LE" -> V.Le in
-        let t = new_label () in
-        let j = new_label () in
-        compile_args args
-        @ [V.IfGoto (op, t); V.Push (V.Const, 0); V.Goto j; V.Label t; V.Push (V.Const, 1); V.Goto j]
-    | If (test, then', else') ->
-        let t = new_label () in
-        let j = new_label () in
-        compile_exp test
-        @ [V.Push (V.Const, 0); V.IfGoto (V.Neq, t)]
-        @ compile_exp else' @ [V.Goto j; V.Label t] @ compile_exp then' @ [V.Label j]
-    | _ -> ErrorMsg.impossible "compile_def"
-  and compile_args (es : IntSyn.exp list) : V.instr list = List.concat_map compile_exp es in
-  let instrs = compile_exp body in
-  Proc (Ident.to_string name, List.length params, instrs @ [V.Push (V.Temp, rv)])
+and compile_app (args : IntSyn.exp list) n c =
+  if args == [] then c else compile_app (List.tl args) n (compile (List.hd args) n (CONS :: c))
+
+and index (x : Ident.t) (n : Ident.t list list) : int * int = indx x n 1
+
+and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
+  if n = [] then
+    ErrorMsg.impossible ("Occurance of '" ^ Ident.to_string x ^ "' must be scope-checked")
+  else
+    let rec indx2 (x : Ident.t) (n : Ident.t list) (j : int) =
+      if n = [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) (j + 1)
+    in
+    let j = indx2 x (List.hd n) 1 in
+    if j = 0 then indx x (List.tl n) (i + 1) else (i, j)
+
+let compile (e : IntSyn.exp) : Machine.t list = compile e [] [STOP]
