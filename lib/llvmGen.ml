@@ -29,22 +29,22 @@ let rec codegen_expr = function
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       match fcn with
-      | "ADD" -> build_add lhs_val rhs_val "addtmp" builder
-      | "SUB" -> build_sub lhs_val rhs_val "subtmp" builder
-      | "MUL" -> build_mul lhs_val rhs_val "multmp" builder
-      | "DIV" -> build_sdiv lhs_val rhs_val "divtmp" builder )
+      | "add" -> build_add lhs_val rhs_val "addtmp" builder
+      | "sub" -> build_sub lhs_val rhs_val "subtmp" builder
+      | "mul" -> build_mul lhs_val rhs_val "multmp" builder
+      | "div" -> build_sdiv lhs_val rhs_val "divtmp" builder )
   | IntSyn.Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       let i =
         (* Convert bool 0/1 to i64 0 or 1 *)
         match fcn with
-        | "EQ" -> build_fcmp Fcmp.Ueq lhs_val rhs_val "eqtmp" builder
-        | "NE" -> build_fcmp Fcmp.Une lhs_val rhs_val "netmp" builder
-        | "LT" -> build_fcmp Fcmp.Ult lhs_val rhs_val "lttmp" builder
-        | "LE" -> build_fcmp Fcmp.Ule lhs_val rhs_val "letmp" builder
-        | "GT" -> build_fcmp Fcmp.Ugt lhs_val rhs_val "gttmp" builder
-        | "GE" -> build_fcmp Fcmp.Uge lhs_val rhs_val "getmp" builder
+        | "eq" -> build_fcmp Fcmp.Ueq lhs_val rhs_val "eqtmp" builder
+        | "ne" -> build_fcmp Fcmp.Une lhs_val rhs_val "netmp" builder
+        | "lt" -> build_fcmp Fcmp.Ult lhs_val rhs_val "lttmp" builder
+        | "le" -> build_fcmp Fcmp.Ule lhs_val rhs_val "letmp" builder
+        | "gt" -> build_fcmp Fcmp.Ugt lhs_val rhs_val "gttmp" builder
+        | "ge" -> build_fcmp Fcmp.Uge lhs_val rhs_val "getmp" builder
       in
       build_uitofp i int_type "booltmp" builder
   | Builtin (fcn, args) ->

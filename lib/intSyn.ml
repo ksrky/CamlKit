@@ -19,11 +19,11 @@ type def = {name: id; params: ids; body: exp}
 
 type defs = def list
 
-let arith = ["ADD"; "SUB"; "MUL"; "DIV"]
+let arith = ["add"; "sub"; "mul"; "div"]
 
-let rel = ["EQ"; "NE"; "LT"; "LE"; "GT"; "GE"]
+let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
-let io = ["WRITEC"; "READC"]
+let io = ["writec"; "readc"]
 
 let ppr_exp exp =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
