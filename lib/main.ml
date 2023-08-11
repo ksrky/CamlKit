@@ -1,6 +1,6 @@
 let emit (frag : Virtual.frag) : unit =
   let ilist = X86Gen.procEntryExit frag in
-  print_string (String.concat "\n" ilist)
+  print_endline (String.concat "\n" ilist)
 
 let compile (src : string) : unit =
   let abs = Parse.parse src in

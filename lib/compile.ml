@@ -27,7 +27,7 @@ let rec compile_def ({name; params; body} : IntSyn.def) : Virtual.frag =
     | Nil -> [V.Push (V.Const, 0)]
     | Var id -> [V.Push (V.Arg, index id args)]
     | App (Var f, args) -> compile_args args @ [V.Call (Ident.to_string f, List.length args)]
-    | App _ | Let _ | Letrec _ -> ErrorMsg.impossible "should be removed in Lifting module"
+    | App _ | Lam _ | Let _ | Letrec _ -> ErrorMsg.impossible "should be removed in Lifting module"
     | Builtin (f, args) when List.mem f IntSyn.arith ->
         let op = match f with "ADD" -> V.Add | "SUB" -> V.Sub | "MUL" -> V.Mul | "DIV" -> V.Div in
         compile_args args @ [V.Arith op]
@@ -43,7 +43,7 @@ let rec compile_def ({name; params; body} : IntSyn.def) : Virtual.frag =
         compile_exp test
         @ [V.Push (V.Const, 0); V.IfGoto (V.Neq, t)]
         @ compile_exp else' @ [V.Goto j; V.Label t] @ compile_exp then' @ [V.Label j]
-    | _ -> []
+    | _ -> ErrorMsg.impossible "compile_def"
   and compile_args (es : IntSyn.exp list) : V.instr list = List.concat_map compile_exp es in
   let instrs = compile_exp body in
   Proc (Ident.to_string name, List.length params, instrs @ [V.Push (V.Temp, rv)])
