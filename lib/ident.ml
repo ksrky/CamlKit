@@ -18,6 +18,8 @@ let name : t -> string = fst
 
 let unique : t -> int = snd
 
+let unique_name (id : t) : string = fst id ^ "_" ^ string_of_int (snd id)
+
 let fresh () = from_string "?"
 
 module Table = Map.Make (struct

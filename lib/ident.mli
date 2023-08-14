@@ -2,6 +2,7 @@ type t
 val from_string : string -> t
 val name  : t -> string
 val unique : t -> int
+val unique_name  : t -> string
 val fresh : unit -> t
 
 module Table : sig

@@ -19,7 +19,7 @@ let rec codegen_expr = function
   | IntSyn.App (Var fcn, args) ->
       (* Look up the name in the module table. *)
       let callee =
-        match lookup_function (Ident.name fcn) the_module with
+        match lookup_function (Ident.unique_name fcn) the_module with
         | Some callee -> callee
         | None -> raise (Error "unknown function referenced")
       in
@@ -116,7 +116,7 @@ and codegen_proto (name, params) : llvalue =
   Array.iteri
     (fun i a ->
       let id = List.nth params i in
-      set_value_name (Ident.name id) a;
+      set_value_name (Ident.unique_name id) a;
       Hashtbl.add named_values id a )
     (Llvm.params func);
   func
@@ -124,9 +124,9 @@ and codegen_proto (name, params) : llvalue =
 let codegen_func : IntSyn.def -> llvalue = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
-      let func = codegen_proto (Ident.name name, params) in
+      let func = codegen_proto (Ident.unique_name name, params) in
       (* Create a new basic block to start insertion into. *)
-      let bb = append_block context (Ident.name name) func in
+      let bb = append_block context (Ident.unique_name name) func in
       position_at_end bb builder;
       try
         let ret_val = codegen_expr body in
