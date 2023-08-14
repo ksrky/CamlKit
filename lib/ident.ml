@@ -14,7 +14,7 @@ let from_string (name : string) : t =
       Hashtbl.add hashtable name !unique;
       (name, !unique)
 
-let to_string : t -> string = fst
+let name : t -> string = fst
 
 let unique : t -> int = snd
 
