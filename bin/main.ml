@@ -9,5 +9,5 @@ let rec repl () =
 let () =
   try
     let filename = Sys.argv.(1) in
-    CamlKit.Main.run filename
+    CamlKit.Main.compile filename
   with Invalid_argument _ -> repl ()

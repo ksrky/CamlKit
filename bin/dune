@@ -1,4 +1,4 @@
 (executable
- (public_name CamlKit)
+ (public_name camlkit)
  (name main)
  (libraries CamlKit))
