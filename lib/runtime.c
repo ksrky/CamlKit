@@ -1,7 +1,7 @@
 #include "stdio.h"
 
 extern long writec(long x) {
-    putchar((char)x);
+    printf("%ld\n", x);
     return 0;
 }
 
