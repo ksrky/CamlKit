@@ -27,47 +27,49 @@ type t =
   | READC
   | WRITEC
 
+let load_command (i : int) (n : int) : int = make_cons (make_int n) i
+
 let rec load_instr i = function
-  | NIL -> alloc i 0
+  | NIL -> load_command i 0
   | LDC x ->
       let j = make_cons (make_int x) i in
-      alloc j 1
+      load_command j 1
   | LD (x, y) ->
       let j = make_cons (make_cons x y) i in
-      alloc j 2
-  | ATOM -> alloc i 3
-  | CAR -> alloc i 4
-  | CDR -> alloc i 5
-  | CONS -> alloc i 6
-  | ADD -> alloc i 7
-  | SUB -> alloc i 8
-  | MUL -> alloc i 9
-  | DIV -> alloc i 10
-  | EQ -> alloc i 11
-  | NE -> alloc i 12
-  | LT -> alloc i 13
-  | LE -> alloc i 14
+      load_command j 2
+  | ATOM -> load_command i 3
+  | CAR -> load_command i 4
+  | CDR -> load_command i 5
+  | CONS -> load_command i 6
+  | ADD -> load_command i 7
+  | SUB -> load_command i 8
+  | MUL -> load_command i 9
+  | DIV -> load_command i 10
+  | EQ -> load_command i 11
+  | NE -> load_command i 12
+  | LT -> load_command i 13
+  | LE -> load_command i 14
   | SEL (ts, fs) ->
       let cf = make_cons (load_instrs fs) i in
       let ct = make_cons (load_instrs ts) cf in
-      alloc ct 15
-  | JOIN -> alloc i 16
+      load_command ct 15
+  | JOIN -> load_command i 16
   | LDF es ->
       let f = make_cons (load_instrs es) i in
-      alloc f 17
-  | RTN -> alloc i 18
-  | AP -> alloc i 19
-  | DUM -> alloc i 20
-  | RAP -> alloc i 21
-  | STOP -> alloc i 22
-  | READC -> alloc i 23
-  | WRITEC -> alloc i 24
+      load_command f 17
+  | RTN -> load_command i 18
+  | AP -> load_command i 19
+  | DUM -> load_command i 20
+  | RAP -> load_command i 21
+  | STOP -> load_command i 22
+  | READC -> load_command i 23
+  | WRITEC -> load_command i 24
 
 and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 
 let load_instrs instrs : unit = c := load_instrs instrs
 
-let run_instr () : unit =
+let run_command () : unit =
   match get_int (pop c) with
   | 0 (* NIL *) -> push (make_int 0) s
   | 1 (* LDC *) ->
@@ -140,7 +142,7 @@ let run_instr () : unit =
       push (make_int 0) s (* tmp *)
   | _ -> ErrorMsg.impossible "Invalid operation"
 
-let rec run_instrs () : unit = if !c == 0 then () else (run_instr (); run_instrs ())
+let rec run_commands () : unit = if !c == 0 then () else (run_command (); run_commands ())
 
 let rec show_instrs (instrs : t list) : string =
   match instrs with

@@ -16,4 +16,3 @@ val cdr : int -> int
 val locate : int -> int -> int
 val binop : int ref -> (int -> int -> int) -> unit
 val rplaca : int -> int -> int
-val alloc : int -> int -> int

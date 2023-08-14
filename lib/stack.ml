@@ -60,5 +60,3 @@ let binop (r : int ref) (op : int -> int -> int) : unit =
 let rplaca (x : int) (y : int) : int =
   cells.(x) <- Cons (y, cdr x);
   x
-
-let alloc (i : int) (n : int) : int = make_cons (make_int n) i
