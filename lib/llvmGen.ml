@@ -1,7 +1,5 @@
 open Llvm
 
-exception Error of string
-
 let context = global_context ()
 
 let the_module = create_module context "main"
@@ -12,20 +10,19 @@ let named_values : (Ident.t, llvalue) Hashtbl.t = Hashtbl.create 10
 
 let int_type = i64_type context
 
-let rec codegen_expr = function
-  | IntSyn.Int i -> const_int int_type i
-  | IntSyn.Nil -> const_null int_type
-  | IntSyn.Var id -> Hashtbl.find named_values id
-  | IntSyn.App (Var fcn, args) ->
-      (* Look up the name in the module table. *)
+let rec codegen_expr : IntSyn.exp -> llvalue = function
+  | Int i -> const_int int_type i
+  | Nil -> const_null int_type
+  | Var id -> Hashtbl.find named_values id
+  | App (Var fcn, args) ->
       let callee =
         match lookup_function (Ident.unique_name fcn) the_module with
         | Some callee -> callee
-        | None -> raise (Error "unknown function referenced")
+        | None -> ErrorMsg.impossible "unknown function referenced"
       in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
-  | IntSyn.Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
+  | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       match fcn with
@@ -33,11 +30,10 @@ let rec codegen_expr = function
       | "sub" -> build_sub lhs_val rhs_val "subtmp" builder
       | "mul" -> build_mul lhs_val rhs_val "multmp" builder
       | "div" -> build_sdiv lhs_val rhs_val "divtmp" builder )
-  | IntSyn.Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
+  | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       let i =
-        (* Convert bool 0/1 to i64 0 or 1 *)
         match fcn with
         | "eq" -> build_icmp Icmp.Eq lhs_val rhs_val "eqtmp" builder
         | "ne" -> build_icmp Icmp.Ne lhs_val rhs_val "netmp" builder
@@ -48,16 +44,15 @@ let rec codegen_expr = function
       in
       build_intcast i int_type "booltmp" builder
   | Builtin (fcn, args) ->
-      (* Look up the name in the module table. *)
       let callee =
         match lookup_function fcn the_module with
         | Some callee -> callee
-        | None -> raise (Error "unknown function referenced")
+        | None -> ErrorMsg.impossible "unknown function referenced"
       in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
-  | IntSyn.Lam _ | IntSyn.Let _ -> raise (Error "should be removed")
-  | IntSyn.If (cond, then_, else_) ->
+  | Lam _ | Let _ -> ErrorMsg.impossible "must be removed in Lifting module"
+  | If (cond, then_, else_) ->
       let cond' = codegen_expr cond in
       (* Convert condition to a bool by comparing equal to 0.0 *)
       let zero = const_int int_type 0 in
@@ -98,7 +93,7 @@ let rec codegen_expr = function
       (* Finally, set the builder to the end of the merge block. *)
       position_at_end merge_bb builder;
       phi
-  | _ -> raise (Error "not allowed")
+  | _ -> ErrorMsg.impossible "malformed intermediate syntax"
 
 and codegen_proto (name, params) : llvalue =
   (* Make the function type: double(double,double) etc. *)
@@ -106,11 +101,8 @@ and codegen_proto (name, params) : llvalue =
   let func_ty = function_type int_type param_tys in
   let func =
     match lookup_function name the_module with
-    | None ->
-        declare_function name func_ty the_module
-        (* If 'f' conflicted, there was already something named 'name'. If it
-           * has a body, don't allow redefinition or reextern. *)
-    | Some _ -> raise (Error "redefinition of function")
+    | None -> declare_function name func_ty the_module
+    | Some _ -> ErrorMsg.impossible "redefinition of function"
   in
   (* Set names for all arguments. *)
   Array.iteri
@@ -138,5 +130,5 @@ let codegen_func : IntSyn.def -> llvalue = function
       with e -> delete_function func; raise e )
 
 let codegen_builtins () : unit =
-  Llvm.dump_value (codegen_proto ("printi", [Ident.from_string "x"]));
-  Llvm.dump_value (codegen_proto ("readi", [Ident.from_string "x"]))
+  dump_value (codegen_proto ("printi", [Ident.from_string "x"]));
+  dump_value (codegen_proto ("readi", [Ident.from_string "x"]))
