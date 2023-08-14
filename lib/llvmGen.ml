@@ -4,7 +4,7 @@ exception Error of string
 
 let context = global_context ()
 
-let the_module = create_module context "CamlKit"
+let the_module = create_module context "main"
 
 let builder = builder context
 
@@ -137,6 +137,6 @@ let codegen_func : IntSyn.def -> llvalue = function
         func
       with e -> delete_function func; raise e )
 
-let codegen_builtins () =
+let codegen_builtins () : unit =
   Llvm.dump_value (codegen_proto ("printi", [Ident.from_string "x"]));
   Llvm.dump_value (codegen_proto ("readi", [Ident.from_string "x"]))
