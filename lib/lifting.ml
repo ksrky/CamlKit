@@ -15,19 +15,7 @@ let rec lift_lam (exp : exp) : exp =
       append {name; params= vars; body= lift_lam body};
       Var name
   | Builtin (fcn, args) -> Builtin (fcn, List.map lift_lam args)
-  | Let (vars, exps, body) ->
-      let memo = ref [] in
-      List.iter2
-        (fun name -> function
-          | Lam (params, exp) -> append {name; params; body= lift_lam exp}
-          | exp -> memo := (name, exp) :: !memo )
-        vars exps;
-      if !memo <> [] then (
-        let f = Ident.fresh () in
-        append {name= f; params= List.map fst !memo; body= lift_lam body};
-        lift_lam (App (Var f, List.map snd !memo)) )
-      else lift_lam body
-  | Letrec (vars, exps, body) ->
+  | Let (_, vars, exps, body) ->
       let memo = ref [] in
       List.iter2
         (fun name -> function

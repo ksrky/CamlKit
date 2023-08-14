@@ -11,8 +11,7 @@ and exp =
   | App of exp * exps
   | Lam of ids * exp
   | Builtin of string * exps
-  | Let of ids * exps * exp
-  | Letrec of ids * exps * exp
+  | Let of bool * ids * exps * exp
   | If of exp * exp * exp
 
 type def = {name: id; params: ids; body: exp}
@@ -42,15 +41,10 @@ let ppr_exp exp =
     | Builtin (fcn, args) -> fcn ^ "(" ^ String.concat ", " (List.map (pretty 0) args) ^ ")"
     | If (cond, then_, else_) ->
         parens ctx 0 ("if " ^ pretty 0 cond ^ " then " ^ pretty 0 then_ ^ " else " ^ pretty 0 else_)
-    | Let (vars, exps, body) ->
+    | Let (isrec, vars, exps, body) ->
         parens ctx 0
           ( "let "
-          ^ String.concat "; "
-              (List.map2 (fun v e -> Ident.to_string v ^ " = " ^ pretty 0 e) vars exps)
-          ^ " in " ^ pretty 0 body )
-    | Letrec (vars, exps, body) ->
-        parens ctx 0
-          ( "let rec "
+          ^ (if isrec then "rec " else "")
           ^ String.concat "; "
               (List.map2 (fun v e -> Ident.to_string v ^ " = " ^ pretty 0 e) vars exps)
           ^ " in " ^ pretty 0 body )
