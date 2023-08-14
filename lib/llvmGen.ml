@@ -138,5 +138,5 @@ let codegen_func : IntSyn.def -> llvalue = function
       with e -> delete_function func; raise e )
 
 let codegen_builtins () =
-  Llvm.dump_value (codegen_proto ("writec", [Ident.from_string "x"]));
-  Llvm.dump_value (codegen_proto ("readc", [Ident.from_string "x"]))
+  Llvm.dump_value (codegen_proto ("printi", [Ident.from_string "x"]));
+  Llvm.dump_value (codegen_proto ("readi", [Ident.from_string "x"]))

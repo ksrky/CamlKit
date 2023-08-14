@@ -24,8 +24,8 @@ type t =
   | DUM
   | RAP
   | STOP
-  | READC
-  | WRITEC
+  | READI
+  | PRINTI
 
 let load_command (i : int) (n : int) : int = make_cons (make_int n) i
 
@@ -62,8 +62,8 @@ let rec load_instr i = function
   | DUM -> load_command i 20
   | RAP -> load_command i 21
   | STOP -> load_command i 22
-  | READC -> load_command i 23
-  | WRITEC -> load_command i 24
+  | READI -> load_command i 23
+  | PRINTI -> load_command i 24
 
 and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 
@@ -133,13 +133,13 @@ let run_command () : unit =
       push !s d;
       s := 0
   | 22 (* STOP *) -> c := 0
-  | 23 (* READC *) ->
+  | 23 (* READI *) ->
       let x = read_int () in
       push (make_int x) s
-  | 24 (* WRITEC *) ->
+  | 24 (* PRINTI *) ->
       let x = pop s in
       print_endline (string_of_int (get_int x));
-      push (make_int 0) s (* tmp *)
+      push (make_int 0) s
   | _ -> ErrorMsg.impossible "Invalid operation"
 
 let rec run_commands () : unit = if !c == 0 then () else (run_command (); run_commands ())
@@ -174,5 +174,5 @@ and show_instr : t -> string = function
   | DUM -> "DUM"
   | RAP -> "RAP"
   | STOP -> "STOP"
-  | READC -> "READC"
-  | WRITEC -> "WRITEC"
+  | READI -> "READI"
+  | PRINTI -> "PRINTI"

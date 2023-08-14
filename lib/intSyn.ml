@@ -23,7 +23,7 @@ let arith = ["add"; "sub"; "mul"; "div"]
 
 let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
-let io = ["writec"; "readc"]
+let io = ["printi"; "readi"]
 
 let ppr_exp exp =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in

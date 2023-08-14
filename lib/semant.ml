@@ -9,8 +9,8 @@ let rec trans_exp env exp =
     | AbsSyn.AppExp _ as exp ->
         let rec loop acc = function
           | AbsSyn.AppExp {fcn; arg} -> loop (trexp arg :: acc) fcn
-          | VarExp id when Ident.to_string id = "read_int" -> Builtin ("readc", acc)
-          | VarExp id when Ident.to_string id = "print_int" -> Builtin ("writec", acc)
+          | VarExp id when Ident.to_string id = "read_int" -> Builtin ("readi", acc)
+          | VarExp id when Ident.to_string id = "print_int" -> Builtin ("printi", acc)
           | fcn -> App (trexp fcn, acc)
         in
         loop [] exp

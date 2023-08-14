@@ -3,8 +3,8 @@ module M = Machine
 
 let builtins : (string * M.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
-  ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readc", READC)
-  ; ("writec", WRITEC) ]
+  ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readi", READI)
+  ; ("printi", PRINTI) ]
 
 let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   match e with
