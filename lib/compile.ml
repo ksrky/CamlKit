@@ -19,10 +19,10 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
       compile_lambda body n' c
   | Builtin (f, args) -> compile_builtin args n (List.assoc f builtins :: c)
   | If (test, then', else') -> compile_if (test, then', else') n c
-  | Let (vars, vals, body) ->
+  | Let (false, vars, vals, body) ->
       let newn = vars :: n in
       NIL :: compile_app vals n (compile_lambda body newn (AP :: c))
-  | Letrec (vars, vals, body) ->
+  | Let (true, vars, vals, body) ->
       let newn = vars :: n in
       DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
 
@@ -41,8 +41,7 @@ and compile_app (args : I.exp list) n c =
 and index (x : Ident.t) (n : Ident.t list list) : int * int = indx x n 1
 
 and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
-  if n = [] then
-    ErrorMsg.impossible ("Occurance of '" ^ Ident.to_string x ^ "' must be scope-checked")
+  if n = [] then ErrorMsg.impossible ("Occurance of '" ^ Ident.name x ^ "' must be scope-checked")
   else
     let rec indx2 (x : Ident.t) (n : Ident.t list) (j : int) =
       if n = [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) (j + 1)

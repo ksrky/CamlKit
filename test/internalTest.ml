@@ -23,4 +23,4 @@ let%test _ =
     (LetExp
        { decs= [{name= f; params= [x; y]; body= VarExp y}]
        ; body= AppExp {fcn= VarExp f; arg= IntExp 1} } )
-  = Let ([f], [Lam ([x; y], Var y)], App (Var f, [Int 1]))
+  = Let (false, [f], [Lam ([x; y], Var y)], App (Var f, [Int 1]))

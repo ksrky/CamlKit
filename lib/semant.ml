@@ -9,8 +9,8 @@ let rec trans_exp env exp =
     | AbsSyn.AppExp _ as exp ->
         let rec loop acc = function
           | AbsSyn.AppExp {fcn; arg} -> loop (trexp arg :: acc) fcn
-          | VarExp id when Ident.to_string id = "read_int" -> Builtin ("readi", acc)
-          | VarExp id when Ident.to_string id = "print_int" -> Builtin ("printi", acc)
+          | VarExp id when Ident.name id = "read_int" -> Builtin ("readi", acc)
+          | VarExp id when Ident.name id = "print_int" -> Builtin ("printi", acc)
           | fcn -> App (trexp fcn, acc)
         in
         loop [] exp
@@ -30,15 +30,22 @@ let rec trans_exp env exp =
     | AbsSyn.IfExp {test; then_; else_} -> If (trexp test, trexp then_, trexp else_)
     | AbsSyn.LetExp {decs; body} ->
         let env' = List.fold_right (fun {AbsSyn.name; _} -> extend name ValBind) decs env in
-        Let (List.map (fun {AbsSyn.name; _} -> name) decs, trans_decs env decs, trans_exp env' body)
+        Let
+          ( false
+          , List.map (fun {AbsSyn.name; _} -> name) decs
+          , trans_decs env decs
+          , trans_exp env' body )
     | AbsSyn.LetrecExp {decs; body} ->
         let env' = List.fold_right (fun {AbsSyn.name; _} -> extend name ValBind) decs env in
-        Letrec
-          (List.map (fun {AbsSyn.name; _} -> name) decs, trans_decs env' decs, trans_exp env' body)
+        Let
+          ( true
+          , List.map (fun {AbsSyn.name; _} -> name) decs
+          , trans_decs env' decs
+          , trans_exp env' body )
   in
   try trexp exp
   with Out_of_scope id ->
-    ErrorMsg.error ("Unbound value " ^ Ident.to_string id);
+    ErrorMsg.error ("Unbound value " ^ Ident.name id);
     Nil
 
 and trans_decs env decs =

@@ -19,7 +19,7 @@ let ppr_exp exp =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pretty ctx exp =
     match exp with
-    | VarExp id -> Ident.to_string id
+    | VarExp id -> Ident.name id
     | NilExp -> "nil"
     | IntExp i -> string_of_int i
     | AppExp {fcn; arg} -> parens ctx 2 (pretty 2 fcn ^ " " ^ pretty 1 arg)
@@ -28,7 +28,7 @@ let ppr_exp exp =
     | LamExp {vars; body} ->
         parens ctx 0
           ( "fun "
-          ^ String.concat " " (List.map (fun id -> Ident.to_string id ^ " ") vars)
+          ^ String.concat " " (List.map (fun id -> Ident.name id ^ " ") vars)
           ^ "-> " ^ pretty 0 body )
     | IfExp {test; then_; else_} ->
         parens ctx 0 ("if " ^ pretty 0 test ^ " then " ^ pretty 0 then_ ^ " else " ^ pretty 0 else_)
@@ -39,7 +39,7 @@ let ppr_exp exp =
         parens ctx 0
           ("let " ^ String.concat " and " (List.map ppr_dec decs) ^ " in " ^ pretty 0 body)
   and ppr_dec ({name; params; body} : dec) : string =
-    String.concat " " (List.map Ident.to_string (name :: params)) ^ " = " ^ pretty 0 body
+    String.concat " " (List.map Ident.name (name :: params)) ^ " = " ^ pretty 0 body
   and ppr_oper : oper -> string = function
     | PlusOp -> "+"
     | MinusOp -> "-"

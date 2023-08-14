@@ -28,7 +28,7 @@ let ppr_exp exp =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pretty ctx exp =
     match exp with
-    | Var id -> Ident.to_string id
+    | Var id -> Ident.name id
     | Nil -> "nil"
     | Int i -> string_of_int i
     | App (fcn, args) ->
@@ -36,7 +36,7 @@ let ppr_exp exp =
     | Lam (vars, body) ->
         parens ctx 0
           ( "fun "
-          ^ String.concat " " (List.map (fun id -> Ident.to_string id ^ " ") vars)
+          ^ String.concat " " (List.map (fun id -> Ident.name id ^ " ") vars)
           ^ "-> " ^ pretty 0 body )
     | Builtin (fcn, args) -> fcn ^ "(" ^ String.concat ", " (List.map (pretty 0) args) ^ ")"
     | If (cond, then_, else_) ->
@@ -45,15 +45,12 @@ let ppr_exp exp =
         parens ctx 0
           ( "let "
           ^ (if isrec then "rec " else "")
-          ^ String.concat "; "
-              (List.map2 (fun v e -> Ident.to_string v ^ " = " ^ pretty 0 e) vars exps)
+          ^ String.concat "; " (List.map2 (fun v e -> Ident.name v ^ " = " ^ pretty 0 e) vars exps)
           ^ " in " ^ pretty 0 body )
   in
   pretty 0 exp
 
 let ppr_def {name; params; body} =
-  Ident.to_string name ^ "("
-  ^ String.concat ", " (List.map Ident.to_string params)
-  ^ ") = " ^ ppr_exp body
+  Ident.name name ^ "(" ^ String.concat ", " (List.map Ident.name params) ^ ") = " ^ ppr_exp body
 
 let ppr_defs defs = String.concat "\n" (List.map ppr_def defs)
