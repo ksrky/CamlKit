@@ -1,9 +1,9 @@
 open Machine
 
 let builtins : (string * t) list =
-  [ ("CAR", CAR); ("CDR", CDR); ("CONS", CONS); ("ADD", ADD); ("SUB", SUB); ("MUL", MUL)
-  ; ("DIV", DIV); ("EQ", EQ); ("NE", NE); ("LT", LT); ("LE", LE); ("READC", READC)
-  ; ("WRITEC", WRITEC) ]
+  [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
+  ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readc", READC)
+  ; ("writec", WRITEC) ]
 
 let rec compile (e : IntSyn.exp) (n : Ident.t list list) (c : t list) : t list =
   match e with

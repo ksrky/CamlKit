@@ -16,7 +16,7 @@ let%test _ =
   = LamExp {vars= [x; y]; body= OpExp {left= VarExp x; oper= PlusOp; right= VarExp y}}
 
 let%test _ =
-  Parse.parse_line "if 1 then 0 else 1" = IfExp {test= IntExp 1; then'= IntExp 0; else'= IntExp 1}
+  Parse.parse_line "if 1 then 0 else 1" = IfExp {test= IntExp 1; then_= IntExp 0; else_= IntExp 1}
 
 let%test _ =
   Parse.parse_line "let f x y = y in f 1"
