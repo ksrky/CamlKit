@@ -7,7 +7,7 @@ type exp =
   | AppExp of {fcn: exp; arg: exp}
   | LamExp of {vars: id list; body: exp}
   | OpExp of {left: exp; oper: oper; right: exp}
-  | IfExp of {test: exp; then': exp; else': exp}
+  | IfExp of {test: exp; then_: exp; else_: exp}
   | LetExp of {decs: dec list; body: exp}
   | LetrecExp of {decs: dec list; body: exp}
 
@@ -30,8 +30,8 @@ let pretty_exp exp =
           ( "fun "
           ^ String.concat " " (List.map (fun id -> Ident.to_string id ^ " ") vars)
           ^ "-> " ^ pretty 0 body )
-    | IfExp {test; then'; else'} ->
-        parens ctx 0 ("if " ^ pretty 0 test ^ " then " ^ pretty 0 then' ^ " else " ^ pretty 0 else')
+    | IfExp {test; then_; else_} ->
+        parens ctx 0 ("if " ^ pretty 0 test ^ " then " ^ pretty 0 then_ ^ " else " ^ pretty 0 else_)
     | LetExp {decs; body} ->
         parens ctx 0
           ("let " ^ String.concat " and " (List.map pretty_dec decs) ^ " in " ^ pretty 0 body)

@@ -38,10 +38,10 @@ let exp :=
   | left=exp; LE; right=exp;                    { OpExp{left; oper=LeOp; right} }
   | left=exp; GT; right=exp;                    { OpExp{left; oper=GtOp; right} }
   | left=exp; GE; right=exp;                    { OpExp{left; oper=GeOp; right} }
-  | test=exp; AND_; ~=exp;                      { IfExp{test; then'=exp; else'=IntExp 0} }
-  | test=exp; OR; ~=exp;                        { IfExp{test; then'=IntExp 1; else'=exp} }
+  | test=exp; AND_; ~=exp;                      { IfExp{test; then_=exp; else_=IntExp 0} }
+  | test=exp; OR; ~=exp;                        { IfExp{test; then_=IntExp 1; else_=exp} }
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
-                                                { IfExp{test; then'=then_; else'=else_} }
+                                                { IfExp{test; then_; else_} }
   | LET; ~=decs; IN; body=exp;                  { LetExp{decs; body} }
   | LET; REC; ~=decs; IN; body=exp;             { LetrecExp{decs; body} }
 
@@ -57,4 +57,4 @@ let dec :=
   | name=id;  params=list(id); EQ; body=exp;    { {name; params; body} }
 
 let id :=
-  | name=ID;                                     { Ident.from_string name }
+  | name=ID;                                    { Ident.from_string name }

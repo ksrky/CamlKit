@@ -27,7 +27,7 @@ let rec trans_exp env exp =
     | AbsSyn.OpExp {left; oper= LeOp; right} -> Builtin ("le", [trexp left; trexp right])
     | AbsSyn.OpExp {left; oper= GtOp; right} -> Builtin ("lt", [trexp right; trexp left])
     | AbsSyn.OpExp {left; oper= GeOp; right} -> Builtin ("le", [trexp right; trexp left])
-    | AbsSyn.IfExp {test; then'; else'} -> If (trexp test, trexp then', trexp else')
+    | AbsSyn.IfExp {test; then_; else_} -> If (trexp test, trexp then_, trexp else_)
     | AbsSyn.LetExp {decs; body} ->
         let env' = List.fold_right (fun {AbsSyn.name; _} -> extend name ValBind) decs env in
         Let (List.map (fun {AbsSyn.name; _} -> name) decs, trans_decs env decs, trans_exp env' body)
