@@ -8,6 +8,7 @@ let rec repl () =
 
 let () =
   try
-    let filename = Sys.argv.(1) in
-    CamlKit.Main.compile filename
+    for i = 1 to Array.length Sys.argv - 1 do
+      CamlKit.Main.run Sys.argv.(i)
+    done
   with Invalid_argument _ -> repl ()

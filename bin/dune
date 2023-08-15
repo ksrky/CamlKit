@@ -1,4 +1,11 @@
 (executable
  (public_name camlkit)
- (name main)
+ (name Camlkit)
+ (modules Camlkit)
+ (libraries CamlKit))
+
+(executable
+ (public_name camlkitopt)
+ (name Camlkitopt)
+ (modules Camlkitopt)
  (libraries CamlKit))
