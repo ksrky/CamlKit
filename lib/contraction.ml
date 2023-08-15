@@ -1,11 +1,11 @@
 module I = IntSyn
 module IT = Ident.Table
 
-(** maximum contraction steps. *)
-let max_step = 4
+(** the maximum contraction steps. *)
+let max_steps = 4
 
-(** minimum number of reductions to cut contraction steps. *)
-let thresh_red = ErrorMsg.impossible "not implemented"
+(** the minimum ratio of current reduction counts to previous reduction counts *)
+let thresh_ratio = 0.95 (* tmp *)
 
 (** number of reductions performed in one step. *)
 let nred = ref 0
@@ -19,7 +19,7 @@ let find_namefunc id : I.exp =
 
 let maybe_simple id : I.exp option =
   match IT.find_opt id !namefunc with
-  | Some e -> ( match e with Int _ | Nil | Var _ -> incr nred; Some e )
+  | Some e -> ( match e with Int _ | Nil | Var _ -> incr nred; Some e | _ -> None )
   | None -> None
 
 let varcount : int ref IT.t ref = ref IT.empty
@@ -73,5 +73,13 @@ let rec reduce : I.exp -> I.exp = function
              vars bnds [] )
       in
       Let (isrec, vars', bnds', reduce body)
+  | e -> e
 
 let step exp : I.exp = init (); gather exp; reduce exp
+
+let rec steps n exp =
+  if n = 0 then exp
+  else
+    let prev = !nred in
+    let exp' = step exp in
+    if float_of_int !nred /. float_of_int prev > thresh_ratio then exp' else steps (n - 1) exp'

@@ -24,8 +24,10 @@ let compile (path : string) : unit =
   (* print_endline (AbsSyn.ppr_exp abssyn); *)
   let intsyn = Semant.trans_exp Env.empty abssyn in
   (* print_endline (IntSyn.ppr_exp intsyn); *)
-  let intsyn' = ClosConv.f intsyn in
-  let defs = Lifting.f intsyn' in
+  let intsyn2 = Simplify.simp_exp intsyn in
+  let intsyn3 = Contraction.steps Contraction.max_steps intsyn2 in
+  let intsyn4 = ClosConv.f intsyn3 in
+  let defs = Lifting.f intsyn4 in
   (* print_endline (IntSyn.ppr_defs defs); *)
   LlvmGen.codegen_builtins ();
   List.iter (fun def -> Llvm.dump_value (LlvmGen.codegen_func def)) defs;
