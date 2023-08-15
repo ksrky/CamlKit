@@ -29,6 +29,5 @@ let compile (path : string) : unit =
   let intsyn4 = ClosConv.f intsyn3 in
   let defs = Lifting.f intsyn4 in
   (* print_endline (IntSyn.ppr_defs defs); *)
-  LlvmGen.codegen_builtins ();
-  List.iter (fun def -> Llvm.dump_value (LlvmGen.codegen_func def)) defs;
+  LlvmGen.codegen defs;
   Llvm.print_module (Filename.remove_extension path ^ ".ll") LlvmGen.the_module

@@ -44,11 +44,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       in
       build_intcast i int_type "booltmp" builder
   | Builtin (fcn, args) ->
-      let callee =
-        match lookup_function fcn the_module with
-        | Some callee -> callee
-        | None -> ErrorMsg.impossible "unknown function referenced"
-      in
+      let callee = Option.get (lookup_function fcn the_module) in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
   | Lam _ | Let _ -> ErrorMsg.impossible "must be removed in Lifting module"
@@ -95,7 +91,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       phi
   | _ -> ErrorMsg.impossible "malformed intermediate syntax"
 
-and codegen_proto (name, params) : llvalue =
+and codegen_proto (name, params) : unit =
   (* Make the function type: double(double,double) etc. *)
   let param_tys = Array.make (List.length params) int_type in
   let func_ty = function_type int_type param_tys in
@@ -110,25 +106,35 @@ and codegen_proto (name, params) : llvalue =
       let id = List.nth params i in
       set_value_name (Ident.unique_name id) a;
       Hashtbl.add named_values id a )
-    (Llvm.params func);
-  func
+    (Llvm.params func)
 
-let codegen_func : IntSyn.def -> llvalue = function
+let codegen_func : IntSyn.def -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
-      let func = codegen_proto (Ident.unique_name name, params) in
+      let name = Ident.unique_name name in
+      let func = Option.get (lookup_function name the_module) in
+      Array.iteri
+        (fun i a ->
+          let id = List.nth params i in
+          set_value_name (Ident.unique_name id) a;
+          Hashtbl.add named_values id a )
+        (Llvm.params func);
       (* Create a new basic block to start insertion into. *)
-      let bb = append_block context (Ident.unique_name name) func in
+      let bb = append_block context name func in
       position_at_end bb builder;
       try
         let ret_val = codegen_expr body in
         (* Finish off the function. *)
         let _ = build_ret ret_val builder in
         (* Validate the generated code, checking for consistency. *)
-        Llvm_analysis.assert_valid_function func;
-        func
+        Llvm_analysis.assert_valid_function func
       with e -> delete_function func; raise e )
 
 let codegen_builtins () : unit =
-  dump_value (codegen_proto ("printi", [Ident.from_string "x"]));
-  dump_value (codegen_proto ("readi", [Ident.from_string "x"]))
+  codegen_proto ("printi", [Ident.from_string "x"]);
+  codegen_proto ("readi", [Ident.from_string "x"])
+
+let codegen (defs : IntSyn.defs) : unit =
+  codegen_builtins ();
+  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (Ident.unique_name name, params)) defs;
+  List.iter (fun def -> codegen_func def) defs
