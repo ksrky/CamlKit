@@ -111,7 +111,7 @@ and codegen_proto (name, params) : unit =
 let codegen_func : IntSyn.def -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
-      let name = Ident.unique_name name in
+      let name = name in
       let func = Option.get (lookup_function name the_module) in
       Array.iteri
         (fun i a ->
@@ -136,5 +136,5 @@ let codegen_builtins () : unit =
 
 let codegen (defs : IntSyn.defs) : unit =
   codegen_builtins ();
-  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (Ident.unique_name name, params)) defs;
+  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) defs;
   List.iter (fun def -> codegen_func def) defs

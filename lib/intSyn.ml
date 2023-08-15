@@ -14,7 +14,7 @@ and exp =
   | Let of bool * ids * exps * exp
   | If of exp * exp * exp
 
-type def = {name: id; params: ids; body: exp}
+type def = {name: string; params: ids; body: exp}
 
 type defs = def list
 
@@ -51,6 +51,6 @@ let ppr_exp exp =
   pretty 0 exp
 
 let ppr_def {name; params; body} =
-  Ident.name name ^ "(" ^ String.concat ", " (List.map Ident.name params) ^ ") = " ^ ppr_exp body
+  name ^ "(" ^ String.concat ", " (List.map Ident.name params) ^ ") = " ^ ppr_exp body
 
 let ppr_defs defs = String.concat "\n" (List.map ppr_def defs)
