@@ -10,5 +10,6 @@ module Table : sig
   type 'a t
   val empty : 'a t
   val add : key -> 'a -> 'a t -> 'a t
+  val find : key -> 'a t -> 'a
   val find_opt : key -> 'a t -> 'a option
 end
