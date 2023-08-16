@@ -2,10 +2,10 @@ module I = IntSyn
 module IT = Ident.Table
 
 (** the maximum contraction steps. *)
-let max_steps = 8
+let max_steps : int = 8
 
 (** the minimum ratio of current reduction counts to previous reduction counts *)
-let thresh_ratio = 0.95 (* tmp *)
+let thresh_ratio : float = 0.95 (* tmp *)
 
 (** number of reductions performed in one step. *)
 let nred = ref 0
@@ -19,7 +19,10 @@ let find_namefunc id : I.exp =
 
 let maybe_simple id : I.exp option =
   match IT.find_opt id !namefunc with
-  | Some e -> ( match e with Int _ | Nil | Var _ -> incr nred; Some e | _ -> None )
+  | Some e -> (
+    match e with
+    | Int _ | Nil | Var _ -> (* inlining small function *) incr nred; Some e
+    | _ -> None )
   | None -> None
 
 let varcount : int ref IT.t ref = ref IT.empty
@@ -63,9 +66,7 @@ let rec reduce : I.exp -> I.exp = function
         List.split
           (List.fold_right2
              (fun v a acc ->
-               if is_varcount v 0 then (
-                 (* dead-variable elimination *) incr nred;
-                 acc )
+               if is_varcount v 0 then (incr nred; acc (* dead-variable elimination *))
                else (v, reduce a) :: acc )
              vars args [] )
       in
@@ -78,9 +79,7 @@ let rec reduce : I.exp -> I.exp = function
         List.split
           (List.fold_right2
              (fun v b acc ->
-               if is_varcount v 0 then (
-                 (* dead-variable elimination *) incr nred;
-                 acc )
+               if is_varcount v 0 then (incr nred; acc (* dead-variable elimination *))
                else if is_varcount v 1 then
                  (v, b) :: acc (* not expand a let binding when it can be inlined. *)
                else (v, reduce b) :: acc )
