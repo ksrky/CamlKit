@@ -72,14 +72,15 @@ let rec reduce : I.exp -> I.exp = function
                else (v, b) :: acc )
              vars bnds [] )
       in
-      Let (isrec, vars', bnds', reduce body)
+      if vars' = [] then reduce body else Let (isrec, vars', bnds', reduce body)
   | e -> e
 
 let step exp : I.exp = init (); gather exp; reduce exp
 
-let rec steps n exp =
+let rec steps (n : int) (exp : I.exp) =
   if n = 0 then exp
   else
     let prev = !nred in
     let exp' = step exp in
-    if float_of_int !nred /. float_of_int prev > thresh_ratio then exp' else steps (n - 1) exp'
+    let next = prev = 0 || float_of_int !nred /. float_of_int prev > thresh_ratio in
+    if next then steps (n - 1) exp' else exp'
