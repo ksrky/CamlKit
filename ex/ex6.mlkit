@@ -1,0 +1,6 @@
+let f x =
+  let g y =
+    let h z = x + y + z
+    in h 3
+  in g 2
+in print_int (f 1)
