@@ -7,8 +7,8 @@ let rec repl () =
     repl () )
 
 let () =
-  try
+  if Array.length Sys.argv = 1 then repl ()
+  else
     for i = 1 to Array.length Sys.argv - 1 do
       CamlKit.Main.run Sys.argv.(i)
     done
-  with Invalid_argument _ -> repl ()
