@@ -4,7 +4,7 @@ let run (path : string) =
   (* print_endline (AbsSyn.ppr_exp abssyn); *)
   let intsyn = Semant.trans_exp Env.empty abssyn in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
-  let instrs = Compile.compile intsyn in
+  let instrs = Compile.f intsyn in
   (* print_endline (Machine.show_instrs instrs); *)
   Stack.init (); Machine.load_instrs instrs; Machine.run_commands ()
 
@@ -14,7 +14,7 @@ let eval (inp : string) =
   (* print_endline (AbsSyn.ppr_exp abssyn); *)
   let intsyn = Semant.trans_exp Env.empty abssyn in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
-  let instrs = Compile.compile intsyn in
+  let instrs = Compile.f intsyn in
   (* print_endline (Machine.show_instrs instrs); *)
   Stack.init (); Machine.load_instrs instrs; Machine.run_commands ()
 
@@ -28,7 +28,7 @@ let compile (path : string) : unit =
   let intsyn2 = Contraction.steps Contraction.max_steps intsyn in
   let intsyn3 = Simplify.f intsyn2 in
   let intsyn4 = ClosConv.f intsyn3 in
-  (* print_endline (IntSyn.ppr_exp intsyn4); *)
+  (* print_endline (IntSyn.ppr_exp Ident.name intsyn4); *)
   let defs = Lifting.f intsyn4 in
   (* print_endline (IntSyn.ppr_defs defs); *)
   LlvmGen.codegen defs;
