@@ -12,17 +12,17 @@ let rec let_expansion : I.exp -> Ident.t list * I.exp list * I.exp = function
       (vars @ vars', bnds @ bnds', body')
   | e -> ([], [], e)
 
-let rec simp_exp : I.exp -> I.exp = function
+let rec f : I.exp -> I.exp = function
   | Int i -> Int i
   | Nil -> Nil
   | Var id -> Var id
-  | App (fcn, args) -> App (simp_exp fcn, List.map simp_exp args)
+  | App (fcn, args) -> App (f fcn, List.map f args)
   | Lam (vars, body) ->
       let vars', body' = uncurrying body in
-      Lam (vars @ vars', simp_exp body')
-  | Builtin (fcn, args) -> Builtin (fcn, List.map simp_exp args)
+      Lam (vars @ vars', f body')
+  | Builtin (fcn, args) -> Builtin (fcn, List.map f args)
   | Let (false, _, _, _) as e ->
       let vars', bnds', body' = let_expansion e in
-      Let (false, vars', List.map simp_exp bnds', simp_exp body')
-  | Let (true, vars, bnds, body) -> Let (false, vars, List.map simp_exp bnds, simp_exp body)
-  | If (test, then_, else_) -> If (simp_exp test, simp_exp then_, simp_exp else_)
+      Let (false, vars', List.map f bnds', f body')
+  | Let (true, vars, bnds, body) -> Let (false, vars, List.map f bnds, f body)
+  | If (test, then_, else_) -> If (f test, f then_, f else_)

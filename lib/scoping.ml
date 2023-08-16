@@ -4,6 +4,8 @@ module A = AbsSyn
 
 let empty : scope = []
 
+let initial : scope = List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"]
+
 let extend (id : Ident.t) (sc : scope) : scope = (Ident.name id, id) :: sc
 
 let extend_list : Ident.t list -> scope -> scope = List.fold_right extend

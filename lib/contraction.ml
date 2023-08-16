@@ -2,7 +2,7 @@ module I = IntSyn
 module IT = Ident.Table
 
 (** the maximum contraction steps. *)
-let max_steps = 4
+let max_steps = 8
 
 (** the minimum ratio of current reduction counts to previous reduction counts *)
 let thresh_ratio = 0.95 (* tmp *)
@@ -58,6 +58,18 @@ let rec reduce : I.exp -> I.exp = function
     | Some e -> e
     | None when is_varcount id 1 -> find_namefunc id
     | None -> Var id )
+  | App (Lam (vars, body), args) ->
+      let vars', args' =
+        List.split
+          (List.fold_right2
+             (fun v a acc ->
+               if is_varcount v 0 then (
+                 (* dead-variable elimination *) incr nred;
+                 acc )
+               else (v, reduce a) :: acc )
+             vars args [] )
+      in
+      if vars' = [] then reduce body else App (Lam (vars', reduce body), args')
   | App (fcn, args) -> App (reduce fcn, List.map reduce args)
   | Lam (vars, body) -> Lam (vars, reduce body)
   | Builtin (fcn, args) -> Builtin (fcn, List.map reduce args)
@@ -69,7 +81,9 @@ let rec reduce : I.exp -> I.exp = function
                if is_varcount v 0 then (
                  (* dead-variable elimination *) incr nred;
                  acc )
-               else (v, b) :: acc )
+               else if is_varcount v 1 then
+                 (v, b) :: acc (* not expand a let binding when it can be inlined. *)
+               else (v, reduce b) :: acc )
              vars bnds [] )
       in
       if vars' = [] then reduce body else Let (isrec, vars', bnds', reduce body)
