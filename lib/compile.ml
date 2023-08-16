@@ -49,4 +49,4 @@ and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
     let j = indx2 x (List.hd n) 1 in
     if j = 0 then indx x (List.tl n) (i + 1) else (i, j)
 
-let compile (e : I.exp) : Machine.t list = compile e [] [M.STOP]
+let f (e : I.exp) : Machine.t list = compile e [] [M.STOP]
