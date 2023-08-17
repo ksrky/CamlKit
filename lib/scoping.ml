@@ -42,6 +42,16 @@ and scoping_bnds (sc : scope) (bnds : A.bnd list) : A.bnd list =
   in
   List.map scbnd bnds
 
-let scoping_def (sc : scope) : A.def -> A.def = function
-  | LetDef bnds -> LetDef (scoping_bnds sc bnds)
-  | LetrecDef bnds -> LetrecDef (scoping_bnds sc bnds)
+let scoping_def (sc : scope) : A.def -> A.def * scope = function
+  | LetDef bnds ->
+      let sc' = extend_list (List.map (fun (d : A.bnd) -> d.name) bnds) sc in
+      (LetDef (scoping_bnds sc bnds), sc')
+  | LetrecDef bnds ->
+      let sc' = extend_list (List.map (fun (d : A.bnd) -> d.name) bnds) sc in
+      (LetrecDef (scoping_bnds sc' bnds), sc')
+
+let rec scoping_defs (sc : scope) : A.def list -> A.def list = function
+  | [] -> []
+  | def :: rest ->
+      let def', sc' = scoping_def sc def in
+      def' :: scoping_defs sc' rest

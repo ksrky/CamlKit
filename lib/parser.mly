@@ -16,12 +16,15 @@ open AbsSyn
 %left TIMES DIVIDE
 %left UMINUS
 
-%start <exp> prog exp
-%start <def> def
+%start <def list> prog
+%start <exp> line
 
 %%
 
 let prog :=
+  | ~=nonempty_list(def); EOF;                  <>
+
+let line :=
   | ~=exp; EOF;                                 <>
 
 let def :=

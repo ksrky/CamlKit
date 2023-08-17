@@ -54,6 +54,10 @@ and trans_bnds env bnds =
   in
   trbnds bnds
 
-let trans_def env = function
-  | A.LetDef bnds -> trans_exp env (A.LetExp {bnds; body= A.IntExp 0})
-  | A.LetrecDef bnds -> trans_exp env (A.LetrecExp {bnds; body= A.IntExp 0})
+let trans_defs (env : E.env) (defs : A.def list) : I.exp =
+  let rec linear = function
+    | [] -> A.IntExp 0
+    | A.LetDef bnds :: rest -> A.LetExp {bnds; body= linear rest}
+    | A.LetrecDef bnds :: rest -> A.LetrecExp {bnds; body= linear rest}
+  in
+  trans_exp env (linear defs)
