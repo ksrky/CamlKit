@@ -26,10 +26,7 @@ let ppr_exp exp =
     | OpExp {left; oper; right} ->
         parens ctx 1 (pretty 1 left ^ " " ^ ppr_oper oper ^ " " ^ pretty 1 right)
     | LamExp {vars; body} ->
-        parens ctx 0
-          ( "fun "
-          ^ String.concat " " (List.map (fun id -> Ident.name id ^ " ") vars)
-          ^ "-> " ^ pretty 0 body )
+        parens ctx 0 ("fun " ^ String.concat " " (List.map Ident.name vars) ^ " -> " ^ pretty 0 body)
     | IfExp {test; then_; else_} ->
         parens ctx 0 ("if " ^ pretty 0 test ^ " then " ^ pretty 0 then_ ^ " else " ^ pretty 0 else_)
     | LetExp {decs; body} ->
