@@ -10,63 +10,67 @@ let thresh_ratio : float = 0.95 (* tmp *)
 (** number of reductions performed in one step. *)
 let nred = ref 0
 
-let namefunc = ref IT.empty
+type varinfo =
+  {mutable _side_effect: bool; usecount: int ref; mutable repres: I.exp; mutable simple: bool}
 
-let extend_namefunc id exp = namefunc := IT.add id exp !namefunc
+let default_info = {_side_effect= true; usecount= ref 0; repres= I.Nil; simple= false}
 
-let find_namefunc id : I.exp =
-  match IT.find_opt id !namefunc with Some e -> (* inlining *) incr nred; e | None -> Var id
+let hashtable : (Ident.t, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
 
-let maybe_simple id : I.exp option =
-  match IT.find_opt id !namefunc with
-  | Some e -> (
-    match e with
-    | Int _ | Nil | Var _ -> (* inlining small function *) incr nred; Some e
-    | _ -> None )
-  | None -> None
+let init_usecount ids : unit =
+  List.iter
+    (fun id ->
+      try (Hashtbl.find hashtable id).usecount := 0
+      with Not_found -> Hashtbl.add hashtable id default_info )
+    ids
 
-let varcount : int ref IT.t ref = ref IT.empty
+let incr_usecount id : unit = incr (Hashtbl.find hashtable id).usecount
 
-let extend_varcount ids : unit = List.iter (fun id -> varcount := IT.add id (ref 0) !varcount) ids
+let decr_usecount id : unit = decr (Hashtbl.find hashtable id).usecount
 
-let incr_varcount id : unit = incr (IT.find id !varcount)
+let is_usecount id cnt : bool = !((Hashtbl.find hashtable id).usecount) = cnt
 
-let is_varcount id cnt : bool = !(IT.find id !varcount) = cnt
+let update_repres id exp =
+  let info = Hashtbl.find hashtable id in
+  info.repres <- exp;
+  match exp with Int _ | Nil | Var _ -> info.simple <- true | _ -> info.simple <- false
 
-let init () =
-  nred := 0;
-  namefunc := IT.empty;
-  varcount := IT.empty
+let find_repres id : I.exp =
+  match Hashtbl.find_opt hashtable id with
+  | Some info -> (* inlining *) incr nred; decr_usecount id; info.repres
+  | None -> Var id
+
+let init () = nred := 0
 
 let rec gather : I.exp -> unit = function
-  | Var id -> incr_varcount id
+  | Var id -> incr_usecount id
   | App (Lam (vars, body), args) ->
       (* (fun x1 x2 .. xn -> e) a1 a2 .. ak *)
-      (try List.iter2 extend_namefunc vars args with Invalid_argument _ (* n > k *) -> ());
-      extend_varcount vars; gather body; List.iter gather args
+      (try List.iter2 update_repres vars args with Invalid_argument _ (* n > k *) -> ());
+      init_usecount vars; gather body; List.iter gather args
   | App (fcn, args) -> gather fcn; List.iter gather args
-  | Lam (vars, body) -> extend_varcount vars; gather body
+  | Lam (vars, body) -> init_usecount vars; gather body
   | Builtin (_, args) -> List.iter gather args
   | Let (_, vars, bnds, body) ->
-      List.iter2 extend_namefunc vars bnds;
-      extend_varcount vars;
+      List.iter2 update_repres vars bnds;
+      init_usecount vars;
       List.iter gather bnds;
       gather body
   | If (test, then_, else_) -> gather test; gather then_; gather else_
   | _ -> ()
 
 let rec reduce : I.exp -> I.exp = function
-  | Var id -> (
-    match maybe_simple id with
-    | Some e -> e
-    | None when is_varcount id 1 -> find_namefunc id
-    | None -> Var id )
+  | Var id ->
+      let info = Hashtbl.find hashtable id in
+      if info.simple then (incr nred; decr_usecount id; info.repres (* inlining a small function *))
+      else if is_usecount id 1 then find_repres id
+      else Var id
   | App (Lam (vars, body), args) ->
       let vars', args' =
         List.split
           (List.fold_right2
              (fun v a acc ->
-               if is_varcount v 0 then (incr nred; acc (* dead-variable elimination *))
+               if is_usecount v 0 then (incr nred; acc (* dead-variable elimination *))
                else (v, reduce a) :: acc )
              vars args [] )
       in
@@ -79,8 +83,8 @@ let rec reduce : I.exp -> I.exp = function
         List.split
           (List.fold_right2
              (fun v b acc ->
-               if is_varcount v 0 then (incr nred; acc (* dead-variable elimination *))
-               else if is_varcount v 1 then
+               if is_usecount v 0 then (incr nred; acc (* dead-variable elimination *))
+               else if is_usecount v 1 then
                  (v, b) :: acc (* not expand a let binding when it can be inlined. *)
                else (v, reduce b) :: acc )
              vars bnds [] )
