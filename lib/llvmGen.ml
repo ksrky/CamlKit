@@ -2,7 +2,7 @@ open Llvm
 
 let context = global_context ()
 
-let the_module = create_module context "main"
+let the_module = ref (create_module context "main")
 
 let builder = builder context
 
@@ -16,7 +16,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
   | Var id -> Hashtbl.find named_values id
   | App (Var fcn, args) ->
       let callee =
-        match lookup_function (Ident.unique_name fcn) the_module with
+        match lookup_function (Ident.unique_name fcn) !the_module with
         | Some callee -> callee
         | None -> ErrorMsg.impossible "unknown function referenced"
       in
@@ -44,7 +44,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       in
       build_intcast i int_type "booltmp" builder
   | Builtin (fcn, args) ->
-      let callee = Option.get (lookup_function fcn the_module) in
+      let callee = Option.get (lookup_function fcn !the_module) in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
   | Lam _ | Let _ -> ErrorMsg.impossible "must be removed in Lifting module"
@@ -96,8 +96,8 @@ and codegen_proto (name, params) : unit =
   let param_tys = Array.make (List.length params) int_type in
   let func_ty = function_type int_type param_tys in
   let func =
-    match lookup_function name the_module with
-    | None -> declare_function name func_ty the_module
+    match lookup_function name !the_module with
+    | None -> declare_function name func_ty !the_module
     | Some _ -> ErrorMsg.impossible "redefinition of function"
   in
   (* Set names for all arguments. *)
@@ -112,7 +112,7 @@ let codegen_func : IntSyn.def -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
       let name = name in
-      let func = Option.get (lookup_function name the_module) in
+      let func = Option.get (lookup_function name !the_module) in
       Array.iteri
         (fun i a ->
           let id = List.nth params i in
@@ -134,7 +134,8 @@ let codegen_builtins () : unit =
   codegen_proto ("printi", [Ident.from_string "x"]);
   codegen_proto ("readi", [Ident.from_string "x"])
 
-let codegen (defs : IntSyn.defs) : unit =
+let codegen (modid : string) (defs : IntSyn.defs) : unit =
+  the_module := create_module context modid;
   codegen_builtins ();
   List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) defs;
   List.iter (fun def -> codegen_func def) defs

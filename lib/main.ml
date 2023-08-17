@@ -31,5 +31,5 @@ let compile (path : string) : unit =
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn4); *)
   let defs = Lifting.f intsyn4 in
   (* print_endline (IntSyn.ppr_defs defs); *)
-  LlvmGen.codegen defs;
-  Llvm.print_module (Filename.remove_extension path ^ ".ll") LlvmGen.the_module
+  LlvmGen.codegen (Filename.basename path) defs;
+  Llvm.print_module (Filename.remove_extension path ^ ".ll") !LlvmGen.the_module

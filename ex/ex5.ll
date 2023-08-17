@@ -1,5 +1,5 @@
-; ModuleID = 'main'
-source_filename = "main"
+; ModuleID = 'ex5.mlkit'
+source_filename = "ex5.mlkit"
 
 declare i64 @printi(i64)
 
