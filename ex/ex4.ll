@@ -17,7 +17,7 @@ then:                                             ; preds = %fact_2
 
 else:                                             ; preds = %fact_2
   %subtmp = sub i64 %n_3, 1
-  %calltmp = call i64 @fact_2(i64 %subtmp)
+  %calltmp = tail call i64 @fact_2(i64 %subtmp)
   %multmp = mul i64 %n_3, %calltmp
   br label %ifcont
 
@@ -28,7 +28,7 @@ ifcont:                                           ; preds = %else, %then
 
 define i64 @main() {
 main:
-  %calltmp = call i64 @fact_2(i64 5)
+  %calltmp = tail call i64 @fact_2(i64 5)
   %calltmp1 = call i64 @printi(i64 %calltmp)
   ret i64 %calltmp1
 }

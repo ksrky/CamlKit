@@ -26,18 +26,18 @@ let rec scoping_exp (sc : scope) : A.exp -> A.exp =
     | LamExp {vars; body} -> LamExp {vars; body= scexp body}
     | OpExp {left; oper; right} -> OpExp {left= scexp left; oper; right= scexp right}
     | IfExp {test; then_; else_} -> IfExp {test= scexp test; then_= scexp then_; else_= scexp else_}
-    | LetExp {decs; body} ->
-        let sc' = extend_list (List.map (fun (d : A.dec) -> d.name) decs) sc in
-        LetExp {decs= scoping_decs sc decs; body= scoping_exp sc' body}
-    | LetrecExp {decs; body} ->
-        let sc' = extend_list (List.map (fun (d : A.dec) -> d.name) decs) sc in
-        LetrecExp {decs= scoping_decs sc' decs; body= scoping_exp sc' body}
+    | LetExp {bnds; body} ->
+        let sc' = extend_list (List.map (fun (d : A.bnd) -> d.name) bnds) sc in
+        LetExp {bnds= scoping_bnds sc bnds; body= scoping_exp sc' body}
+    | LetrecExp {bnds; body} ->
+        let sc' = extend_list (List.map (fun (d : A.bnd) -> d.name) bnds) sc in
+        LetrecExp {bnds= scoping_bnds sc' bnds; body= scoping_exp sc' body}
   in
   scexp
 
-and scoping_decs (sc : scope) (decs : A.dec list) : A.dec list =
-  let scdec ({name; params; body} : A.dec) : A.dec =
+and scoping_bnds (sc : scope) (bnds : A.bnd list) : A.bnd list =
+  let scbnd ({name; params; body} : A.bnd) : A.bnd =
     let sc' = extend_list params sc in
     {name; params; body= scoping_exp sc' body}
   in
-  List.map scdec decs
+  List.map scbnd bnds

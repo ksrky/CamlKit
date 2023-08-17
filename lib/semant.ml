@@ -29,19 +29,19 @@ let rec trans_exp env exp =
     | OpExp {left; oper= GtOp; right} -> Builtin ("lt", [trexp right; trexp left])
     | OpExp {left; oper= GeOp; right} -> Builtin ("le", [trexp right; trexp left])
     | IfExp {test; then_; else_} -> If (trexp test, trexp then_, trexp else_)
-    | LetExp {decs; body} ->
-        let env' = List.fold_right (fun {A.name; _} -> E.extend name ValBind) decs env in
+    | LetExp {bnds; body} ->
+        let env' = List.fold_right (fun {A.name; _} -> E.extend name ValBind) bnds env in
         Let
           ( false
-          , List.map (fun {A.name; _} -> name) decs
-          , trans_decs env decs
+          , List.map (fun {A.name; _} -> name) bnds
+          , trans_bnds env bnds
           , trans_exp env' body )
-    | LetrecExp {decs; body} ->
-        let env' = List.fold_right (fun {A.name; _} -> E.extend name ValBind) decs env in
+    | LetrecExp {bnds; body} ->
+        let env' = List.fold_right (fun {A.name; _} -> E.extend name ValBind) bnds env in
         Let
           ( true
-          , List.map (fun {A.name; _} -> name) decs
-          , trans_decs env' decs
+          , List.map (fun {A.name; _} -> name) bnds
+          , trans_bnds env' bnds
           , trans_exp env' body )
   in
   try trexp exp
@@ -49,8 +49,8 @@ let rec trans_exp env exp =
     ErrorMsg.error ("Unbound value " ^ Ident.name id);
     Nil
 
-and trans_decs env decs =
-  let trdecs =
+and trans_bnds env bnds =
+  let trbnds =
     List.map (fun {A.params; A.body; _} ->
         match params with
         | [] -> trans_exp env body
@@ -58,4 +58,4 @@ and trans_decs env decs =
             let env' = List.fold_right (fun id -> E.extend id ValBind) params env in
             Lam (params, trans_exp env' body) )
   in
-  trdecs decs
+  trbnds bnds

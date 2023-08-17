@@ -17,7 +17,7 @@ then:                                             ; preds = %iseven_2
 
 else:                                             ; preds = %iseven_2
   %subtmp = sub i64 %n_3, 1
-  %calltmp = call i64 @isodd_7(i64 %subtmp)
+  %calltmp = tail call i64 @isodd_7(i64 %subtmp)
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
@@ -37,7 +37,7 @@ then:                                             ; preds = %isodd_7
 
 else:                                             ; preds = %isodd_7
   %subtmp = sub i64 %n_8, 1
-  %calltmp = call i64 @iseven_2(i64 %subtmp)
+  %calltmp = tail call i64 @iseven_2(i64 %subtmp)
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
@@ -47,7 +47,7 @@ ifcont:                                           ; preds = %else, %then
 
 define i64 @main() {
 main:
-  %calltmp = call i64 @iseven_2(i64 10)
+  %calltmp = tail call i64 @iseven_2(i64 10)
   %calltmp1 = call i64 @printi(i64 %calltmp)
   ret i64 %calltmp1
 }

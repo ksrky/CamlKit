@@ -42,18 +42,18 @@ let exp :=
   | test=exp; OR; ~=exp;                        { IfExp{test; then_=IntExp 1; else_=exp} }
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
                                                 { IfExp{test; then_; else_} }
-  | LET; ~=decs; IN; body=exp;                  { LetExp{decs; body} }
-  | LET; REC; ~=decs; IN; body=exp;             { LetrecExp{decs; body} }
+  | LET; ~=bnds; IN; body=exp;                  { LetExp{bnds; body} }
+  | LET; REC; ~=bnds; IN; body=exp;             { LetrecExp{bnds; body} }
 
 let aexp := 
   | ~=id;                                       { VarExp id }
   | int=INT;                                    { IntExp int }
   | LPAREN; ~=exp; RPAREN;                      { exp }
 
-let decs ==
-  | separated_nonempty_list(AND, dec)
+let bnds ==
+  | separated_nonempty_list(AND, bnd)
 
-let dec :=
+let bnd :=
   | name=id;  params=list(id); EQ; body=exp;    { {name; params; body} }
 
 let id :=

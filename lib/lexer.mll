@@ -3,12 +3,13 @@ open Parser
 }
 
 let digit = ['0'-'9']
-let alpha = ['a'-'z' 'A'-'Z']
+let letter = ['a'-'z' 'A'-'Z']
 let space = ['\t' '\r' ' ']
 let newline = '\n'
 
 let decimal = digit+
-let id = alpha (alpha | digit | '_')*
+let id = (letter | '_') (letter | digit | '_' | ''')*
+let integer = digit+
 
 rule token = parse
 | space+        { token lexbuf }
@@ -45,7 +46,7 @@ rule token = parse
 | "->"          { ARROW }
 
 (* integer and identifier *)
-| decimal as i  { INT (int_of_string i) }
+| integer as i  { INT (int_of_string i) }
 | id as s       { ID s }
 
 | _             { ErrorMsg.error "illegal charcter"; token lexbuf }
