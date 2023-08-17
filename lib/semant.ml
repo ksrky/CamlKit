@@ -18,31 +18,25 @@ let rec trans_exp env exp =
     | LamExp {vars; body} ->
         let env' = List.fold_right (fun id -> E.extend id ValBind) vars env in
         Lam (vars, trans_exp env' body)
-    | OpExp {left; oper= PlusOp; right} -> Builtin ("add", [trexp left; trexp right])
-    | OpExp {left; oper= MinusOp; right} -> Builtin ("sub", [trexp left; trexp right])
-    | OpExp {left; oper= TimesOp; right} -> Builtin ("mul", [trexp left; trexp right])
-    | OpExp {left; oper= DivideOp; right} -> Builtin ("div", [trexp left; trexp right])
-    | OpExp {left; oper= EqOp; right} -> Builtin ("eq", [trexp left; trexp right])
-    | OpExp {left; oper= NeqOp; right} -> Builtin ("ne", [trexp left; trexp right])
-    | OpExp {left; oper= LtOp; right} -> Builtin ("lt", [trexp left; trexp right])
-    | OpExp {left; oper= LeOp; right} -> Builtin ("le", [trexp left; trexp right])
-    | OpExp {left; oper= GtOp; right} -> Builtin ("lt", [trexp right; trexp left])
-    | OpExp {left; oper= GeOp; right} -> Builtin ("le", [trexp right; trexp left])
+    | OpExp {left; op= PlusOp; right} -> Builtin ("add", [trexp left; trexp right])
+    | OpExp {left; op= MinusOp; right} -> Builtin ("sub", [trexp left; trexp right])
+    | OpExp {left; op= TimesOp; right} -> Builtin ("mul", [trexp left; trexp right])
+    | OpExp {left; op= DivideOp; right} -> Builtin ("div", [trexp left; trexp right])
+    | OpExp {left; op= EqOp; right} -> Builtin ("eq", [trexp left; trexp right])
+    | OpExp {left; op= NeqOp; right} -> Builtin ("ne", [trexp left; trexp right])
+    | OpExp {left; op= LtOp; right} -> Builtin ("lt", [trexp left; trexp right])
+    | OpExp {left; op= LeOp; right} -> Builtin ("le", [trexp left; trexp right])
+    | OpExp {left; op= GtOp; right} -> Builtin ("lt", [trexp right; trexp left])
+    | OpExp {left; op= GeOp; right} -> Builtin ("le", [trexp right; trexp left])
     | IfExp {test; then_; else_} -> If (trexp test, trexp then_, trexp else_)
     | LetExp {bnds; body} ->
         let env' = List.fold_right (fun {A.name; _} -> E.extend name ValBind) bnds env in
         Let
-          ( false
-          , List.map (fun {A.name; _} -> name) bnds
-          , trans_bnds env bnds
-          , trans_exp env' body )
+          (false, List.map (fun {A.name; _} -> name) bnds, trans_bnds env bnds, trans_exp env' body)
     | LetrecExp {bnds; body} ->
         let env' = List.fold_right (fun {A.name; _} -> E.extend name ValBind) bnds env in
         Let
-          ( true
-          , List.map (fun {A.name; _} -> name) bnds
-          , trans_bnds env' bnds
-          , trans_exp env' body )
+          (true, List.map (fun {A.name; _} -> name) bnds, trans_bnds env' bnds, trans_exp env' body)
   in
   try trexp exp
   with E.Out_of_scope id ->
@@ -59,3 +53,7 @@ and trans_bnds env bnds =
             Lam (params, trans_exp env' body) )
   in
   trbnds bnds
+
+let trans_def env = function
+  | A.LetDef bnds -> trans_exp env (A.LetExp {bnds; body= A.IntExp 0})
+  | A.LetrecDef bnds -> trans_exp env (A.LetrecExp {bnds; body= A.IntExp 0})
