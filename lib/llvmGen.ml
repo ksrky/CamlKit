@@ -21,7 +21,8 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
         | None -> ErrorMsg.impossible "unknown function referenced"
       in
       let args' = Array.of_list (List.map codegen_expr args) in
-      build_call callee args' "calltmp" builder
+      let ci = build_call callee args' "calltmp" builder in
+      set_tail_call true ci; ci
   | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in

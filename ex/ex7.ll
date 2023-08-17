@@ -24,14 +24,14 @@ else:                                             ; preds = %ackermann_2
 
 then4:                                            ; preds = %else
   %subtmp = sub i64 %m_3, 1
-  %calltmp = call i64 @ackermann_2(i64 %subtmp, i64 1)
+  %calltmp = tail call i64 @ackermann_2(i64 %subtmp, i64 1)
   br label %ifcont
 
 else5:                                            ; preds = %else
   %subtmp6 = sub i64 %m_3, 1
   %subtmp7 = sub i64 %n_4, 1
-  %calltmp8 = call i64 @ackermann_2(i64 %m_3, i64 %subtmp7)
-  %calltmp9 = call i64 @ackermann_2(i64 %subtmp6, i64 %calltmp8)
+  %calltmp8 = tail call i64 @ackermann_2(i64 %m_3, i64 %subtmp7)
+  %calltmp9 = tail call i64 @ackermann_2(i64 %subtmp6, i64 %calltmp8)
   br label %ifcont
 
 ifcont:                                           ; preds = %else5, %then4
@@ -45,6 +45,6 @@ ifcont10:                                         ; preds = %ifcont, %then
 
 define i64 @main() {
 main:
-  %calltmp = call i64 @ackermann_2(i64 4, i64 1)
+  %calltmp = tail call i64 @ackermann_2(i64 4, i64 1)
   ret i64 %calltmp
 }
