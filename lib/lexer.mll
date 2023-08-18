@@ -43,8 +43,8 @@ rule token = parse
 | "<="          { LE }
 | ">"           { GT }
 | ">="          { GE }
-| "&"           { AND_ }
-| "|"           { OR }
+| "&&"          { LAND }
+| "||"          { LOR }
 | "->"          { ARROW }
 
 (* integer and identifier *)

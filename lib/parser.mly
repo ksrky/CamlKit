@@ -6,12 +6,12 @@ open AbsSyn
 %token <string> ID
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-%token LPAREN RPAREN AND_ OR ARROW
+%token LPAREN RPAREN LAND LOR ARROW
 %token IF THEN ELSE LET IN AND FUN REC
 %token TRUE FALSE
 
-%right OR
-%right AND_
+%right LOR
+%right LAND
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS
 %left TIMES DIVIDE
@@ -39,8 +39,8 @@ let exp :=
   | left=exp; LE; right=exp;                    { OpExp{left; op=LeOp; right} }
   | left=exp; GT; right=exp;                    { OpExp{left; op=GtOp; right} }
   | left=exp; GE; right=exp;                    { OpExp{left; op=GeOp; right} }
-  | test=exp; AND_; ~=exp;                      { IfExp{test; then_=exp; else_=IntExp 0} }
-  | test=exp; OR; ~=exp;                        { IfExp{test; then_=IntExp 1; else_=exp} }
+  | test=exp; LAND; ~=exp;                      { IfExp{test; then_=exp; else_=BoolExp false} }
+  | test=exp; LOR; ~=exp;                       { IfExp{test; then_=BoolExp true; else_=exp} }
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
                                                 { IfExp{test; then_; else_} }
   | LET; ~=bnds; IN; body=exp;                  { LetExp{bnds; body} }
