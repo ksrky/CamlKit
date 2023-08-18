@@ -24,7 +24,7 @@ let rec scoping_exp (sc : scope) : A.exp -> A.exp =
     | IntExp i -> IntExp i
     | AppExp {fcn; arg} -> AppExp {fcn= scexp fcn; arg= scexp arg}
     | LamExp {vars; body} -> LamExp {vars; body= scexp body}
-    | OpExp {left; oper; right} -> OpExp {left= scexp left; oper; right= scexp right}
+    | OpExp {left; op; right} -> OpExp {left= scexp left; op; right= scexp right}
     | IfExp {test; then_; else_} -> IfExp {test= scexp test; then_= scexp then_; else_= scexp else_}
     | LetExp {bnds; body} ->
         let sc' = extend_list (List.map (fun (d : A.bnd) -> d.name) bnds) sc in

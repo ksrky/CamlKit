@@ -15,7 +15,7 @@ let%test _ = trans_exp Env.empty (IntExp 42) = Int 42
 
 let%test _ =
   trans_exp Env.empty
-    (LamExp {vars= [x; y]; body= OpExp {left= VarExp x; oper= PlusOp; right= VarExp y}})
+    (LamExp {vars= [x; y]; body= OpExp {left= VarExp x; op= PlusOp; right= VarExp y}})
   = Lam ([x; y], Builtin ("add", [Var x; Var y]))
 
 let%test _ =

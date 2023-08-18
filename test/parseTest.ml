@@ -3,7 +3,7 @@ open AbsSyn
 
 let%test _ = Parse.parse_line "42" = IntExp 42
 
-let%test _ = Parse.parse_line "3 - 7" = OpExp {left= IntExp 3; oper= MinusOp; right= IntExp 7}
+let%test _ = Parse.parse_line "3 - 7" = OpExp {left= IntExp 3; op= MinusOp; right= IntExp 7}
 
 let%test _ = AbsSyn.ppr_exp (Parse.parse_line "fun x y -> x + y") = "fun x y -> x + y"
 

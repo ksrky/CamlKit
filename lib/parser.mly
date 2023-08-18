@@ -27,17 +27,17 @@ let exp :=
   | ~=aexp;                                     { aexp }
   | fcn=exp; arg=aexp;                          { AppExp{fcn; arg} }
   | FUN; vars=list(id); ARROW; body=exp;        { LamExp{vars; body} }
-  | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; oper=MinusOp; right} }
-  | left=exp; PLUS; right=exp;                  { OpExp{left; oper=PlusOp; right} }
-  | left=exp; MINUS; right=exp;                 { OpExp{left; oper=MinusOp; right} }
-  | left=exp; TIMES; right=exp;                 { OpExp{left; oper=TimesOp; right} }
-  | left=exp; DIVIDE; right=exp;                { OpExp{left; oper=DivideOp; right} }
-  | left=exp; EQ; right=exp;                    { OpExp{left; oper=EqOp; right} }
-  | left=exp; NEQ; right=exp;                   { OpExp{left; oper=NeqOp; right} }
-  | left=exp; LT; right=exp;                    { OpExp{left; oper=LtOp; right} }
-  | left=exp; LE; right=exp;                    { OpExp{left; oper=LeOp; right} }
-  | left=exp; GT; right=exp;                    { OpExp{left; oper=GtOp; right} }
-  | left=exp; GE; right=exp;                    { OpExp{left; oper=GeOp; right} }
+  | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; op=MinusOp; right} }
+  | left=exp; PLUS; right=exp;                  { OpExp{left; op=PlusOp; right} }
+  | left=exp; MINUS; right=exp;                 { OpExp{left; op=MinusOp; right} }
+  | left=exp; TIMES; right=exp;                 { OpExp{left; op=TimesOp; right} }
+  | left=exp; DIVIDE; right=exp;                { OpExp{left; op=DivideOp; right} }
+  | left=exp; EQ; right=exp;                    { OpExp{left; op=EqOp; right} }
+  | left=exp; NEQ; right=exp;                   { OpExp{left; op=NeqOp; right} }
+  | left=exp; LT; right=exp;                    { OpExp{left; op=LtOp; right} }
+  | left=exp; LE; right=exp;                    { OpExp{left; op=LeOp; right} }
+  | left=exp; GT; right=exp;                    { OpExp{left; op=GtOp; right} }
+  | left=exp; GE; right=exp;                    { OpExp{left; op=GeOp; right} }
   | test=exp; AND_; ~=exp;                      { IfExp{test; then_=exp; else_=IntExp 0} }
   | test=exp; OR; ~=exp;                        { IfExp{test; then_=IntExp 1; else_=exp} }
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
