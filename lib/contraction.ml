@@ -8,39 +8,45 @@ let max_steps : int = 8
 let thresh_ratio : float = 0.95 (* tmp *)
 
 (** number of reductions performed in one step. *)
-let nred = ref 0
+let nred = ref 1
 
 type varinfo =
-  {mutable _side_effect: bool; usecount: int ref; mutable repres: I.exp; mutable simple: bool}
+  {mutable _side_effect: bool; mutable usecount: int; mutable repres: I.exp; mutable simple: bool}
 
-let default_info = {_side_effect= true; usecount= ref 0; repres= I.Nil; simple= false}
+let default_info () = {_side_effect= true; usecount= 0; repres= I.Nil; simple= false}
 
-let hashtable : (Ident.t, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
+let hashtable : (int, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
 
-let init_usecount ids : unit =
-  List.iter
-    (fun id ->
-      try (Hashtbl.find hashtable id).usecount := 0
-      with Not_found -> Hashtbl.add hashtable id default_info )
-    ids
+let hashtbl_find (id : Ident.t) : varinfo =
+  try Hashtbl.find hashtable (Ident.unique id)
+  with Not_found ->
+    let info = default_info () in
+    Hashtbl.add hashtable (Ident.unique id) info;
+    info
 
-let incr_usecount id : unit = incr (Hashtbl.find hashtable id).usecount
+let init_usecount ids : unit = List.iter (fun id -> (hashtbl_find id).usecount <- 0) ids
 
-let decr_usecount id : unit = decr (Hashtbl.find hashtable id).usecount
+let incr_usecount id : unit =
+  let info = hashtbl_find id in
+  info.usecount <- info.usecount + 1
 
-let is_usecount id cnt : bool = !((Hashtbl.find hashtable id).usecount) = cnt
+let decr_usecount id : unit =
+  let info = hashtbl_find id in
+  info.usecount <- info.usecount - 1
+
+let is_usecount id cnt : bool = (hashtbl_find id).usecount = cnt
 
 let update_repres id exp =
-  let info = Hashtbl.find hashtable id in
+  let info = hashtbl_find id in
   info.repres <- exp;
   match exp with Int _ | Nil | Var _ -> info.simple <- true | _ -> info.simple <- false
 
-let find_repres id : I.exp =
-  match Hashtbl.find_opt hashtable id with
+let find_repres (id : Ident.t) : I.exp =
+  match Hashtbl.find_opt hashtable (Ident.unique id) with
   | Some info -> (* inlining *) incr nred; decr_usecount id; info.repres
   | None -> Var id
 
-let init () = nred := 0
+let init () = nred := 1
 
 let rec gather : I.exp -> unit = function
   | Var id -> incr_usecount id
@@ -61,7 +67,7 @@ let rec gather : I.exp -> unit = function
 
 let rec reduce : I.exp -> I.exp = function
   | Var id ->
-      let info = Hashtbl.find hashtable id in
+      let info = hashtbl_find id in
       if info.simple then (incr nred; decr_usecount id; info.repres (* inlining a small function *))
       else if is_usecount id 1 then find_repres id
       else Var id
@@ -99,5 +105,5 @@ let rec steps (n : int) (exp : I.exp) =
   else
     let prev = !nred in
     let exp' = step exp in
-    let next = prev = 0 || float_of_int !nred /. float_of_int prev > thresh_ratio in
+    let next = float_of_int !nred /. float_of_int prev > thresh_ratio in
     if next then steps (n - 1) exp' else exp'
