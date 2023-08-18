@@ -15,9 +15,9 @@ type varinfo =
   ; mutable usecount: int
   ; mutable repres: I.exp
   ; mutable simple: bool
-  ; mutable isrec: bool }
+  ; mutable _isrec: bool }
 
-let default_info () = {side_effect= false; usecount= 0; repres= I.Nil; simple= false; isrec= false}
+let default_info () = {side_effect= false; usecount= 0; repres= I.Nil; simple= false; _isrec= false}
 
 let hashtbl : (int, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
 
@@ -29,7 +29,7 @@ let init_varinfo ?(isrec = false) ids : unit =
   List.iter
     (fun id ->
       let info = default_info () in
-      info.isrec <- isrec;
+      info._isrec <- isrec;
       Hashtbl.add hashtbl (Ident.unique id) info )
     ids
 
