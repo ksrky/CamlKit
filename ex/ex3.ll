@@ -13,8 +13,8 @@ double_4:
 
 define i64 @main() {
 main:
-  %calltmp = tail call i64 @double_4(i64 123)
-  %calltmp1 = tail call i64 @double_4(i64 %calltmp)
+  %calltmp = call i64 @double_4(i64 123)
+  %calltmp1 = call i64 @double_4(i64 %calltmp)
   %calltmp2 = call i64 @printi(i64 %calltmp1)
   ret i64 %calltmp2
 }

@@ -22,7 +22,9 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       in
       let args' = Array.of_list (List.map codegen_expr args) in
       let ci = build_call callee args' "calltmp" builder in
-      set_tail_call true ci; ci
+      (* if (Contraction.hashtbl_find fcn).isrec then set_tail_call true ci;
+         tmp: LlvmGen depends on Contraction module *)
+      ci
   | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in

@@ -24,5 +24,5 @@ let rec f : I.exp -> I.exp = function
   | Let (false, _, _, _) as e ->
       let vars', bnds', body' = let_expansion e in
       Let (false, vars', List.map f bnds', f body')
-  | Let (true, vars, bnds, body) -> Let (false, vars, List.map f bnds, f body)
+  | Let (true, vars, bnds, body) -> Let (true, vars, List.map f bnds, f body)
   | If (test, then_, else_) -> If (f test, f then_, f else_)
