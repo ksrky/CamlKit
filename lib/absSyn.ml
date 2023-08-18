@@ -3,6 +3,7 @@ type id = Ident.t
 type exp =
   | VarExp of id
   | NilExp
+  | BoolExp of bool
   | IntExp of int
   | AppExp of {fcn: exp; arg: exp}
   | LamExp of {vars: id list; body: exp}
@@ -21,6 +22,7 @@ let rec ppr_exp exp =
     match exp with
     | VarExp id -> Ident.name id
     | NilExp -> "nil"
+    | BoolExp b -> string_of_bool b
     | IntExp i -> string_of_int i
     | AppExp {fcn; arg} -> parens ctx 2 (pretty 2 fcn ^ " " ^ pretty 1 arg)
     | OpExp {left; op; right} ->

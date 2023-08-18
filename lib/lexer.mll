@@ -27,6 +27,8 @@ rule token = parse
 | "and"         { AND }
 | "fun"         { FUN }
 | "rec"         { REC }
+| "true"        { TRUE }
+| "false"       { FALSE }
 
 (* reserved symbols *)
 | "("           { LPAREN }

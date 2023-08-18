@@ -8,6 +8,7 @@ open AbsSyn
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
 %token LPAREN RPAREN AND_ OR ARROW
 %token IF THEN ELSE LET IN AND FUN REC
+%token TRUE FALSE
 
 %right OR
 %right AND_
@@ -47,7 +48,9 @@ let exp :=
 
 let aexp := 
   | ~=id;                                       { VarExp id }
-  | int=INT;                                    { IntExp int }
+  | TRUE;                                       { BoolExp true }
+  | FALSE;                                      { BoolExp false }
+  | i=INT;                                      { IntExp i }
   | LPAREN; ~=exp; RPAREN;                      { exp }
 
 let bnds ==

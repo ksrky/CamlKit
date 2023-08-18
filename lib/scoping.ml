@@ -21,6 +21,7 @@ let rec scoping_exp (sc : scope) : A.exp -> A.exp =
   let rec scexp : A.exp -> A.exp = function
     | VarExp id -> VarExp (scoping id sc)
     | NilExp -> NilExp
+    | BoolExp b -> BoolExp b
     | IntExp i -> IntExp i
     | AppExp {fcn; arg} -> AppExp {fcn= scexp fcn; arg= scexp arg}
     | LamExp {vars; body} -> LamExp {vars; body= scexp body}

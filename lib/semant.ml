@@ -6,6 +6,7 @@ let rec trans_exp env exp =
   let rec trexp : A.exp -> I.exp = function
     | VarExp id -> Var id
     | NilExp -> Nil
+    | BoolExp b -> if b then Int 1 else Int 0
     | IntExp x -> Int x
     | AppExp _ as exp ->
         let rec loop acc : A.exp -> I.exp = function
