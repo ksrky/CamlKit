@@ -1,4 +1,4 @@
-type binding = ValBind
+type binding = ValBind of AbsSyn.ty
 
 type env = binding Ident.Table.t
 
@@ -13,3 +13,5 @@ let lookup (id : Ident.t) (env : env) =
 
 let extend_list (binds : (Ident.t * binding) list) (env : env) =
   List.fold_right (fun (id, bind) -> extend id bind) binds env
+
+let lookup_type id env : AbsSyn.ty = match lookup id env with ValBind ty -> ty

@@ -16,6 +16,10 @@ and bnd = {name: id; params: id list; body: exp}
 
 and op = PlusOp | MinusOp | TimesOp | DivideOp | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
 
+type ty = INT | BOOL | FunTy of ty * ty | MetaTy of tyvar
+
+and tyvar = {uniq: int; mutable repres: ty option}
+
 let rec ppr_exp exp =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pretty ctx exp =
