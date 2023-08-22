@@ -4,7 +4,13 @@ module A = AbsSyn
 
 let empty : scope = []
 
-let initial : scope = List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"]
+let initial : scope =
+  List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"; "int"; "bool"]
+
+let get_reservedid (name : string) : Ident.t =
+  match List.assoc_opt name initial with
+  | Some id -> id
+  | None -> ErrorMsg.impossible ("Not found " ^ name)
 
 let extend (id : Ident.t) (sc : scope) : scope = (Ident.name id, id) :: sc
 

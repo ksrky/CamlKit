@@ -3,7 +3,7 @@ let run (path : string) =
   let abssyn = Parse.parse path in
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
   (* print_endline (AbsSyn.ppr_exp abssyn); *)
-  let intsyn = Semant.trans_exp Env.empty abssyn' in
+  let intsyn, _ = Semant.infer_exp Env.empty abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
   (* print_endline (Machine.show_instrs instrs); *)
@@ -14,7 +14,7 @@ let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
   (* print_endline (AbsSyn.ppr_exp abssyn); *)
-  let intsyn = Semant.trans_exp Env.empty abssyn' in
+  let intsyn, _ = Semant.infer_exp Env.empty abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
   (* print_endline (Machine.show_instrs instrs); *)
@@ -25,7 +25,7 @@ let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
   (* print_endline (AbsSyn.ppr_exp abssyn'); *)
-  let intsyn = Semant.trans_exp Env.empty abssyn' in
+  let intsyn, _ = Semant.infer_exp Env.empty abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let intsyn2 = Contraction.steps Contraction.max_steps intsyn in
   let intsyn3 = Simplify.f intsyn2 in

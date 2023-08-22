@@ -16,7 +16,7 @@ and bnd = {name: id; params: id list; body: exp}
 
 and op = PlusOp | MinusOp | TimesOp | DivideOp | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
 
-type ty = INT | BOOL | FunTy of ty * ty | MetaTy of tyvar
+type ty = NIL | TyconTy of {con: id; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
 
 and tyvar = {uniq: int; mutable repres: ty option}
 
@@ -54,6 +54,8 @@ let rec ppr_exp exp =
     | GeOp -> ">="
   in
   pretty 0 exp
+
+and ppr_ty : ty -> string = function _ -> ""
 
 and ppr_bnd ({name; params; body} : bnd) : string =
   String.concat " " (List.map Ident.name (name :: params)) ^ " = " ^ ppr_exp body
