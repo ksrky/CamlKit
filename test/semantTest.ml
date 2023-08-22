@@ -17,7 +17,7 @@ let%test _ =
   check_exp Env.empty
     (LamExp {vars= [x; y]; body= OpExp {left= VarExp x; op= PlusOp; right= VarExp y}})
     NIL
-  = Lam ([x; y], Builtin ("add", [Var x; Var y]))
+  = Lam ([x; y], Prim ("add", [Var x; Var y]))
 
 let%test _ =
   check_exp Env.empty

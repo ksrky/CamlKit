@@ -25,7 +25,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       (* if (Contraction.hashtbl_find fcn).isrec then set_tail_call true ci;
          tmp: LlvmGen depends on Contraction module *)
       ci
-  | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
+  | Prim (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       match fcn with
@@ -33,7 +33,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       | "sub" -> build_sub lhs_val rhs_val "subtmp" builder
       | "mul" -> build_mul lhs_val rhs_val "multmp" builder
       | "div" -> build_sdiv lhs_val rhs_val "divtmp" builder )
-  | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
+  | Prim (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       let i =
@@ -46,7 +46,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
         | "ge" -> build_icmp Icmp.Uge lhs_val rhs_val "getmp" builder
       in
       build_intcast i int_type "booltmp" builder
-  | Builtin (fcn, args) ->
+  | Prim (fcn, args) ->
       let callee = Option.get (lookup_function fcn !the_module) in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
@@ -133,12 +133,12 @@ let codegen_func : IntSyn.def -> unit = function
         Llvm_analysis.assert_valid_function func
       with e -> delete_function func; raise e )
 
-let codegen_builtins () : unit =
+let codegen_prims () : unit =
   codegen_proto ("printi", [Ident.from_string "x"]);
   codegen_proto ("readi", [Ident.from_string "x"])
 
 let codegen (modid : string) (defs : IntSyn.defs) : unit =
   the_module := create_module context modid;
-  codegen_builtins ();
+  codegen_prims ();
   List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) defs;
   List.iter (fun def -> codegen_func def) defs

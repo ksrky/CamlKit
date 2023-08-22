@@ -35,10 +35,10 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
               loop (check_exp env arg arg_ty :: acc) exp_ty fcn
           | VarExp id when Ident.name id = "read_int" ->
               check_type (E.lookup_type id env) exp_ty;
-              Builtin ("readi", acc)
+              Prim ("readi", acc)
           | VarExp id when Ident.name id = "print_int" ->
               check_type (E.lookup_type id env) exp_ty;
-              Builtin ("printi", acc)
+              Prim ("printi", acc)
           | fcn -> App (trexp (fcn, exp_ty), acc)
         in
         loop [] exp_ty exp
@@ -55,34 +55,34 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         Lam (vars, body')
     | OpExp {left; op= PlusOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
-        Builtin ("add", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("add", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= MinusOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
-        Builtin ("sub", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("sub", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= TimesOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
-        Builtin ("mul", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("mul", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= DivideOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
-        Builtin ("div", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("div", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= EqOp; right}, exp_ty ->
         check_type T.tBOOL exp_ty;
-        Builtin ("eq", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("eq", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= NeqOp; right}, exp_ty ->
         check_type T.tBOOL exp_ty;
-        Builtin ("ne", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("ne", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= LtOp; right}, exp_ty ->
         check_type T.tBOOL exp_ty;
-        Builtin ("lt", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("lt", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= LeOp; right}, exp_ty ->
         check_type T.tBOOL exp_ty;
-        Builtin ("le", [check_exp env left T.tINT; check_exp env right T.tINT])
+        Prim ("le", [check_exp env left T.tINT; check_exp env right T.tINT])
     | OpExp {left; op= GtOp; right}, exp_ty ->
         check_type T.tBOOL exp_ty;
-        Builtin ("lt", [check_exp env right T.tINT; check_exp env left T.tINT])
+        Prim ("lt", [check_exp env right T.tINT; check_exp env left T.tINT])
     | OpExp {left; op= GeOp; right}, exp_ty ->
         check_type T.tBOOL exp_ty;
-        Builtin ("le", [check_exp env right T.tINT; check_exp env left T.tINT])
+        Prim ("le", [check_exp env right T.tINT; check_exp env left T.tINT])
     | IfExp {test; then_; else_}, exp_ty ->
         If (check_exp env test T.tBOOL, trexp (then_, exp_ty), trexp (else_, exp_ty))
     | LetExp {bnds; body}, exp_ty ->

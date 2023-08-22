@@ -10,7 +10,7 @@ and exp =
   | Var of id
   | App of exp * exps
   | Lam of ids * exp
-  | Builtin of string * exps
+  | Prim of string * exps
   | Let of bool * ids * exps * exp
   | If of exp * exp * exp
 
@@ -38,7 +38,7 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
           ( "fun "
           ^ String.concat " " (List.map (fun id -> pprid id ^ " ") vars)
           ^ "-> " ^ pretty 0 body )
-    | Builtin (fcn, args) -> fcn ^ "(" ^ String.concat ", " (List.map (pretty 0) args) ^ ")"
+    | Prim (fcn, args) -> fcn ^ "(" ^ String.concat ", " (List.map (pretty 0) args) ^ ")"
     | If (cond, then_, else_) ->
         parens ctx 0 ("if " ^ pretty 0 cond ^ " then " ^ pretty 0 then_ ^ " else " ^ pretty 0 else_)
     | Let (isrec, vars, exps, body) ->

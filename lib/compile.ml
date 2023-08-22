@@ -1,7 +1,7 @@
 module I = IntSyn
 module M = Machine
 
-let builtins : (string * M.t) list =
+let primitives : (string * M.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
   ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readi", READI)
   ; ("printi", PRINTI) ]
@@ -17,7 +17,7 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   | Lam (vars, body) ->
       let n' = vars :: n in
       compile_lambda body n' c
-  | Builtin (f, args) -> compile_builtin args n (List.assoc f builtins :: c)
+  | Prim (f, args) -> compile_prim args n (List.assoc f primitives :: c)
   | If (test, then', else') -> compile_if (test, then', else') n c
   | Let (false, vars, vals, body) ->
       let newn = vars :: n in
@@ -26,8 +26,8 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
       let newn = vars :: n in
       DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
 
-and compile_builtin (args : I.exp list) (n : I.id list list) (c : M.t list) =
-  if args == [] then c else compile_builtin (List.tl args) n (compile (List.hd args) n c)
+and compile_prim (args : I.exp list) (n : I.id list list) (c : M.t list) =
+  if args == [] then c else compile_prim (List.tl args) n (compile (List.hd args) n c)
 
 and compile_lambda (body : I.exp) (n : I.id list list) (c : M.t list) : M.t list =
   LDF (compile body n [RTN]) :: c

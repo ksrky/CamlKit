@@ -71,7 +71,7 @@ let rec gather (sc : Ident.t list) : I.exp -> unit = function
   | Lam (vars, body) ->
       init_varinfo vars;
       gather (vars @ sc) body
-  | Builtin (fcn, args) ->
+  | Prim (fcn, args) ->
       if List.mem fcn I.io then List.iter (fun v -> (hashtbl_find v).side_effect <- true) sc;
       List.iter (gather sc) args
   | Let (isrec, vars, bnds, body) ->
@@ -101,7 +101,7 @@ let rec reduce : I.exp -> I.exp = function
       if vars' = [] then reduce body else App (Lam (vars', reduce body), args')
   | App (fcn, args) -> App (reduce fcn, List.map reduce args)
   | Lam (vars, body) -> Lam (vars, reduce body)
-  | Builtin (fcn, args) -> Builtin (fcn, List.map reduce args)
+  | Prim (fcn, args) -> Prim (fcn, List.map reduce args)
   | Let (isrec, vars, bnds, body) ->
       let vars', bnds' =
         List.split

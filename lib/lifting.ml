@@ -14,7 +14,7 @@ let rec lift_lam (exp : exp) : exp =
       let id = Ident.fresh () in
       append {name= Ident.unique_name id; params= vars; body= lift_lam body};
       Var id
-  | Builtin (fcn, args) -> Builtin (fcn, List.map lift_lam args)
+  | Prim (fcn, args) -> Prim (fcn, List.map lift_lam args)
   | Let (_, vars, exps, body) ->
       let memo = ref [] in
       List.iter2

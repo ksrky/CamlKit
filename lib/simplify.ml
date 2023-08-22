@@ -20,7 +20,7 @@ let rec f : I.exp -> I.exp = function
   | Lam (vars, body) ->
       let vars', body' = uncurrying body in
       Lam (vars @ vars', f body')
-  | Builtin (fcn, args) -> Builtin (fcn, List.map f args)
+  | Prim (fcn, args) -> Prim (fcn, List.map f args)
   | Let (false, _, _, _) as e ->
       let vars', bnds', body' = let_expansion e in
       Let (false, vars', List.map f bnds', f body')
