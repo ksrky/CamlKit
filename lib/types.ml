@@ -2,6 +2,8 @@ let tINT = AbsSyn.TyconTy {con= Scoping.get_reservedid "int"; args= []}
 
 let tBOOL = AbsSyn.TyconTy {con= Scoping.get_reservedid "bool"; args= []}
 
+let tUNIT = AbsSyn.TyconTy {con= Scoping.get_reservedid "unit"; args= []}
+
 let rec zonk_type : AbsSyn.ty -> AbsSyn.ty = function
   | TyconTy {con; args} -> TyconTy {con; args= List.map zonk_type args}
   | FunTy (fcn, arg) -> FunTy (zonk_type fcn, zonk_type arg)
@@ -15,7 +17,7 @@ let rec zonk_type : AbsSyn.ty -> AbsSyn.ty = function
 
 let unique = ref (-1)
 
-let new_tyvar =
+let new_tyvar () =
   incr unique;
   AbsSyn.MetaTy {uniq= !unique; repres= None}
 

@@ -5,7 +5,7 @@ module A = AbsSyn
 let empty : scope = []
 
 let initial : scope =
-  List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"; "int"; "bool"]
+  List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"; "int"; "bool"; "unit"]
 
 let get_reservedid (name : string) : Ident.t =
   match List.assoc_opt name initial with
@@ -30,7 +30,9 @@ let rec scoping_exp (sc : scope) : A.exp -> A.exp =
     | BoolExp b -> BoolExp b
     | IntExp i -> IntExp i
     | AppExp {fcn; arg} -> AppExp {fcn= scexp fcn; arg= scexp arg}
-    | LamExp {vars; body} -> LamExp {vars; body= scexp body}
+    | LamExp {vars; body} ->
+        let sc' = extend_list vars sc in
+        LamExp {vars; body= scoping_exp sc' body}
     | OpExp {left; op; right} -> OpExp {left= scexp left; op; right= scexp right}
     | IfExp {test; then_; else_} -> IfExp {test= scexp test; then_= scexp then_; else_= scexp else_}
     | LetExp {bnds; body} ->

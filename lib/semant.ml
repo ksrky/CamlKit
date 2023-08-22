@@ -45,7 +45,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         let body' = check_exp env' body body_ty in
         Lam (vars, body')
     | LamExp {vars; body}, Infer ref ->
-        let var_tys = List.map (fun _ -> T.new_tyvar) vars in
+        let var_tys = List.map (fun _ -> T.new_tyvar ()) vars in
         let env' = List.fold_right2 (fun id ty -> E.extend id (ValBind ty)) vars var_tys env in
         let body', body_ty = infer_exp env' body in
         ref := Some body_ty;
@@ -86,7 +86,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         let env' =
           List.fold_right
             (fun {A.name; _} ->
-              let tv = T.new_tyvar in
+              let tv = T.new_tyvar () in
               E.extend name (ValBind tv) )
             bnds env
         in
@@ -99,7 +99,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         let env' =
           List.fold_right
             (fun {A.name; _} ->
-              let tv = T.new_tyvar in
+              let tv = T.new_tyvar () in
               E.extend name (ValBind tv) )
             bnds env
         in
@@ -117,7 +117,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
 and trans_bnds env bnds =
   let trbnds =
     List.map (fun {A.params; A.body; _} ->
-        let tv = T.new_tyvar in
+        let tv = T.new_tyvar () in
         match params with
         | [] -> trans_exp env body (Check tv)
         | _ ->

@@ -29,13 +29,15 @@ and occurs_check tv1 ty2 : unit =
 let unify_fun = function
   | A.FunTy (arg_ty, res_ty) -> (arg_ty, res_ty)
   | ty ->
-      let arg_ty = A.MetaTy {uniq= 0; repres= None} and res_ty = A.MetaTy {uniq= 0; repres= None} in
+      let arg_ty = Types.new_tyvar () and res_ty = Types.new_tyvar () in
       unify ty (A.FunTy (arg_ty, res_ty));
       (arg_ty, res_ty)
 
 let unify_funs vars ty =
   let rec loop acc = function
     | [], ty -> (acc, ty)
-    | _ :: rest, A.FunTy (arg_ty, res_ty) -> loop (arg_ty :: acc) (rest, res_ty)
+    | _ :: rest, ty ->
+        let arg_ty, res_ty = unify_fun ty in
+        loop (arg_ty :: acc) (rest, res_ty)
   in
   loop [] (vars, ty)
