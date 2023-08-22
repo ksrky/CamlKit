@@ -55,7 +55,17 @@ let rec ppr_exp exp =
   in
   pretty 0 exp
 
-and ppr_ty : ty -> string = function _ -> ""
+and ppr_ty (ty : ty) : string =
+  let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
+  let rec pretty ctx = function
+    | NIL -> "nil"
+    | TyconTy {con; args} ->
+        if args = [] then Ident.name con
+        else parens ctx 1 (String.concat " " (Ident.name con :: List.map (pretty 2) args))
+    | FunTy (fcn, arg) -> parens ctx 0 (pretty 1 fcn ^ " -> " ^ pretty 0 arg)
+    | MetaTy tv -> "$" ^ string_of_int tv.uniq
+  in
+  pretty 0 ty
 
 and ppr_bnd ({name; params; body} : bnd) : string =
   String.concat " " (List.map Ident.name (name :: params)) ^ " = " ^ ppr_exp body

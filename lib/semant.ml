@@ -30,12 +30,15 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
     | (AppExp _ as exp), exp_ty ->
         let rec loop acc exp_ty : A.exp -> I.exp = function
           | AppExp {fcn; arg} ->
-              let _, fcn_ty = infer_exp env fcn in
-              let arg_ty, res_ty = Tc.unify_fun fcn_ty in
+              let arg_ty = T.new_tyvar () and res_ty = T.new_tyvar () in
               check_type res_ty exp_ty;
               loop (check_exp env arg arg_ty :: acc) exp_ty fcn
-          | VarExp id when Ident.name id = "read_int" -> Builtin ("readi", acc)
-          | VarExp id when Ident.name id = "print_int" -> Builtin ("printi", acc)
+          | VarExp id when Ident.name id = "read_int" ->
+              check_type (E.lookup_type id env) exp_ty;
+              Builtin ("readi", acc)
+          | VarExp id when Ident.name id = "print_int" ->
+              check_type (E.lookup_type id env) exp_ty;
+              Builtin ("printi", acc)
           | fcn -> App (trexp (fcn, exp_ty), acc)
         in
         loop [] exp_ty exp
@@ -48,7 +51,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         let var_tys = List.map (fun _ -> T.new_tyvar ()) vars in
         let env' = List.fold_right2 (fun id ty -> E.extend id (ValBind ty)) vars var_tys env in
         let body', body_ty = infer_exp env' body in
-        ref := Some body_ty;
+        ref := Some (List.fold_right (fun l r -> A.FunTy (l, r)) var_tys body_ty);
         Lam (vars, body')
     | OpExp {left; op= PlusOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
@@ -81,7 +84,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         check_type T.tBOOL exp_ty;
         Builtin ("le", [check_exp env right T.tINT; check_exp env left T.tINT])
     | IfExp {test; then_; else_}, exp_ty ->
-        If (check_exp env test T.tINT, trexp (then_, exp_ty), trexp (else_, exp_ty))
+        If (check_exp env test T.tBOOL, trexp (then_, exp_ty), trexp (else_, exp_ty))
     | LetExp {bnds; body}, exp_ty ->
         let env' =
           List.fold_right

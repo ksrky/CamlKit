@@ -6,7 +6,7 @@ let%test _ = Main.eval "1 + 2" = ()
 
 let%test _ = Main.eval "6 > 9" = ()
 
-let%test _ = Main.eval "if 1 then 10 else -10" = ()
+let%test _ = Main.eval "if true then 10 else -10" = ()
 
 let%expect_test _ = Main.eval "print_int 1"; [%expect {|  1  |}]
 

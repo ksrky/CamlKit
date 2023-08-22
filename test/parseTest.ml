@@ -8,7 +8,8 @@ let%test _ = Parse.parse_line "3 - 7" = OpExp {left= IntExp 3; op= MinusOp; righ
 let%test _ = AbsSyn.ppr_exp (Parse.parse_line "fun x y -> x + y") = "fun x y -> x + y"
 
 let%test _ =
-  Parse.parse_line "if 1 then 0 else 1" = IfExp {test= IntExp 1; then_= IntExp 0; else_= IntExp 1}
+  Parse.parse_line "if true then 0 else 1"
+  = IfExp {test= BoolExp true; then_= IntExp 0; else_= IntExp 1}
 
 let%test _ = AbsSyn.ppr_exp (Parse.parse_line "let f x y = y in f 1") = "let f x y = y in f 1"
 
