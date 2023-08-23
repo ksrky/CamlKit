@@ -17,6 +17,7 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   | Lam (vars, body) ->
       let n' = vars :: n in
       compile_lambda body n' c
+  | Prim ("init_array", args) -> compile_app args n c
   | Prim (f, args) -> compile_prim args n (List.assoc f primitives :: c)
   | If (test, then', else') -> compile_if (test, then', else') n c
   | Let (false, vars, vals, body) ->

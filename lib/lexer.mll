@@ -45,7 +45,9 @@ rule token = parse
 | ">="          { GE }
 | "&&"          { LAND }
 | "||"          { LOR }
-| "->"          { ARROW }
+| "->"          { LARROW }
+| "<-"          { RARROW }
+| "."           { DOT }
 
 (* integer and identifier *)
 | integer as i  { INT (int_of_string i) }

@@ -13,6 +13,8 @@ and exp =
   | Prim of string * exps
   | Let of bool * ids * exps * exp
   | If of exp * exp * exp
+  | Seq of exp list
+  | Select of exp * exp
 
 type def = {name: string; params: ids; body: exp}
 

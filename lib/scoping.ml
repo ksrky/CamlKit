@@ -5,7 +5,7 @@ module A = AbsSyn
 let empty : scope = []
 
 let initial : scope =
-  List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"; "int"; "bool"; "unit"]
+  List.map (fun s -> (s, Ident.from_string s)) ["read_int"; "print_int"; "int"; "bool"; "unit"; "Array.create"]
 
 let get_reservedid (name : string) : Ident.t =
   match List.assoc_opt name initial with

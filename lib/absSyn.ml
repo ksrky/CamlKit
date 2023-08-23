@@ -11,6 +11,8 @@ type exp =
   | IfExp of {test: exp; then_: exp; else_: exp}
   | LetExp of {bnds: bnd list; body: exp}
   | LetrecExp of {bnds: bnd list; body: exp}
+  | SubscExp of {arr: exp; idx: exp}
+  | AssignExp of {arr: exp; idx: exp; rhs: exp}
 
 and bnd = {name: id; params: id list; body: exp}
 

@@ -39,6 +39,9 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
           | VarExp id when Ident.name id = "print_int" ->
               check_type (E.lookup_type id env) exp_ty;
               Prim ("printi", acc)
+          | VarExp id when Ident.name id = "Array.create" ->
+              check_type (E.lookup_type id env) exp_ty;
+              Prim ("init_array", acc)
           | fcn -> App (trexp (fcn, exp_ty), acc)
         in
         loop [] exp_ty exp
@@ -111,6 +114,9 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
           , List.map (fun {A.name; _} -> name) bnds
           , trans_bnds env' bnds
           , trans_exp env' body exp_ty )
+    | SubscExp {arr; idx}, exp_ty ->
+        check_type T.tINT exp_ty;
+        Select (check_exp env idx T.tINT, check_exp env arr T.tARRAY)
   in
   try trexp (exp, exp_ty)
   with E.Out_of_scope id ->

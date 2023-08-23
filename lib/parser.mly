@@ -6,7 +6,7 @@ open AbsSyn
 %token <string> ID
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-%token LPAREN RPAREN LAND LOR ARROW
+%token LPAREN RPAREN LAND LOR LARROW RARROW DOT
 %token IF THEN ELSE LET IN AND FUN REC
 %token TRUE FALSE
 
@@ -27,7 +27,7 @@ let prog :=
 let exp :=
   | ~=aexp;                                     { aexp }
   | fcn=exp; arg=aexp;                          { AppExp{fcn; arg} }
-  | FUN; vars=list(id); ARROW; body=exp;        { LamExp{vars; body} }
+  | FUN; vars=list(id); LARROW; body=exp;       { LamExp{vars; body} }
   | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; op=MinusOp; right} }
   | left=exp; PLUS; right=exp;                  { OpExp{left; op=PlusOp; right} }
   | left=exp; MINUS; right=exp;                 { OpExp{left; op=MinusOp; right} }
@@ -45,8 +45,11 @@ let exp :=
                                                 { IfExp{test; then_; else_} }
   | LET; ~=bnds; IN; body=exp;                  { LetExp{bnds; body} }
   | LET; REC; ~=bnds; IN; body=exp;             { LetrecExp{bnds; body} }
+  | arr=exp; DOT; LPAREN; idx=exp; RPAREN;      { SubscExp{arr; idx} }
+  | arr=exp; DOT; LPAREN; idx=exp; RPAREN; RARROW; rhs=exp;
+                                                { AssignExp{arr; idx; rhs} }
 
-let aexp := 
+let aexp :=
   | ~=id;                                       { VarExp id }
   | TRUE;                                       { BoolExp true }
   | FALSE;                                      { BoolExp false }
