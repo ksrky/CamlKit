@@ -39,7 +39,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
           | VarExp id when Ident.name id = "print_int" ->
               check_type (E.lookup_type id env) exp_ty;
               Prim ("printi", acc)
-          | VarExp id when Ident.name id = "Array.create" ->
+          | VarExp id when Ident.name id = "array_make" ->
               check_type (E.lookup_type id env) exp_ty;
               Prim ("init_array", acc)
           | fcn -> App (trexp (fcn, exp_ty), acc)
@@ -116,7 +116,12 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
           , trans_exp env' body exp_ty )
     | SubscExp {arr; idx}, exp_ty ->
         check_type T.tINT exp_ty;
+        (* tmp : array polymorphism *)
         Select (check_exp env idx T.tINT, check_exp env arr T.tARRAY)
+    | AssignExp {arr; idx; rhs}, exp_ty ->
+        check_type T.tUNIT exp_ty;
+        Rewrite
+          (Select (check_exp env idx T.tINT, check_exp env arr T.tARRAY), check_exp env rhs T.tINT)
   in
   try trexp (exp, exp_ty)
   with E.Out_of_scope id ->

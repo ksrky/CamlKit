@@ -17,7 +17,7 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   | Lam (vars, body) ->
       let n' = vars :: n in
       compile_lambda body n' c
-  | Prim ("init_array", args) -> compile_app args n c
+  | Prim ("init_array", args) -> compile_app (List.rev args) n c
   | Prim (f, args) -> compile_prim args n (List.assoc f primitives :: c)
   | If (test, then', else') -> compile_if (test, then', else') n c
   | Let (false, vars, vals, body) ->
@@ -26,9 +26,11 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   | Let (true, vars, vals, body) ->
       let newn = vars :: n in
       DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
+  | Select (ptr, idx) -> compile ptr n (compile idx n (M.SUB :: c))
+  | Rewrite (lhs, rhs) -> compile lhs n (compile rhs n (M.ST :: c))
 
 and compile_prim (args : I.exp list) (n : I.id list list) (c : M.t list) =
-  if args == [] then c else compile_prim (List.tl args) n (compile (List.hd args) n c)
+  if args = [] then c else compile_prim (List.tl args) n (compile (List.hd args) n c)
 
 and compile_lambda (body : I.exp) (n : I.id list list) (c : M.t list) : M.t list =
   LDF (compile body n [RTN]) :: c
@@ -37,7 +39,7 @@ and compile_if (test, tr, fa) n c =
   compile test n [SEL (compile tr n [JOIN], compile fa n [JOIN])] @ c
 
 and compile_app (args : I.exp list) n c =
-  if args == [] then c else compile_app (List.tl args) n (compile (List.hd args) n (CONS :: c))
+  if args = [] then c else compile_app (List.tl args) n (compile (List.hd args) n (CONS :: c))
 
 and index (x : Ident.t) (n : Ident.t list list) : int * int = indx x n 1
 

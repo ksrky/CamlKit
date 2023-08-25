@@ -11,7 +11,7 @@ let entry : env =
     (fun (k, b) -> Ident.Table.add k b)
     [ (Scoping.get_reservedid "print_int", ValBind (AbsSyn.FunTy (Types.tINT, Types.tUNIT)))
     ; (Scoping.get_reservedid "read_int", ValBind (AbsSyn.FunTy (Types.tUNIT, Types.tINT)))
-    ; ( Scoping.get_reservedid "Array.make"
+    ; ( Scoping.get_reservedid "array_make"
       , ValBind (AbsSyn.FunTy (Types.tINT, AbsSyn.FunTy (Types.tINT, Types.tARRAY))) ) ]
     empty
 

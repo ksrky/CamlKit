@@ -49,7 +49,7 @@ let cdr (i : int) : int =
   match cells.(i) with Cons (_, j) -> j | _ -> raise (Runtime_error "Cons required")
 
 let locate (ij : int) (r : int) =
-  let rec loc (y, z) = if y == 1 then car z else loc (y - 1, cdr z) in
+  let rec loc (y, z) = if y = 1 then car z else loc (y - 1, cdr z) in
   loc (cdr ij, loc (car ij, r))
 
 let binop (r : int ref) (op : int -> int -> int) : unit =
@@ -60,3 +60,5 @@ let binop (r : int ref) (op : int -> int -> int) : unit =
 let rplaca (x : int) (y : int) : int =
   cells.(x) <- Cons (y, cdr x);
   x
+
+let store (i : int) (x : int) : unit = cells.(i) <- Int x

@@ -15,6 +15,7 @@ and exp =
   | If of exp * exp * exp
   | Seq of exp list
   | Select of exp * exp
+  | Rewrite of exp * exp
 
 type def = {name: string; params: ids; body: exp}
 
