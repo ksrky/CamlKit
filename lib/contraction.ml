@@ -80,6 +80,7 @@ let rec gather (sc : Ident.t list) : I.exp -> unit = function
       List.iter2 (fun v b -> gather (v :: sc) b) vars bnds;
       gather sc body
   | If (test, then_, else_) -> gather sc test; gather sc then_; gather sc else_
+  | Seq (exp, rest) -> gather sc exp; gather sc rest
   | _ -> ()
 
 let rec reduce : I.exp -> I.exp = function
@@ -115,6 +116,7 @@ let rec reduce : I.exp -> I.exp = function
       in
       List.iter2 update_repres vars' bnds';
       if vars' = [] then reduce body else Let (isrec, vars', bnds', reduce body)
+  | Seq (exp, rest) -> Seq (reduce exp, reduce rest)
   | e -> e
 
 let step exp : I.exp =

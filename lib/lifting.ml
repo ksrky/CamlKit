@@ -28,6 +28,7 @@ let rec lift_lam (exp : exp) : exp =
         lift_lam (App (Var f, List.map snd !memo)) )
       else lift_lam body
   | If (test, then', else') -> If (lift_lam test, lift_lam then', lift_lam else')
+  | Seq (exp, rest) -> Seq (lift_lam exp, lift_lam rest)
 
 let f (exp : exp) : def list =
   let ans = lift_lam exp in

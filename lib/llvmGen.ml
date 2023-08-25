@@ -92,6 +92,9 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       (* Finally, set the builder to the end of the merge block. *)
       position_at_end merge_bb builder;
       phi
+  | Seq (exp, rest) ->
+      ignore (codegen_expr exp);
+      codegen_expr rest
   | _ -> ErrorMsg.impossible "malformed intermediate syntax"
 
 and codegen_proto (name, params) : unit =
