@@ -122,6 +122,15 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         check_type T.tUNIT exp_ty;
         Rewrite
           (Select (check_exp env idx T.tINT, check_exp env arr T.tARRAY), check_exp env rhs T.tINT)
+    | SeqExp exps, exp_ty ->
+        let rec loop = function
+          | [] -> check_type T.tUNIT exp_ty; I.Int 0
+          | [e] -> trans_exp env e exp_ty
+          | e :: es ->
+              let e', _ = infer_exp env e in
+              Seq (e', loop es)
+        in
+        loop exps
   in
   try trexp (exp, exp_ty)
   with E.Out_of_scope id ->

@@ -48,6 +48,7 @@ rule token = parse
 | "->"          { LARROW }
 | "<-"          { RARROW }
 | "."           { DOT }
+| ";"           { SEMI }
 
 (* integer and identifier *)
 | integer as i  { INT (int_of_string i) }

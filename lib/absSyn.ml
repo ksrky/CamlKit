@@ -13,6 +13,7 @@ type exp =
   | LetrecExp of {bnds: bnd list; body: exp}
   | SubscExp of {arr: exp; idx: exp}
   | AssignExp of {arr: exp; idx: exp; rhs: exp}
+  | SeqExp of exp list
 
 and bnd = {name: id; params: id list; body: exp}
 

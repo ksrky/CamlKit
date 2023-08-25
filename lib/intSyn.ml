@@ -13,7 +13,7 @@ and exp =
   | Prim of string * exps
   | Let of bool * ids * exps * exp
   | If of exp * exp * exp
-  | Seq of exp list
+  | Seq of exp * exp
   | Select of exp * exp
   | Rewrite of exp * exp
 

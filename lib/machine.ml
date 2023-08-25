@@ -27,6 +27,7 @@ type t =
   | READI
   | PRINTI
   | ST
+  | DIS
 
 let load_command (i : int) (n : int) : int = make_cons (make_int n) i
 
@@ -66,6 +67,7 @@ let rec load_instr i = function
   | READI -> load_command i 23
   | PRINTI -> load_command i 24
   | ST -> load_command i 25
+  | DIS -> load_command i 26
 
 and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 
@@ -146,6 +148,7 @@ let run_command () : unit =
       let x = pop s in
       let i = pop s in
       store i x
+  | 26 (* DIS *) -> ignore (pop s)
   | _ -> ErrorMsg.impossible "Invalid operation"
 
 let rec run_commands () : unit = if !c = 0 then () else (run_command (); run_commands ())
@@ -182,3 +185,5 @@ and show_instr : t -> string = function
   | STOP -> "STOP"
   | READI -> "READI"
   | PRINTI -> "PRINTI"
+  | ST -> "ST"
+  | DIS -> "DIS"

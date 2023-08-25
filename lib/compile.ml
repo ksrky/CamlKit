@@ -26,6 +26,7 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   | Let (true, vars, vals, body) ->
       let newn = vars :: n in
       DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
+  | Seq (exp, rest) -> compile exp n (M.DIS :: compile rest n c)
   | Select (ptr, idx) -> compile ptr n (compile idx n (M.SUB :: c))
   | Rewrite (lhs, rhs) -> compile lhs n (compile rhs n (M.ST :: c))
 
