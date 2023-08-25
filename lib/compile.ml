@@ -4,7 +4,7 @@ module M = Machine
 let primitives : (string * M.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
   ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readi", READI)
-  ; ("printi", PRINTI) ]
+  ; ("printi", PRINTI); ("array_alloca", MALLOC); ("store", ST); ("gep", SUB); ("load", LDS) ]
 
 let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   match e with
@@ -17,7 +17,6 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   | Lam (vars, body) ->
       let n' = vars :: n in
       compile_lambda body n' c
-  | Prim ("init_array", args) -> compile_app (List.rev args) n c
   | Prim (f, args) -> compile_prim args n (List.assoc f primitives :: c)
   | If (test, then', else') -> compile_if (test, then', else') n c
   | Let (false, vars, vals, body) ->
@@ -27,8 +26,6 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
       let newn = vars :: n in
       DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
   | Seq (exp, rest) -> compile exp n (M.DIS :: compile rest n c)
-  | Select (ptr, idx) -> compile ptr n (compile idx n (M.SUB :: c))
-  | Rewrite (lhs, rhs) -> compile lhs n (compile rhs n (M.ST :: c))
 
 and compile_prim (args : I.exp list) (n : I.id list list) (c : M.t list) =
   if args = [] then c else compile_prim (List.tl args) n (compile (List.hd args) n c)

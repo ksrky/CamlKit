@@ -44,6 +44,9 @@ let rec scoping_exp (sc : scope) : A.exp -> A.exp =
         let sc' = extend_list (List.map (fun (d : A.bnd) -> d.name) bnds) sc in
         LetrecExp {bnds= scoping_bnds sc' bnds; body= scoping_exp sc' body}
     | SeqExp exps -> SeqExp (List.map (scoping_exp sc) exps)
+    | SubscExp {arr; idx} -> SubscExp {arr= scoping_exp sc arr; idx= scoping_exp sc idx}
+    | AssignExp {arr; idx; rhs} ->
+        AssignExp {arr= scoping_exp sc arr; idx= scoping_exp sc idx; rhs= scoping_exp sc rhs}
   in
   scexp
 

@@ -17,3 +17,4 @@ val locate : int -> int -> int
 val binop : int ref -> (int -> int -> int) -> unit
 val rplaca : int -> int -> int
 val store : int -> int -> unit
+val array_alloca : int -> int -> int

@@ -15,7 +15,7 @@ and exp =
   | If of exp * exp * exp
   | Seq of exp * exp
   | Select of exp * exp
-  | Rewrite of exp * exp
+  | Store of exp * exp
 
 type def = {name: string; params: ids; body: exp}
 
@@ -26,6 +26,8 @@ let arith = ["add"; "sub"; "mul"; "div"]
 let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
 let io = ["printi"; "readi"]
+
+let mem = ["load"; "store"; "gep"; "array_alloca"]
 
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
@@ -50,6 +52,9 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
           ^ (if isrec then "rec " else "")
           ^ String.concat "; " (List.map2 (fun v e -> pprid v ^ " = " ^ pretty 0 e) vars exps)
           ^ " in " ^ pretty 0 body )
+    | Seq (exp, rest) -> "(" ^ pretty 0 exp ^ "; " ^ pretty 0 rest ^ ")"
+    | Select (exp, idx) -> pretty 3 exp ^ ".(" ^ pretty 0 idx ^ ")"
+    | Store (lhs, rhs) -> pretty 0 lhs ^ "<-" ^ pretty 0 rhs
   in
   pretty 0 exp
 
