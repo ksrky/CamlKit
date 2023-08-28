@@ -15,8 +15,8 @@ and exp =
   | App of exp * exps
   | Lam of binders * exp
   | Prim of string * exps
-  | Let of bool * binders * exps * exp
   | If of exp * exp * exp
+  | Let of bool * binders * exps * exp
   | Seq of exp * exp
 
 type frag = {name: string; params: binders; body: exp}
@@ -28,11 +28,6 @@ let arith = ["add"; "sub"; "mul"; "div"]
 let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
 let effect = ["printi"; "readi"; "store"; "array_alloca"]
-
-(*
-   IO:     printi, readi
-   Memory: load, store, gep, array_alloca
-*)
 
 let rec ppr_ty : ty -> string = AbsSyn.ppr_ty
 

@@ -2,13 +2,25 @@ module A = AbsSyn
 module I = IntSyn
 module E = Env
 module T = Types
-module Tc = TypeCheck
+module U = Unification
 
 type expected = Infer of A.ty option ref | Check of A.ty
 
 let check_type (ty : A.ty) : expected -> unit = function
-  | Check ty' -> Tc.unify ty ty'
+  | Check ty' -> U.unify ty ty'
   | Infer ref -> ref := Some ty
+
+let zonk_bndrs : I.binder list -> I.binder list = List.map (fun (id, ty) -> (id, T.zonk_type ty))
+
+let rec zonk_expr : I.exp -> I.exp = function
+  | Var (id, ty) -> Var (id, T.zonk_type ty)
+  | App (fcn, args) -> App (zonk_expr fcn, List.map zonk_expr args)
+  | Lam (bndrs, body) -> Lam (zonk_bndrs bndrs, zonk_expr body)
+  | Prim (op, args) -> Prim (op, List.map zonk_expr args)
+  | If (test, then_, else_) -> If (zonk_expr test, zonk_expr then_, zonk_expr else_)
+  | Let (isrec, bndrs, defs, body) ->
+      Let (isrec, zonk_bndrs bndrs, List.map zonk_expr defs, zonk_expr body)
+  | Seq (e1, e2) -> Seq (zonk_expr e1, zonk_expr e2)
 
 let mkbndrs : Ident.t list -> A.ty list -> I.binders = List.map2 (fun x y -> (x, y))
 
@@ -17,7 +29,7 @@ let rec check_exp env exp ty : I.exp = trans_exp env exp (Check ty)
 and infer_exp env exp : I.exp * A.ty =
   let ref = ref None in
   let exp' = trans_exp env exp (Infer ref) in
-  (exp', Option.get !ref)
+  (exp', T.zonk_type (Option.get !ref))
 
 and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
   let rec trexp : A.exp * expected -> I.exp = function
@@ -49,7 +61,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         in
         loop [] exp_ty exp
     | LamExp {vars; body}, Check ty ->
-        let arg_tys, body_ty = Tc.unify_funs vars ty in
+        let arg_tys, body_ty = U.unify_funs vars ty in
         let env' = List.fold_right2 (fun id ty -> E.extend id (ValBind ty)) vars arg_tys env in
         let bndrs = mkbndrs vars arg_tys in
         let body' = check_exp env' body body_ty in
@@ -133,7 +145,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         in
         loop exps
   in
-  try trexp (exp, exp_ty)
+  try zonk_expr (trexp (exp, exp_ty))
   with E.Out_of_scope id ->
     ErrorMsg.error ("Unbound value " ^ Ident.name id);
     Nil
