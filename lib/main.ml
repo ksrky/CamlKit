@@ -31,7 +31,7 @@ let compile (path : string) : unit =
   let intsyn3 = Simplify.f intsyn2 in
   let intsyn4 = ClosConv.f intsyn3 in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn4); *)
-  let defs = Lifting.f intsyn4 in
-  (* print_endline (IntSyn.ppr_defs defs); *)
-  LlvmGen.codegen (Filename.basename path) defs;
+  let frags = Lifting.f intsyn4 in
+  (* print_endline (IntSyn.ppr_frags frags); *)
+  LlvmGen.codegen (Filename.basename path) frags;
   Llvm.print_module (Filename.remove_extension path ^ ".ll") !LlvmGen.the_module

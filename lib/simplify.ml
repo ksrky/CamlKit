@@ -1,12 +1,12 @@
 module I = IntSyn
 
-let rec uncurrying : I.exp -> Ident.t list * I.exp = function
+let rec uncurrying : I.exp -> I.binders * I.exp = function
   | Lam (vars, body) ->
       let vars', body' = uncurrying body in
       (vars @ vars', body')
   | e -> ([], e)
 
-let rec let_expansion : I.exp -> Ident.t list * I.exp list * I.exp = function
+let rec let_expansion : I.exp -> I.binder list * I.exp list * I.exp = function
   | Let (false, vars, bnds, body) ->
       let vars', bnds', body' = let_expansion body in
       (vars @ vars', bnds @ bnds', body')

@@ -10,20 +10,20 @@ let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   match e with
   | Nil -> NIL :: c
   | Int x -> LDC x :: c
-  | Var x ->
+  | Var (x, _) ->
       let i, j = index x n in
       LD (i, j) :: c
   | App (fcn, args) -> NIL :: compile_app args n (compile fcn n (AP :: c))
   | Lam (vars, body) ->
-      let n' = vars :: n in
+      let n' = List.map fst vars :: n in
       compile_lambda body n' c
   | Prim (f, args) -> compile_prim args n (List.assoc f primitives :: c)
   | If (test, then', else') -> compile_if (test, then', else') n c
   | Let (false, vars, vals, body) ->
-      let newn = vars :: n in
+      let newn = List.map fst vars :: n in
       NIL :: compile_app vals n (compile_lambda body newn (AP :: c))
   | Let (true, vars, vals, body) ->
-      let newn = vars :: n in
+      let newn = List.map fst vars :: n in
       DUM :: NIL :: compile_app vals newn (compile_lambda body newn (RAP :: c))
   | Seq (exp, rest) -> compile exp n (M.DIS :: compile rest n c)
 

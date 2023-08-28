@@ -13,8 +13,8 @@ let int_type = i64_type context
 let rec codegen_expr : IntSyn.exp -> llvalue = function
   | Int i -> const_int int_type i
   | Nil -> const_null int_type
-  | Var id -> Hashtbl.find named_values id
-  | App (Var fcn, args) ->
+  | Var (id, _) -> Hashtbl.find named_values id
+  | App (Var (fcn, _), args) ->
       let callee =
         match lookup_function (Ident.unique_name fcn) !the_module with
         | Some callee -> callee
@@ -112,7 +112,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       codegen_expr rest
   | _ -> ErrorMsg.impossible "malformed intermediate syntax"
 
-and codegen_proto (name, params) : unit =
+and codegen_proto ((name, params) : string * IntSyn.binders) : unit =
   (* Make the function type: double(double,double) etc. *)
   let param_tys = Array.make (List.length params) int_type in
   let func_ty = function_type int_type param_tys in
@@ -124,19 +124,19 @@ and codegen_proto (name, params) : unit =
   (* Set names for all arguments. *)
   Array.iteri
     (fun i a ->
-      let id = List.nth params i in
+      let id, _ = List.nth params i in
       set_value_name (Ident.unique_name id) a;
       Hashtbl.add named_values id a )
     (Llvm.params func)
 
-let codegen_func : IntSyn.def -> unit = function
+let codegen_func : IntSyn.frag -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
       let name = name in
       let func = Option.get (lookup_function name !the_module) in
       Array.iteri
         (fun i a ->
-          let id = List.nth params i in
+          let id, _ = List.nth params i in
           set_value_name (Ident.unique_name id) a;
           Hashtbl.add named_values id a )
         (Llvm.params func);
@@ -152,11 +152,11 @@ let codegen_func : IntSyn.def -> unit = function
       with e -> delete_function func; raise e )
 
 let codegen_prims () : unit =
-  codegen_proto ("printi", [Ident.from_string "x"]);
-  codegen_proto ("readi", [Ident.from_string "x"])
+  codegen_proto ("printi", [(Ident.from_string "x", Types.tINT)]);
+  codegen_proto ("readi", [(Ident.from_string "x", Types.tUNIT)])
 
-let codegen (modid : string) (defs : IntSyn.defs) : unit =
+let codegen (modid : string) (frags : IntSyn.frags) : unit =
   the_module := create_module context modid;
   codegen_prims ();
-  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) defs;
-  List.iter (fun def -> codegen_func def) defs
+  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) frags;
+  List.iter (fun frag -> codegen_func frag) frags

@@ -10,6 +10,8 @@ let check_type (ty : A.ty) : expected -> unit = function
   | Check ty' -> Tc.unify ty ty'
   | Infer ref -> ref := Some ty
 
+let mkbndrs : Ident.t list -> A.ty list -> I.binders = List.map2 (fun x y -> (x, y))
+
 let rec check_exp env exp ty : I.exp = trans_exp env exp (Check ty)
 
 and infer_exp env exp : I.exp * A.ty =
@@ -20,8 +22,9 @@ and infer_exp env exp : I.exp * A.ty =
 and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
   let rec trexp : A.exp * expected -> I.exp = function
     | VarExp id, exp_ty ->
-        check_type (E.lookup_type id env) exp_ty;
-        Var id
+        let ty = E.lookup_type id env in
+        check_type ty exp_ty;
+        Var (id, ty)
     | NilExp, _ -> Nil
     | BoolExp b, exp_ty ->
         check_type T.tBOOL exp_ty;
@@ -48,14 +51,16 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
     | LamExp {vars; body}, Check ty ->
         let arg_tys, body_ty = Tc.unify_funs vars ty in
         let env' = List.fold_right2 (fun id ty -> E.extend id (ValBind ty)) vars arg_tys env in
+        let bndrs = mkbndrs vars arg_tys in
         let body' = check_exp env' body body_ty in
-        Lam (vars, body')
+        Lam (bndrs, body')
     | LamExp {vars; body}, Infer ref ->
         let var_tys = List.map (fun _ -> T.new_tyvar ()) vars in
         let env' = List.fold_right2 (fun id ty -> E.extend id (ValBind ty)) vars var_tys env in
+        let bndrs = mkbndrs vars var_tys in
         let body', body_ty = infer_exp env' body in
         ref := Some (List.fold_right (fun l r -> A.FunTy (l, r)) var_tys body_ty);
-        Lam (vars, body')
+        Lam (bndrs, body')
     | OpExp {left; op= PlusOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
         Prim ("add", [check_exp env left T.tINT; check_exp env right T.tINT])
@@ -96,11 +101,8 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
               E.extend name (ValBind tv) )
             bnds env
         in
-        Let
-          ( false
-          , List.map (fun {A.name; _} -> name) bnds
-          , trans_bnds env bnds
-          , trans_exp env' body exp_ty )
+        let bndrs, defs = List.split (trans_bnds env bnds) in
+        Let (false, bndrs, defs, trans_exp env' body exp_ty)
     | LetrecExp {bnds; body}, exp_ty ->
         let env' =
           List.fold_right
@@ -109,11 +111,8 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
               E.extend name (ValBind tv) )
             bnds env
         in
-        Let
-          ( true
-          , List.map (fun {A.name; _} -> name) bnds
-          , trans_bnds env' bnds
-          , trans_exp env' body exp_ty )
+        let bndrs, defs = List.split (trans_bnds env' bnds) in
+        Let (true, bndrs, defs, trans_exp env' body exp_ty)
     | SubscExp {arr; idx}, exp_ty ->
         check_type T.tINT exp_ty;
         (* tmp : array polymorphism *)
@@ -139,14 +138,25 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
     ErrorMsg.error ("Unbound value " ^ Ident.name id);
     Nil
 
-and trans_bnds env bnds =
+and trans_bnds env bnds : (I.binder * I.exp) list =
   let trbnds =
-    List.map (fun {A.params; A.body; _} ->
+    List.map (fun {A.name; A.params; A.body} ->
         let tv = T.new_tyvar () in
-        match params with
-        | [] -> trans_exp env body (Check tv)
-        | _ ->
-            let env' = List.fold_right (fun id -> E.extend id (ValBind tv)) params env in
-            Lam (params, trans_exp env' body (Check tv)) )
+        let body' =
+          match params with
+          | [] -> trans_exp env body (Check tv)
+          | _ ->
+              let bndrs = ref [] in
+              let env' =
+                List.fold_right
+                  (fun id ->
+                    let tv = T.new_tyvar () in
+                    bndrs := (id, tv) :: !bndrs;
+                    E.extend id (ValBind tv) )
+                  params env
+              in
+              Lam (!bndrs, trans_exp env' body (Check tv))
+        in
+        ((name, tv), body') )
   in
   trbnds bnds
