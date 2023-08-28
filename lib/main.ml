@@ -4,13 +4,10 @@ let run (path : string) =
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
   (* print_endline (AbsSyn.ppr_exp abssyn); *)
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
-  print_endline (IntSyn.ppr_exp Ident.name intsyn);
+  (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
-  print_endline (Machine.show_instrs instrs);
-  Stack.init ();
-  Machine.load_instrs instrs;
-  Machine.run_commands ();
-  print_newline ()
+  (* print_endline (Machine.show_instrs instrs); *)
+  Stack.init (); Machine.load_instrs instrs; Machine.run_commands (); print_newline ()
 
 (** [eval inp] evaluates string [inp] on the virtual machine. *)
 let eval (inp : string) =
