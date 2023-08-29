@@ -10,6 +10,16 @@ let named_values : (Ident.t, llvalue) Hashtbl.t = Hashtbl.create 10
 
 let int_type = i64_type context
 
+let arr_type = array_type int_type 100
+
+let llvm_type ty =
+  if ty = Types.tINT then int_type
+  else if ty = Types.tBOOL then int_type
+  else if ty = Types.tNIL then int_type
+  else if ty = Types.tUNIT then int_type
+  else if ty = Types.tARRAY then arr_type
+  else ErrorMsg.impossible ("unknown type: " ^ IntSyn.ppr_ty ty)
+
 let rec codegen_expr : IntSyn.exp -> llvalue = function
   | Int i -> const_int int_type i
   | Nil -> const_null int_type
@@ -53,10 +63,10 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       let ptr_val = codegen_expr ptr in
       let rhs_val = codegen_expr rhs in
       build_store rhs_val ptr_val builder
-  | Prim ("gep", [ptr; idx]) ->
-      let ptr_val = codegen_expr ptr in
+  | Prim ("gep", [arr; idx]) ->
+      let arr_val = codegen_expr arr in
       let idx_val = codegen_expr idx in
-      build_gep ptr_val (Array.of_list [idx_val]) "geptmp" builder
+      build_gep arr_val (Array.of_list [idx_val]) "geptmp" builder
   | Prim ("array_alloca", [size; init]) ->
       let size_val = codegen_expr size in
       let _init_val = codegen_expr init in
@@ -114,7 +124,14 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
 
 and codegen_proto ((name, params) : string * IntSyn.binders) : unit =
   (* Make the function type: double(double,double) etc. *)
-  let param_tys = Array.make (List.length params) int_type in
+  let param_tys =
+    Array.of_list
+      (List.map
+         (fun (id, ty) ->
+           print_endline (Ident.name id);
+           llvm_type ty )
+         params )
+  in
   let func_ty = function_type int_type param_tys in
   let func =
     match lookup_function name !the_module with

@@ -4,12 +4,12 @@ module T = Types
 let openv : (string * I.ty) list =
   [ ("add", T.([tINT; tINT] --> tINT)); ("sub", T.([tINT; tINT] --> tINT))
   ; ("mul", T.([tINT; tINT] --> tINT)); ("div", T.([tINT; tINT] --> tINT))
-  ; ("eq", T.([tINT; tINT] --> tINT)); ("ne", T.([tINT; tINT] --> tINT))
-  ; ("lt", T.([tINT; tINT] --> tINT)); ("le", T.([tINT; tINT] --> tINT))
-  ; ("gt", T.([tINT; tINT] --> tINT)); ("ge", T.([tINT; tINT] --> tINT))
+  ; ("eq", T.([tINT; tINT] --> tBOOL)); ("ne", T.([tINT; tINT] --> tBOOL))
+  ; ("lt", T.([tINT; tINT] --> tBOOL)); ("le", T.([tINT; tINT] --> tBOOL))
+  ; ("gt", T.([tINT; tINT] --> tBOOL)); ("ge", T.([tINT; tINT] --> tBOOL))
   ; ("printi", T.([tINT] --> tUNIT)); ("readi", T.([tUNIT] --> tINT)); ("load", T.([tINT] --> tINT))
-  ; ("store", T.([tINT; tINT] --> tUNIT)); ("gep", T.([tINT; tINT] --> tINT))
-  ; ("array_alloca", T.([tINT; tINT] --> tINT)) ]
+  ; ("store", T.([tINT; tINT] --> tUNIT)); ("gep", T.([tARRAY; tINT] --> tINT))
+  ; ("array_alloca", T.([tINT; tINT] --> tARRAY)) ]
 
 let rec tyeqv ty1 ty2 =
   match (ty1, ty2) with
@@ -18,6 +18,7 @@ let rec tyeqv ty1 ty2 =
   | AbsSyn.TyconTy {con= c1; args= a1}, AbsSyn.TyconTy {con= c2; args= a2} when c1 = c2 ->
       List.iter2 tyeqv a1 a2
   | AbsSyn.FunTy (a1, b1), AbsSyn.FunTy (a2, b2) -> tyeqv a1 a2; tyeqv b1 b2
+  | _ -> ErrorMsg.impossible ("Types not match: " ^ I.ppr_ty ty1 ^ " with " ^ I.ppr_ty ty2)
 
 let rec check_app fcn_ty = function
   | [] -> fcn_ty
@@ -30,16 +31,16 @@ let rec type_of (env : (Ident.t * I.ty) list) : I.exp -> I.ty = function
   | Int _ -> T.tINT
   | Nil -> T.tNIL
   | Var (id, ty) ->
-      let ty' = List.assoc id env in
-      tyeqv ty ty'; ty
+      (try tyeqv ty (List.assoc id env) with Not_found -> ());
+      ty
   | App (fcn, args) ->
       let fcn_ty = type_of env fcn in
       let arg_tys = List.map (type_of env) args in
       check_app fcn_ty arg_tys
-  | Lam (bndrs, body) ->
-      let arg_tys = List.map snd bndrs in
+  | Lam (vars, body) ->
+      let var_tys = List.map snd vars in
       let res_ty = type_of env body in
-      T.(arg_tys --> res_ty)
+      T.(var_tys --> res_ty)
   | Prim (op, args) ->
       let op_ty = List.assoc op openv in
       let arg_tys = List.map (type_of env) args in

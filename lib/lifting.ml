@@ -13,8 +13,7 @@ let rec lift_lam (exp : exp) : exp =
   | Lam (vars, body) ->
       let id = Ident.fresh () in
       append {name= Ident.unique_name id; params= vars; body= lift_lam body};
-      Var (id, Types.new_tyvar ())
-      (* tmp *)
+      Var (id, TypeCheck.type_of [] exp)
   | Prim (fcn, args) -> Prim (fcn, List.map lift_lam args)
   | Let (_, vars, exps, body) ->
       let memo = ref [] in
@@ -23,11 +22,11 @@ let rec lift_lam (exp : exp) : exp =
           | Lam (params, exp) -> append {name= Ident.unique_name id; params; body= lift_lam exp}
           | exp -> memo := ((id, ty), exp) :: !memo )
         vars exps;
-      if !memo <> [] then (
-        let f = Ident.fresh () in
-        append {name= Ident.unique_name f; params= List.map fst !memo; body= lift_lam body};
-        lift_lam (App (Var (f, Types.new_tyvar ()), List.map snd !memo)) (* tmp *) )
-      else lift_lam body
+      if !memo = [] then lift_lam body
+      else
+        let f = Ident.fresh () and params = List.map fst !memo in
+        append {name= Ident.unique_name f; params; body= lift_lam body};
+        lift_lam (App (Var (f, TypeCheck.type_of [] (Lam (params, body))), List.map snd !memo))
   | If (test, then', else') -> If (lift_lam test, lift_lam then', lift_lam else')
   | Seq (exp, rest) -> Seq (lift_lam exp, lift_lam rest)
 

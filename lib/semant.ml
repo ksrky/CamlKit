@@ -21,6 +21,7 @@ let rec zonk_expr : I.exp -> I.exp = function
   | Let (isrec, bndrs, defs, body) ->
       Let (isrec, zonk_bndrs bndrs, List.map zonk_expr defs, zonk_expr body)
   | Seq (e1, e2) -> Seq (zonk_expr e1, zonk_expr e2)
+  | e -> e
 
 let mkbndrs : Ident.t list -> A.ty list -> I.binders = List.map2 (fun x y -> (x, y))
 
@@ -43,21 +44,21 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         if b then Int 1 else Int 0
     | IntExp x, exp_ty -> check_type T.tINT exp_ty; Int x
     | (AppExp _ as exp), exp_ty ->
-        let rec loop acc exp_ty : A.exp -> I.exp = function
+        let rec loop acc (exp_ty' : expected) : A.exp -> I.exp = function
           | AppExp {fcn; arg} ->
               let arg_ty = T.new_tyvar () and res_ty = T.new_tyvar () in
-              check_type res_ty exp_ty;
-              loop (check_exp env arg arg_ty :: acc) exp_ty fcn
+              check_type res_ty exp_ty';
+              loop (check_exp env arg arg_ty :: acc) (Check T.([arg_ty] --> res_ty)) fcn
           | VarExp id when Ident.name id = "read_int" ->
-              check_type (E.lookup_type id env) exp_ty;
+              check_type (E.lookup_type id env) exp_ty';
               Prim ("readi", acc)
           | VarExp id when Ident.name id = "print_int" ->
-              check_type (E.lookup_type id env) exp_ty;
+              check_type (E.lookup_type id env) exp_ty';
               Prim ("printi", acc)
           | VarExp id when Ident.name id = "array_make" ->
-              check_type (E.lookup_type id env) exp_ty;
+              check_type (E.lookup_type id env) exp_ty';
               Prim ("array_alloca", acc)
-          | fcn -> App (trexp (fcn, exp_ty), acc)
+          | fcn ->  App (trexp (fcn, exp_ty'), acc)
         in
         loop [] exp_ty exp
     | LamExp {vars; body}, Check ty ->
@@ -151,24 +152,23 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
     Nil
 
 and trans_bnds env bnds : (I.binder * I.exp) list =
-  let trbnds =
-    List.map (fun {A.name; A.params; A.body} ->
-        let tv = T.new_tyvar () in
-        let body' =
-          match params with
-          | [] -> trans_exp env body (Check tv)
-          | _ ->
-              let bndrs = ref [] in
-              let env' =
-                List.fold_right
-                  (fun id ->
-                    let tv = T.new_tyvar () in
-                    bndrs := (id, tv) :: !bndrs;
-                    E.extend id (ValBind tv) )
-                  params env
-              in
-              Lam (!bndrs, trans_exp env' body (Check tv))
-        in
-        ((name, tv), body') )
-  in
-  trbnds bnds
+  List.map
+    (fun {A.name; A.params; A.body} ->
+      let body', ty =
+        match params with
+        | [] -> infer_exp env body
+        | _ ->
+            let bndrs = ref [] in
+            let env' =
+              List.fold_right
+                (fun id ->
+                  let tv = T.new_tyvar () in
+                  bndrs := (id, tv) :: !bndrs;
+                  E.extend id (ValBind tv) )
+                params env
+            in
+            let body', ty = infer_exp env' body in
+            (Lam (!bndrs, body'), ty)
+      in
+      ((name, ty), body') )
+    bnds

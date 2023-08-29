@@ -38,11 +38,11 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
   let pbndr ((id, ty) : binder) = pprid id ^ ": " ^ ppr_ty ty in
   let rec pexp ctx exp =
     match exp with
-    | Var var -> pbndr var
+    | Var var -> parens ctx 0 (pbndr var)
     | Nil -> "nil"
     | Int i -> string_of_int i
     | App (fcn, args) ->
-        parens ctx 2 (pexp 2 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
+        parens ctx 1 (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
     | Lam (bndrs, body) ->
         parens ctx 0
           ( "fun "

@@ -12,12 +12,10 @@ let rec unify ty1 ty2 : unit =
   | _, _ -> ErrorMsg.error ("Cannot unify types: " ^ A.ppr_ty ty1 ^ " with " ^ A.ppr_ty ty2)
 
 and unify_var (tv1 : A.tyvar) (ty2 : A.ty) : unit =
-  match (tv1, ty2) with
-  | _, A.MetaTy tv2 -> (
-    match (tv1.repres, tv2.repres) with
-    | Some ty1, _ -> unify ty1 ty2
-    | None, Some ty2' -> unify (A.MetaTy tv1) ty2'
-    | None, None -> tv1.repres <- Some ty2 )
+  match (tv1.repres, ty2) with
+  | Some ty1, _ -> unify ty1 ty2
+  | None, A.MetaTy tv2 -> (
+    match tv2.repres with Some ty2 -> unify (A.MetaTy tv1) ty2 | None -> tv1.repres <- Some ty2 )
   | _ ->
       occurs_check tv1 ty2;
       tv1.repres <- Some ty2
