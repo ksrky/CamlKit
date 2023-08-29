@@ -17,7 +17,7 @@ let llvm_type ty =
   else if ty = Types.tBOOL then int_type
   else if ty = Types.tNIL then int_type
   else if ty = Types.tUNIT then int_type
-  else if ty = Types.tARRAY then arr_type
+  else if ty = Types.tARRAY then pointer_type arr_type
   else ErrorMsg.impossible ("unknown type: " ^ IntSyn.ppr_ty ty)
 
 let rec codegen_expr : IntSyn.exp -> llvalue = function
@@ -124,14 +124,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
 
 and codegen_proto ((name, params) : string * IntSyn.binders) : unit =
   (* Make the function type: double(double,double) etc. *)
-  let param_tys =
-    Array.of_list
-      (List.map
-         (fun (id, ty) ->
-           print_endline (Ident.name id);
-           llvm_type ty )
-         params )
-  in
+  let param_tys = Array.of_list (List.map (fun (_, ty) -> llvm_type ty) params) in
   let func_ty = function_type int_type param_tys in
   let func =
     match lookup_function name !the_module with
