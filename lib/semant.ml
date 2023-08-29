@@ -140,7 +140,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
           | [] -> check_type T.tUNIT exp_ty; I.Int 0
           | [e] -> trans_exp env e exp_ty
           | e :: es ->
-              let e', _ = infer_exp env e in
+              let e' = check_exp env e T.tUNIT in
               Seq (e', loop es)
         in
         loop exps
