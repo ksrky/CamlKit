@@ -26,12 +26,12 @@ let compile (path : string) : unit =
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
   (* print_endline (AbsSyn.ppr_exp abssyn'); *)
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
-  print_endline (IntSyn.ppr_exp Ident.name intsyn);
+  (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let intsyn2 = Contraction.steps Contraction.max_steps intsyn in
   let intsyn3 = Simplify.f intsyn2 in
   let intsyn4 = ClosConv.f intsyn3 in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn4); *)
   let frags = Lifting.f intsyn4 in
-  print_endline (IntSyn.ppr_frags frags);
+  (* print_endline (IntSyn.ppr_frags frags); *)
   LlvmGen.codegen (Filename.basename path) frags;
   Llvm.print_module (Filename.remove_extension path ^ ".ll") !LlvmGen.the_module
