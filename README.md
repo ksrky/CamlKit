@@ -10,27 +10,7 @@ dune install CamlKit
 
 ## Syntax
 
-$$
-\begin{align}
-&prog ::=& &exp \nonumber \\
-\nonumber \\
-&exp ::=& &id \nonumber \\
-&&        &nil \nonumber \\
-&&        &true\ |\ false \nonumber \\
-&&        &integer \nonumber \\
-&&        &exp\ exp \nonumber \\
-&&        &\texttt{fun}\ id\ ...\ id\ \texttt{->}\ exp \nonumber \\
-&&        &exp\ op\ exp \nonumber \\
-&&        &\texttt{if}\ exp\ \texttt{then}\ exp\ \texttt{else}\ exp \nonumber \\
-&&        &\texttt{let}\ bnds\ \texttt{in}\ exp \nonumber \\
-&&        &\texttt{let}\ \texttt{rec}\ bnds\ \texttt{in}\ exp \nonumber \\
-\nonumber \\
-&bnds ::=& &bnd\ \texttt{and}\ bnds \nonumber \\
-&&         &bnd \nonumber \\
-
-&bnd ::=& &id\ \texttt{=}\ exp \nonumber
-\end{align}
-$$
+[Syntax of CamlKit](https://imgur.com/a/u5VSZDn)
 
 ## SECD Backend
 
