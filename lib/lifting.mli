@@ -1,1 +1,1 @@
-val f : IntSyn.exp -> IntSyn.def list
+val f : IntSyn.exp -> IntSyn.frag list

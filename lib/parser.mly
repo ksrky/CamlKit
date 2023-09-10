@@ -6,25 +6,22 @@ open AbsSyn
 %token <string> ID
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-%token LPAREN RPAREN AND_ OR ARROW
+%token LPAREN RPAREN LAND LOR LARROW RARROW DOT SEMI
 %token IF THEN ELSE LET IN AND FUN REC
+%token TRUE FALSE
 
-%right OR
-%right AND_
+%right LOR
+%right LAND
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left UMINUS
 
-%start <def list> prog
-%start <exp> line
+%start <exp> prog
 
 %%
 
 let prog :=
-  | ~=nonempty_list(def); EOF;                  <>
-
-let line :=
   | ~=exp; EOF;                                 <>
 
 let def :=
@@ -34,7 +31,7 @@ let def :=
 let exp :=
   | ~=aexp;                                     { aexp }
   | fcn=exp; arg=aexp;                          { AppExp{fcn; arg} }
-  | FUN; vars=list(id); ARROW; body=exp;        { LamExp{vars; body} }
+  | FUN; vars=list(id); LARROW; body=exp;       { LamExp{vars; body} }
   | MINUS; right=exp; %prec UMINUS              { OpExp{left=IntExp 0; op=MinusOp; right} }
   | left=exp; PLUS; right=exp;                  { OpExp{left; op=PlusOp; right} }
   | left=exp; MINUS; right=exp;                 { OpExp{left; op=MinusOp; right} }
@@ -46,16 +43,25 @@ let exp :=
   | left=exp; LE; right=exp;                    { OpExp{left; op=LeOp; right} }
   | left=exp; GT; right=exp;                    { OpExp{left; op=GtOp; right} }
   | left=exp; GE; right=exp;                    { OpExp{left; op=GeOp; right} }
-  | test=exp; AND_; ~=exp;                      { IfExp{test; then_=exp; else_=IntExp 0} }
-  | test=exp; OR; ~=exp;                        { IfExp{test; then_=IntExp 1; else_=exp} }
+  | test=exp; LAND; ~=exp;                      { IfExp{test; then_=exp; else_=BoolExp false} }
+  | test=exp; LOR; ~=exp;                       { IfExp{test; then_=BoolExp true; else_=exp} }
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
                                                 { IfExp{test; then_; else_} }
-  | LET; ~=bnds; IN; body=exp;                  { LetExp{bnds; body} }
-  | LET; REC; ~=bnds; IN; body=exp;             { LetrecExp{bnds; body} }
+  | LET; ~=bnds; IN; exps=separated_list(SEMI, exp);
+                                                { LetExp{bnds; body=SeqExp exps} }
+  | LET; REC; ~=bnds; IN; exps=separated_list(SEMI, exp);
+                                                { LetrecExp{bnds; body=SeqExp exps} }
+  | arr=exp; DOT; LPAREN; idx=exp; RPAREN;      { SubscExp{arr; idx} }
+  | arr=exp; DOT; LPAREN; idx=exp; RPAREN; RARROW; rhs=exp;
+                                                { AssignExp{arr; idx; rhs} }
+  | LPAREN; exps=separated_list(SEMI, exp); RPAREN;
+                                                { SeqExp exps }
 
-let aexp := 
+let aexp :=
   | ~=id;                                       { VarExp id }
-  | int=INT;                                    { IntExp int }
+  | TRUE;                                       { BoolExp true }
+  | FALSE;                                      { BoolExp false }
+  | i=INT;                                      { IntExp i }
   | LPAREN; ~=exp; RPAREN;                      { exp }
 
 let bnds ==

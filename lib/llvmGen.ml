@@ -10,11 +10,21 @@ let named_values : (Ident.t, llvalue) Hashtbl.t = Hashtbl.create 10
 
 let int_type = i64_type context
 
+let arr_type = array_type int_type 100
+
+let llvm_type ty =
+  if ty = Types.tINT then int_type
+  else if ty = Types.tBOOL then int_type
+  else if ty = Types.tNIL then int_type
+  else if ty = Types.tUNIT then int_type
+  else if ty = Types.tARRAY then pointer_type arr_type
+  else ErrorMsg.impossible ("unknown type: " ^ IntSyn.ppr_ty ty)
+
 let rec codegen_expr : IntSyn.exp -> llvalue = function
   | Int i -> const_int int_type i
   | Nil -> const_null int_type
-  | Var id -> Hashtbl.find named_values id
-  | App (Var fcn, args) ->
+  | Var (id, _) -> Hashtbl.find named_values id
+  | App (Var (fcn, _), args) ->
       let callee =
         match lookup_function (Ident.unique_name fcn) !the_module with
         | Some callee -> callee
@@ -25,7 +35,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       (* if (Contraction.hashtbl_find fcn).isrec then set_tail_call true ci;
          tmp: LlvmGen depends on Contraction module *)
       ci
-  | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
+  | Prim (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       match fcn with
@@ -33,7 +43,7 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       | "sub" -> build_sub lhs_val rhs_val "subtmp" builder
       | "mul" -> build_mul lhs_val rhs_val "multmp" builder
       | "div" -> build_sdiv lhs_val rhs_val "divtmp" builder )
-  | Builtin (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
+  | Prim (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       let i =
@@ -46,7 +56,22 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
         | "ge" -> build_icmp Icmp.Uge lhs_val rhs_val "getmp" builder
       in
       build_intcast i int_type "booltmp" builder
-  | Builtin (fcn, args) ->
+  | Prim ("load", [arg]) ->
+      let arg_val = codegen_expr arg in
+      build_load arg_val "loadtmp" builder
+  | Prim ("store", [ptr; rhs]) ->
+      let ptr_val = codegen_expr ptr in
+      let rhs_val = codegen_expr rhs in
+      build_store rhs_val ptr_val builder
+  | Prim ("gep", [arr; idx]) ->
+      let arr_val = codegen_expr arr in
+      let idx_val = codegen_expr idx in
+      build_gep arr_val (Array.of_list [idx_val]) "geptmp" builder
+  | Prim ("array_alloca", [size; init]) ->
+      let size_val = codegen_expr size in
+      let _init_val = codegen_expr init in
+      build_array_alloca int_type size_val "allocatmp" builder
+  | Prim (fcn, args) ->
       let callee = Option.get (lookup_function fcn !the_module) in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
@@ -92,11 +117,14 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       (* Finally, set the builder to the end of the merge block. *)
       position_at_end merge_bb builder;
       phi
+  | Seq (exp, rest) ->
+      ignore (codegen_expr exp);
+      codegen_expr rest
   | _ -> ErrorMsg.impossible "malformed intermediate syntax"
 
-and codegen_proto (name, params) : unit =
+and codegen_proto ((name, params) : string * IntSyn.binders) : unit =
   (* Make the function type: double(double,double) etc. *)
-  let param_tys = Array.make (List.length params) int_type in
+  let param_tys = Array.of_list (List.map (fun (_, ty) -> llvm_type ty) params) in
   let func_ty = function_type int_type param_tys in
   let func =
     match lookup_function name !the_module with
@@ -106,19 +134,19 @@ and codegen_proto (name, params) : unit =
   (* Set names for all arguments. *)
   Array.iteri
     (fun i a ->
-      let id = List.nth params i in
+      let id, _ = List.nth params i in
       set_value_name (Ident.unique_name id) a;
       Hashtbl.add named_values id a )
     (Llvm.params func)
 
-let codegen_func : IntSyn.def -> unit = function
+let codegen_func : IntSyn.frag -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
       let name = name in
       let func = Option.get (lookup_function name !the_module) in
       Array.iteri
         (fun i a ->
-          let id = List.nth params i in
+          let id, _ = List.nth params i in
           set_value_name (Ident.unique_name id) a;
           Hashtbl.add named_values id a )
         (Llvm.params func);
@@ -133,12 +161,12 @@ let codegen_func : IntSyn.def -> unit = function
         Llvm_analysis.assert_valid_function func
       with e -> delete_function func; raise e )
 
-let codegen_builtins () : unit =
-  codegen_proto ("printi", [Ident.from_string "x"]);
-  codegen_proto ("readi", [Ident.from_string "x"])
+let codegen_prims () : unit =
+  codegen_proto ("printi", [(Ident.from_string "x", Types.tINT)]);
+  codegen_proto ("readi", [(Ident.from_string "x", Types.tUNIT)])
 
-let codegen (modid : string) (defs : IntSyn.defs) : unit =
+let codegen (modid : string) (frags : IntSyn.frags) : unit =
   the_module := create_module context modid;
-  codegen_builtins ();
-  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) defs;
-  List.iter (fun def -> codegen_func def) defs
+  codegen_prims ();
+  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) frags;
+  List.iter (fun frag -> codegen_func frag) frags

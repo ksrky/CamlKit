@@ -27,6 +27,8 @@ rule token = parse
 | "and"         { AND }
 | "fun"         { FUN }
 | "rec"         { REC }
+| "true"        { TRUE }
+| "false"       { FALSE }
 
 (* reserved symbols *)
 | "("           { LPAREN }
@@ -41,9 +43,12 @@ rule token = parse
 | "<="          { LE }
 | ">"           { GT }
 | ">="          { GE }
-| "&"           { AND_ }
-| "|"           { OR }
-| "->"          { ARROW }
+| "&&"          { LAND }
+| "||"          { LOR }
+| "->"          { LARROW }
+| "<-"          { RARROW }
+| "."           { DOT }
+| ";"           { SEMI }
 
 (* integer and identifier *)
 | integer as i  { INT (int_of_string i) }

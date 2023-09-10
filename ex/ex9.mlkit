@@ -1,0 +1,5 @@
+let
+  arr = array_make 10 0
+in
+  arr.(1) <- 5;
+  print_int (arr.(1))
