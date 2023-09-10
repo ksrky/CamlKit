@@ -5,19 +5,19 @@ declare i64 @printi(i64)
 
 declare i64 @readi(i64)
 
-define i64 @iseven_7(i64 %n_8) {
-iseven_7:
-  %eqtmp = icmp eq i64 %n_8, 0
+define i64 @iseven_5(i64 %n_6) {
+iseven_5:
+  %eqtmp = icmp eq i64 %n_6, 0
   %booltmp = sext i1 %eqtmp to i64
   %ifcond = icmp ne i64 %booltmp, 0
   br i1 %ifcond, label %then, label %else
 
-then:                                             ; preds = %iseven_7
+then:                                             ; preds = %iseven_5
   br label %ifcont
 
-else:                                             ; preds = %iseven_7
-  %subtmp = sub i64 %n_8, 1
-  %calltmp = call i64 @isodd_12(i64 %subtmp)
+else:                                             ; preds = %iseven_5
+  %subtmp = sub i64 %n_6, 1
+  %calltmp = call i64 @isodd_10(i64 %subtmp)
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
@@ -25,19 +25,19 @@ ifcont:                                           ; preds = %else, %then
   ret i64 %iftmp
 }
 
-define i64 @isodd_12(i64 %n_13) {
-isodd_12:
-  %eqtmp = icmp eq i64 %n_13, 0
+define i64 @isodd_10(i64 %n_11) {
+isodd_10:
+  %eqtmp = icmp eq i64 %n_11, 0
   %booltmp = sext i1 %eqtmp to i64
   %ifcond = icmp ne i64 %booltmp, 0
   br i1 %ifcond, label %then, label %else
 
-then:                                             ; preds = %isodd_12
+then:                                             ; preds = %isodd_10
   br label %ifcont
 
-else:                                             ; preds = %isodd_12
-  %subtmp = sub i64 %n_13, 1
-  %calltmp = call i64 @iseven_7(i64 %subtmp)
+else:                                             ; preds = %isodd_10
+  %subtmp = sub i64 %n_11, 1
+  %calltmp = call i64 @iseven_5(i64 %subtmp)
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
@@ -47,7 +47,7 @@ ifcont:                                           ; preds = %else, %then
 
 define i64 @main() {
 main:
-  %calltmp = call i64 @iseven_7(i64 10)
+  %calltmp = call i64 @iseven_5(i64 10)
   %calltmp1 = call i64 @printi(i64 %calltmp)
   ret i64 %calltmp1
 }
