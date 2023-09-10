@@ -27,7 +27,7 @@ let arith = ["add"; "sub"; "mul"; "div"]
 
 let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
-let effect = ["printi"; "readi"; "store"; "array_alloca"]
+let effect = ["printi"; "readi"  ]
 
 let rec ppr_ty : ty -> string = AbsSyn.ppr_ty
 

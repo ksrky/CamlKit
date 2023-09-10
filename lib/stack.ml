@@ -60,13 +60,3 @@ let binop (r : int ref) (op : int -> int -> int) : unit =
 let rplaca (x : int) (y : int) : int =
   cells.(x) <- Cons (y, cdr x);
   x
-
-let store (i : int) (x : int) : unit = cells.(i) <- Int x
-
-let array_alloca (n : int) (x : int) : int =
-  let hd = ref 0 in
-  if n <= 0 then raise (Runtime_error "Array is initialized to have non-positive size");
-  for _ = 1 to n do
-    hd := make_int x
-  done;
-  !hd

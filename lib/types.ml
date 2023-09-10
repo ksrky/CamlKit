@@ -6,8 +6,6 @@ let tBOOL = AbsSyn.TyconTy {con= Scoping.get_reservedid "bool"; args= []}
 
 let tUNIT = AbsSyn.TyconTy {con= Scoping.get_reservedid "unit"; args= []}
 
-let tARRAY = AbsSyn.TyconTy {con= Scoping.get_reservedid "array"; args= [tINT]}
-
 let ( --> ) = List.fold_right (fun ty1 ty2 -> AbsSyn.FunTy (ty1, ty2))
 
 let rec zonk_type : AbsSyn.ty -> AbsSyn.ty = function

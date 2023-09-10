@@ -10,14 +10,11 @@ let named_values : (Ident.t, llvalue) Hashtbl.t = Hashtbl.create 10
 
 let int_type = i64_type context
 
-let arr_type = array_type int_type 100
-
 let llvm_type ty =
   if ty = Types.tINT then int_type
   else if ty = Types.tBOOL then int_type
   else if ty = Types.tNIL then int_type
   else if ty = Types.tUNIT then int_type
-  else if ty = Types.tARRAY then pointer_type arr_type
   else ErrorMsg.impossible ("unknown type: " ^ IntSyn.ppr_ty ty)
 
 let rec codegen_expr : IntSyn.exp -> llvalue = function
@@ -56,21 +53,6 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
         | "ge" -> build_icmp Icmp.Uge lhs_val rhs_val "getmp" builder
       in
       build_intcast i int_type "booltmp" builder
-  | Prim ("load", [arg]) ->
-      let arg_val = codegen_expr arg in
-      build_load arg_val "loadtmp" builder
-  | Prim ("store", [ptr; rhs]) ->
-      let ptr_val = codegen_expr ptr in
-      let rhs_val = codegen_expr rhs in
-      build_store rhs_val ptr_val builder
-  | Prim ("gep", [arr; idx]) ->
-      let arr_val = codegen_expr arr in
-      let idx_val = codegen_expr idx in
-      build_gep arr_val (Array.of_list [idx_val]) "geptmp" builder
-  | Prim ("array_alloca", [size; init]) ->
-      let size_val = codegen_expr size in
-      let _init_val = codegen_expr init in
-      build_array_alloca int_type size_val "allocatmp" builder
   | Prim (fcn, args) ->
       let callee = Option.get (lookup_function fcn !the_module) in
       let args' = Array.of_list (List.map codegen_expr args) in

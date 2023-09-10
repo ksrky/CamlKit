@@ -4,7 +4,7 @@ module M = Machine
 let primitives : (string * M.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
   ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readi", READI)
-  ; ("printi", PRINTI); ("array_alloca", MALLOC); ("store", ST); ("gep", SUB); ("load", LDS) ]
+  ; ("printi", PRINTI) ]
 
 let rec compile (e : I.exp) (n : Ident.t list list) (c : M.t list) : M.t list =
   match e with

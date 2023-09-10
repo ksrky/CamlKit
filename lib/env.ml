@@ -10,8 +10,7 @@ let entry : env =
   List.fold_right
     (fun (k, b) -> Ident.Table.add k b)
     [ (Scoping.get_reservedid "print_int", ValBind Types.([tINT] --> tUNIT))
-    ; (Scoping.get_reservedid "read_int", ValBind Types.([tUNIT] --> tINT))
-    ; (Scoping.get_reservedid "array_make", ValBind Types.([tINT; tINT] --> tARRAY)) ]
+    ; (Scoping.get_reservedid "read_int", ValBind Types.([tUNIT] --> tINT)) ]
     empty
 
 let extend (id : Ident.t) (bind : binding) (env : env) = Ident.Table.add id bind env

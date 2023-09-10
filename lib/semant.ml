@@ -55,9 +55,6 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
           | VarExp id when Ident.name id = "print_int" ->
               check_type (E.lookup_type id env) exp_ty';
               Prim ("printi", acc)
-          | VarExp id when Ident.name id = "array_make" ->
-              check_type (E.lookup_type id env) exp_ty';
-              Prim ("array_alloca", acc)
           | fcn -> App (trexp (fcn, exp_ty'), acc)
         in
         loop [] exp_ty exp
@@ -126,16 +123,6 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         in
         let bndrs, defs = List.split (trans_bnds env' bnds) in
         Let (true, bndrs, defs, trans_exp env' body exp_ty)
-    | SubscExp {arr; idx}, exp_ty ->
-        check_type T.tINT exp_ty;
-        (* tmp : array polymorphism *)
-        Prim ("load", [Prim ("gep", [check_exp env arr T.tARRAY; check_exp env idx T.tINT])])
-    | AssignExp {arr; idx; rhs}, exp_ty ->
-        check_type T.tUNIT exp_ty;
-        Prim
-          ( "store"
-          , [ Prim ("gep", [check_exp env arr T.tARRAY; check_exp env idx T.tINT])
-            ; check_exp env rhs T.tINT ] )
     | SeqExp exps, exp_ty ->
         let rec loop = function
           | [] -> check_type T.tUNIT exp_ty; I.Int 0

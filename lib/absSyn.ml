@@ -11,8 +11,6 @@ type exp =
   | IfExp of {test: exp; then_: exp; else_: exp}
   | LetExp of {bnds: bnd list; body: exp}
   | LetrecExp of {bnds: bnd list; body: exp}
-  | SubscExp of {arr: exp; idx: exp}
-  | AssignExp of {arr: exp; idx: exp; rhs: exp}
   | SeqExp of exp list
 
 and bnd = {name: id; params: id list; body: exp}
@@ -43,6 +41,7 @@ let rec ppr_exp exp =
     | LetrecExp {bnds; body} ->
         parens ctx 0
           ("let " ^ String.concat " and " (List.map ppr_bnd bnds) ^ " in " ^ pretty 0 body)
+    | SeqExp exps -> parens ctx 0 (String.concat "; " (List.map (pretty 0) exps))
   and ppr_oper : op -> string = function
     | PlusOp -> "+"
     | MinusOp -> "-"

@@ -7,9 +7,7 @@ let openv : (string * I.ty) list =
   ; ("eq", T.([tINT; tINT] --> tBOOL)); ("ne", T.([tINT; tINT] --> tBOOL))
   ; ("lt", T.([tINT; tINT] --> tBOOL)); ("le", T.([tINT; tINT] --> tBOOL))
   ; ("gt", T.([tINT; tINT] --> tBOOL)); ("ge", T.([tINT; tINT] --> tBOOL))
-  ; ("printi", T.([tINT] --> tUNIT)); ("readi", T.([tUNIT] --> tINT)); ("load", T.([tINT] --> tINT))
-  ; ("store", T.([tINT; tINT] --> tUNIT)); ("gep", T.([tARRAY; tINT] --> tINT))
-  ; ("array_alloca", T.([tINT; tINT] --> tARRAY)) ]
+  ; ("printi", T.([tINT] --> tUNIT)); ("readi", T.([tUNIT] --> tINT)) ]
 
 let rec tyeqv ty1 ty2 =
   match (ty1, ty2) with

@@ -51,9 +51,6 @@ let exp :=
                                                 { LetExp{bnds; body=SeqExp exps} }
   | LET; REC; ~=bnds; IN; exps=separated_list(SEMI, exp);
                                                 { LetrecExp{bnds; body=SeqExp exps} }
-  | arr=exp; DOT; LPAREN; idx=exp; RPAREN;      { SubscExp{arr; idx} }
-  | arr=exp; DOT; LPAREN; idx=exp; RPAREN; RARROW; rhs=exp;
-                                                { AssignExp{arr; idx; rhs} }
   | LPAREN; exps=separated_list(SEMI, exp); RPAREN;
                                                 { SeqExp exps }
 
