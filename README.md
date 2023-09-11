@@ -10,7 +10,7 @@ dune install CamlKit
 
 ## Syntax
 
-![Syntax of CamlKit](https://imgur.com/XiNqOBd)
+![Syntax of CamlKit](https://i.imgur.com/XiNqOBd.png)
 
 ## SECD Backend
 
