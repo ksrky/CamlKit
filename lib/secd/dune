@@ -1,0 +1,7 @@
+(library
+ (name secd))
+
+(env
+ (dev
+  (flags
+   (:standard -w "-8-30-39"))))

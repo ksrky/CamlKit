@@ -143,7 +143,7 @@ let run_command () : unit =
       print_int (get_int x);
       push (make_int 0) s
   | 25 (* DIS *) -> ignore (pop s)
-  | _ -> ErrorMsg.impossible "Invalid operation"
+  | _ -> failwith "Invalid operation"
 
 let rec run_commands () : unit = if !c = 0 then () else (run_command (); run_commands ())
 

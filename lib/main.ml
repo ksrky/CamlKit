@@ -6,8 +6,11 @@ let run (path : string) =
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
-  (* print_endline (Machine.show_instrs instrs); *)
-  Stack.init (); Machine.load_instrs instrs; Machine.run_commands (); print_newline ()
+  (* print_endline (Secd.Machine.show_instrs instrs); *)
+  Secd.Stack.init ();
+  Secd.Machine.load_instrs instrs;
+  Secd.Machine.run_commands ();
+  print_newline ()
 
 (** [eval inp] evaluates string [inp] on the virtual machine. *)
 let eval (inp : string) =
@@ -17,8 +20,11 @@ let eval (inp : string) =
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
-  (* print_endline (Machine.show_instrs instrs); *)
-  Stack.init (); Machine.load_instrs instrs; Machine.run_commands (); print_newline ()
+  (* print_endline (Secd.Machine.show_instrs instrs); *)
+  Secd.Stack.init ();
+  Secd.Machine.load_instrs instrs;
+  Secd.Machine.run_commands ();
+  print_newline ()
 
 (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)
 let compile (path : string) : unit =

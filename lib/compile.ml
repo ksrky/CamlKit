@@ -1,5 +1,5 @@
 module I = IntSyn
-module M = Machine
+module M = Secd.Machine
 
 let primitives : (string * M.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
@@ -50,4 +50,4 @@ and indx (x : Ident.t) (n : Ident.t list list) (i : int) : int * int =
     let j = indx2 x (List.hd n) 1 in
     if j = 0 then indx x (List.tl n) (i + 1) else (i, j)
 
-let f (e : I.exp) : Machine.t list = compile e [] [M.STOP]
+let f (e : I.exp) : M.t list = compile e [] [M.STOP]
