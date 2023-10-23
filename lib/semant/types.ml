@@ -1,7 +1,4 @@
-module Ident = Language.Ident
-
-
-type ty = NIL | TyconTy of {con: Ident.t; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
+type ty = NIL | TyconTy of {con: Id.t; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
 
 and tyvar = {uniq: int; mutable repres: ty option}
 
@@ -10,8 +7,8 @@ let ppr_ty (ty : ty) : string =
   let rec pretty ctx = function
     | NIL -> "nil"
     | TyconTy {con; args} ->
-        if args = [] then Ident.name con
-        else parens ctx 1 (String.concat " " (Ident.name con :: List.map (pretty 2) args))
+        if args = [] then Id.name con
+        else parens ctx 1 (String.concat " " (Id.name con :: List.map (pretty 2) args))
     | FunTy (fcn, arg) -> parens ctx 0 (pretty 1 fcn ^ " -> " ^ pretty 0 arg)
     | MetaTy tv -> "$" ^ string_of_int tv.uniq
   in
@@ -28,6 +25,7 @@ let tUNIT = TyconTy {con= Scoping.get_reservedid "unit"; args= []}
 let ( --> ) = List.fold_right (fun ty1 ty2 -> FunTy (ty1, ty2))
 
 let rec zonk_type : ty -> ty = function
+  | NIL -> NIL
   | TyconTy {con; args} -> TyconTy {con; args= List.map zonk_type args}
   | FunTy (fcn, arg) -> FunTy (zonk_type fcn, zonk_type arg)
   | MetaTy tv -> (
@@ -45,6 +43,7 @@ let new_tyvar () =
   MetaTy {uniq= !unique; repres= None}
 
 let rec metatvs : ty -> tyvar list = function
+  | NIL -> []
   | TyconTy {args; _} -> List.concat_map metatvs args
   | FunTy (fcn, arg) -> metatvs fcn @ metatvs arg
   | MetaTy tv -> [tv]

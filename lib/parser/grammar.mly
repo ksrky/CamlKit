@@ -1,6 +1,5 @@
 %{
 open Language.Syntax
-open Language.Ident
 %}
 
 %token EOF
@@ -40,10 +39,10 @@ let exp :=
   | left=exp; LE; right=exp;                    { OpExp{left; op=LeOp; right} }
   | left=exp; GT; right=exp;                    { OpExp{left; op=GtOp; right} }
   | left=exp; GE; right=exp;                    { OpExp{left; op=GeOp; right} }
-  | test=exp; LAND; ~=exp;                      { IfExp{test; then_=exp; else_=BoolExp false} }
-  | test=exp; LOR; ~=exp;                       { IfExp{test; then_=BoolExp true; else_=exp} }
-  | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
-                                                { IfExp{test; then_; else_} }
+  | cond=exp; LAND; then_=exp;                  { IfExp{cond; then_; else_=BoolExp false} }
+  | cond=exp; LOR; else_=exp;                   { IfExp{cond; then_=BoolExp true; else_} }
+  | IF; cond=exp; THEN; then_=exp; ELSE; else_=exp;
+                                                { IfExp{cond; then_; else_} }
   | LET; ~=bnds; IN; body=exp;                  { LetExp{bnds; body} }
   | LET; REC; ~=bnds; IN; body=exp;             { LetrecExp{bnds; body} }
 
@@ -61,4 +60,4 @@ let bnd :=
   | name=id;  params=list(id); EQ; body=exp;    { {name; params; body} }
 
 let id :=
-  | name=ID;                                    { from_string name }
+  | name=ID;                                    { Id.from_string name }

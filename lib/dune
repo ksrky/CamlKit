@@ -1,6 +1,7 @@
 (library
  (name CamlKit)
- (libraries language parser secd llvm llvm.analysis))
+ (libraries common language parser semant core secd llvm llvm.analysis)
+ (flags -open Common))
 
 (env
  (dev

@@ -9,7 +9,7 @@ let rec unify ty1 ty2 : unit =
   | T.MetaTy tv1, T.MetaTy tv2 when tv1.uniq = tv2.uniq -> ()
   | T.MetaTy tv1, _ -> unify_var tv1 ty2
   | _, T.MetaTy tv2 -> unify_var tv2 ty1
-  | _, _ -> ErrorMsg.error ("Cannot unify types: " ^ T.ppr_ty ty1 ^ " with " ^ T.ppr_ty ty2)
+  | _, _ -> Error.error ("Cannot unify types: " ^ T.ppr_ty ty1 ^ " with " ^ T.ppr_ty ty2)
 
 and unify_var (tv1 : T.tyvar) (ty2 : T.ty) : unit =
   match (tv1.repres, ty2) with
@@ -22,7 +22,7 @@ and unify_var (tv1 : T.tyvar) (ty2 : T.ty) : unit =
 
 and occurs_check tv1 ty2 : unit =
   let tvs2 = Types.get_tyvars ty2 in
-  if List.mem tv1 tvs2 then ErrorMsg.error ("Infinite type: " ^ T.ppr_ty ty2) else ()
+  if List.mem tv1 tvs2 then Error.error ("Infinite type: " ^ T.ppr_ty ty2) else ()
 
 let unify_fun = function
   | T.FunTy (arg_ty, res_ty) -> (arg_ty, res_ty)

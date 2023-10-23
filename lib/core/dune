@@ -1,6 +1,6 @@
 (library
- (name semant)
- (libraries common language parser)
+ (name core)
+ (libraries common language)
  (flags -open Common))
 
 (env

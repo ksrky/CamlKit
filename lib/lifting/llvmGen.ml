@@ -1,5 +1,4 @@
 open Llvm
-module Ident = Language.Ident
 
 let context = global_context ()
 
@@ -7,59 +6,54 @@ let the_module = ref (create_module context "main")
 
 let builder = builder context
 
-let named_values : (Ident.t, llvalue) Hashtbl.t = Hashtbl.create 10
+let named_values : (Id.t, llvalue) Hashtbl.t = Hashtbl.create 10
 
 let int_type = i64_type context
 
-let llvm_type ty =
-  if ty = Types.tINT then int_type
-  else if ty = Types.tBOOL then int_type
-  else if ty = Types.tNIL then int_type
-  else if ty = Types.tUNIT then int_type
-  else ErrorMsg.impossible ("unknown type: " ^ IntSyn.ppr_ty ty)
-
-let rec codegen_expr : IntSyn.exp -> llvalue = function
+let rec codegen_expr : Syntax.exp -> llvalue = function
   | Int i -> const_int int_type i
   | Nil -> const_null int_type
-  | Var (id, _) -> Hashtbl.find named_values id
-  | App (Var (fcn, _), args) ->
+  | Var id -> Hashtbl.find named_values id
+  | App {fcn= Var id; args} ->
       let callee =
-        match lookup_function (Ident.unique_name fcn) !the_module with
+        match lookup_function (Id.unique_name id) !the_module with
         | Some callee -> callee
-        | None -> ErrorMsg.impossible "unknown function referenced"
+        | None -> failwith "unknown function referenced"
       in
       let args' = Array.of_list (List.map codegen_expr args) in
       let ci = build_call callee args' "calltmp" builder in
       (* if (Contraction.hashtbl_find fcn).isrec then set_tail_call true ci;
          tmp: LlvmGen depends on Contraction module *)
       ci
-  | Prim (fcn, [lhs; rhs]) when List.mem fcn IntSyn.arith -> (
+  | Prim {oper; args= [lhs; rhs]} when List.mem oper ["add"; "sub"; "mul"; "div"] -> (
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
-      match fcn with
+      match oper with
       | "add" -> build_add lhs_val rhs_val "addtmp" builder
       | "sub" -> build_sub lhs_val rhs_val "subtmp" builder
       | "mul" -> build_mul lhs_val rhs_val "multmp" builder
-      | "div" -> build_sdiv lhs_val rhs_val "divtmp" builder )
-  | Prim (fcn, [lhs; rhs]) when List.mem fcn IntSyn.rel ->
+      | "div" -> build_sdiv lhs_val rhs_val "divtmp" builder
+      | _ -> failwith "impossible" )
+  | Prim {oper; args= [lhs; rhs]} when List.mem oper ["eq"; "ne"; "lt"; "le"; "gt"; "ge"] ->
       let lhs_val = codegen_expr lhs in
       let rhs_val = codegen_expr rhs in
       let i =
-        match fcn with
+        match oper with
         | "eq" -> build_icmp Icmp.Eq lhs_val rhs_val "eqtmp" builder
         | "ne" -> build_icmp Icmp.Ne lhs_val rhs_val "netmp" builder
         | "lt" -> build_icmp Icmp.Ult lhs_val rhs_val "lttmp" builder
         | "le" -> build_icmp Icmp.Ule lhs_val rhs_val "letmp" builder
         | "gt" -> build_icmp Icmp.Ugt lhs_val rhs_val "gttmp" builder
         | "ge" -> build_icmp Icmp.Uge lhs_val rhs_val "getmp" builder
+        | _ -> failwith "impossible"
       in
       build_intcast i int_type "booltmp" builder
-  | Prim (fcn, args) ->
-      let callee = Option.get (lookup_function fcn !the_module) in
+  | Prim {oper; args} ->
+      let callee = Option.get (lookup_function oper !the_module) in
       let args' = Array.of_list (List.map codegen_expr args) in
       build_call callee args' "calltmp" builder
-  | Lam _ | Let _ -> ErrorMsg.impossible "must be removed in Lifting module"
-  | If (cond, then_, else_) ->
+  | Lam _ | Let _ -> failwith "must be removed in Lifting module"
+  | If {cond; then_; else_} ->
       let cond' = codegen_expr cond in
       (* Convert condition to a bool by comparing equal to 0.0 *)
       let zero = const_int int_type 0 in
@@ -100,37 +94,34 @@ let rec codegen_expr : IntSyn.exp -> llvalue = function
       (* Finally, set the builder to the end of the merge block. *)
       position_at_end merge_bb builder;
       phi
-  | Seq (exp, rest) ->
-      ignore (codegen_expr exp);
-      codegen_expr rest
-  | _ -> ErrorMsg.impossible "malformed intermediate syntax"
+  | _ -> failwith "malformed intermediate syntax"
 
-and codegen_proto ((name, params) : string * IntSyn.binders) : unit =
+and codegen_proto ((name, params) : string * Syntax.id list) : unit =
   (* Make the function type: double(double,double) etc. *)
-  let param_tys = Array.of_list (List.map (fun (_, ty) -> llvm_type ty) params) in
+  let param_tys = Array.of_list (List.map (fun _ -> int_type) params) in
   let func_ty = function_type int_type param_tys in
   let func =
     match lookup_function name !the_module with
     | None -> declare_function name func_ty !the_module
-    | Some _ -> ErrorMsg.impossible "redefinition of function"
+    | Some _ -> failwith "redefinition of function"
   in
   (* Set names for all arguments. *)
   Array.iteri
     (fun i a ->
-      let id, _ = List.nth params i in
-      set_value_name (Ident.unique_name id) a;
+      let id = List.nth params i in
+      set_value_name (Id.unique_name id) a;
       Hashtbl.add named_values id a )
     (Llvm.params func)
 
-let codegen_func : IntSyn.frag -> unit = function
+let codegen_func : Syntax.frag -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
       let name = name in
       let func = Option.get (lookup_function name !the_module) in
       Array.iteri
         (fun i a ->
-          let id, _ = List.nth params i in
-          set_value_name (Ident.unique_name id) a;
+          let id = List.nth params i in
+          set_value_name (Id.unique_name id) a;
           Hashtbl.add named_values id a )
         (Llvm.params func);
       (* Create a new basic block to start insertion into. *)
@@ -145,11 +136,11 @@ let codegen_func : IntSyn.frag -> unit = function
       with e -> delete_function func; raise e )
 
 let codegen_prims () : unit =
-  codegen_proto ("printi", [(Ident.from_string "x", Types.tINT)]);
-  codegen_proto ("readi", [(Ident.from_string "x", Types.tUNIT)])
+  codegen_proto ("printi", [Id.from_string "x"]);
+  codegen_proto ("readi", [Id.from_string "x"])
 
-let codegen (modid : string) (frags : IntSyn.frags) : unit =
+let codegen (modid : string) (frags : Syntax.frags) : unit =
   the_module := create_module context modid;
   codegen_prims ();
-  List.iter (fun {IntSyn.name; params; _} -> codegen_proto (name, params)) frags;
+  List.iter (fun {Syntax.name; params; _} -> codegen_proto (name, params)) frags;
   List.iter (fun frag -> codegen_func frag) frags

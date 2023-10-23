@@ -1,6 +1,7 @@
 (library
  (name parser)
- (libraries language))
+ (libraries common language)
+ (flags -open Common))
 
 (env
  (dev
