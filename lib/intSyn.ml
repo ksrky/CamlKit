@@ -1,6 +1,6 @@
 type id = Ident.t
 
-type ty = AbsSyn.ty
+type ty = Types.ty
 
 type binder = id * ty
 
@@ -27,9 +27,9 @@ let arith = ["add"; "sub"; "mul"; "div"]
 
 let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
-let effect = ["printi"; "readi"  ]
+let effect = ["printi"; "readi"]
 
-let rec ppr_ty : ty -> string = AbsSyn.ppr_ty
+let rec ppr_ty : ty -> string = Types.ppr_ty
 
 let ppr_binder (pprid : id -> string) ((id, ty) : binder) = pprid id ^ ": " ^ ppr_ty ty
 

@@ -6,7 +6,7 @@ open AbsSyn
 %token <string> ID
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-%token LPAREN RPAREN LAND LOR LARROW RARROW DOT SEMI
+%token LPAREN RPAREN LAND LOR LARROW SEMI
 %token IF THEN ELSE LET IN AND FUN REC
 %token TRUE FALSE
 
@@ -23,10 +23,6 @@ open AbsSyn
 
 let prog :=
   | ~=exp; EOF;                                 <>
-
-let def :=
-  | LET; ~=bnds;                                { LetDef bnds }
-  | LET; REC; ~=bnds;                           { LetDef bnds }
 
 let exp :=
   | ~=aexp;                                     { aexp }
@@ -47,12 +43,8 @@ let exp :=
   | test=exp; LOR; ~=exp;                       { IfExp{test; then_=BoolExp true; else_=exp} }
   | IF; test=exp; THEN; then_=exp; ELSE; else_=exp;
                                                 { IfExp{test; then_; else_} }
-  | LET; ~=bnds; IN; exps=separated_list(SEMI, exp);
-                                                { LetExp{bnds; body=SeqExp exps} }
-  | LET; REC; ~=bnds; IN; exps=separated_list(SEMI, exp);
-                                                { LetrecExp{bnds; body=SeqExp exps} }
-  | LPAREN; exps=separated_list(SEMI, exp); RPAREN;
-                                                { SeqExp exps }
+  | LET; ~=bnds; IN; body=exp;                  { LetExp{bnds; body} }
+  | LET; REC; ~=bnds; IN; body=exp;             { LetrecExp{bnds; body} }
 
 let aexp :=
   | ~=id;                                       { VarExp id }

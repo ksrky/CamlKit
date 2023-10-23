@@ -1,14 +1,30 @@
-let tNIL = AbsSyn.NIL
+type ty = NIL | TyconTy of {con: Ident.t; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
 
-let tINT = AbsSyn.TyconTy {con= Scoping.get_reservedid "int"; args= []}
+and tyvar = {uniq: int; mutable repres: ty option}
 
-let tBOOL = AbsSyn.TyconTy {con= Scoping.get_reservedid "bool"; args= []}
+let ppr_ty (ty : ty) : string =
+  let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
+  let rec pretty ctx = function
+    | NIL -> "nil"
+    | TyconTy {con; args} ->
+        if args = [] then Ident.name con
+        else parens ctx 1 (String.concat " " (Ident.name con :: List.map (pretty 2) args))
+    | FunTy (fcn, arg) -> parens ctx 0 (pretty 1 fcn ^ " -> " ^ pretty 0 arg)
+    | MetaTy tv -> "$" ^ string_of_int tv.uniq
+  in
+  pretty 0 ty
 
-let tUNIT = AbsSyn.TyconTy {con= Scoping.get_reservedid "unit"; args= []}
+let tNIL = NIL
 
-let ( --> ) = List.fold_right (fun ty1 ty2 -> AbsSyn.FunTy (ty1, ty2))
+let tINT = TyconTy {con= Scoping.get_reservedid "int"; args= []}
 
-let rec zonk_type : AbsSyn.ty -> AbsSyn.ty = function
+let tBOOL = TyconTy {con= Scoping.get_reservedid "bool"; args= []}
+
+let tUNIT = TyconTy {con= Scoping.get_reservedid "unit"; args= []}
+
+let ( --> ) = List.fold_right (fun ty1 ty2 -> FunTy (ty1, ty2))
+
+let rec zonk_type : ty -> ty = function
   | TyconTy {con; args} -> TyconTy {con; args= List.map zonk_type args}
   | FunTy (fcn, arg) -> FunTy (zonk_type fcn, zonk_type arg)
   | MetaTy tv -> (
@@ -23,9 +39,9 @@ let unique = ref (-1)
 
 let new_tyvar () =
   incr unique;
-  AbsSyn.MetaTy {uniq= !unique; repres= None}
+  MetaTy {uniq= !unique; repres= None}
 
-let rec metatvs : AbsSyn.ty -> AbsSyn.tyvar list = function
+let rec metatvs : ty -> tyvar list = function
   | TyconTy {args; _} -> List.concat_map metatvs args
   | FunTy (fcn, arg) -> metatvs fcn @ metatvs arg
   | MetaTy tv -> [tv]

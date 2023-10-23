@@ -1,9 +1,14 @@
-val tNIL : AbsSyn.ty
-val tINT : AbsSyn.ty
-val tBOOL : AbsSyn.ty
-val tUNIT : AbsSyn.ty
-val (-->) : AbsSyn.ty list -> AbsSyn.ty -> AbsSyn.ty
+type ty = NIL | TyconTy of {con: Ident.t; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
+and tyvar = {uniq: int; mutable repres: ty option}
 
-val new_tyvar : unit -> AbsSyn.ty
-val get_tyvars : AbsSyn.ty -> AbsSyn.tyvar list
-val zonk_type : AbsSyn.ty -> AbsSyn.ty
+val ppr_ty : ty -> string
+
+val tNIL : ty
+val tINT : ty
+val tBOOL : ty
+val tUNIT : ty
+val (-->) : ty list -> ty -> ty
+
+val new_tyvar : unit -> ty
+val get_tyvars : ty -> tyvar list
+val zonk_type : ty -> ty

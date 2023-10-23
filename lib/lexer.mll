@@ -46,8 +46,6 @@ rule token = parse
 | "&&"          { LAND }
 | "||"          { LOR }
 | "->"          { LARROW }
-| "<-"          { RARROW }
-| "."           { DOT }
 | ";"           { SEMI }
 
 (* integer and identifier *)

@@ -1,7 +1,7 @@
 module I = IntSyn
 module T = Types
 
-let openv : (string * I.ty) list =
+let openv : (string * T.ty) list =
   [ ("add", T.([tINT; tINT] --> tINT)); ("sub", T.([tINT; tINT] --> tINT))
   ; ("mul", T.([tINT; tINT] --> tINT)); ("div", T.([tINT; tINT] --> tINT))
   ; ("eq", T.([tINT; tINT] --> tBOOL)); ("ne", T.([tINT; tINT] --> tBOOL))
@@ -11,18 +11,18 @@ let openv : (string * I.ty) list =
 
 let rec tyeqv ty1 ty2 =
   match (ty1, ty2) with
-  | AbsSyn.NIL, _ -> ()
-  | _, AbsSyn.NIL -> ()
-  | AbsSyn.TyconTy {con= c1; args= a1}, AbsSyn.TyconTy {con= c2; args= a2} when c1 = c2 ->
+  | T.NIL, _ -> ()
+  | _, T.NIL -> ()
+  | T.TyconTy {con= c1; args= a1}, T.TyconTy {con= c2; args= a2} when c1 = c2 ->
       List.iter2 tyeqv a1 a2
-  | AbsSyn.FunTy (a1, b1), AbsSyn.FunTy (a2, b2) -> tyeqv a1 a2; tyeqv b1 b2
-  | _ -> ErrorMsg.impossible ("Types not match: " ^ I.ppr_ty ty1 ^ " with " ^ I.ppr_ty ty2)
+  | T.FunTy (a1, b1), T.FunTy (a2, b2) -> tyeqv a1 a2; tyeqv b1 b2
+  | _ -> ErrorMsg.impossible ("Types not match: " ^ T.ppr_ty ty1 ^ " with " ^ T.ppr_ty ty2)
 
 let rec check_app fcn_ty = function
   | [] -> fcn_ty
   | arg_ty :: rest -> (
     match fcn_ty with
-    | AbsSyn.FunTy (arg_ty', res_ty) -> tyeqv arg_ty arg_ty'; check_app res_ty rest
+    | T.FunTy (arg_ty', res_ty) -> tyeqv arg_ty arg_ty'; check_app res_ty rest
     | _ -> ErrorMsg.impossible "Not function type" )
 
 let rec type_of (env : (Ident.t * I.ty) list) : I.exp -> I.ty = function

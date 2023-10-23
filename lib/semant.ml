@@ -4,9 +4,9 @@ module E = Env
 module T = Types
 module U = Unification
 
-type expected = Infer of A.ty option ref | Check of A.ty
+type expected = Infer of T.ty option ref | Check of T.ty
 
-let check_type (ty : A.ty) : expected -> unit = function
+let check_type (ty : T.ty) : expected -> unit = function
   | Check ty' -> U.unify ty ty'
   | Infer ref -> ref := Some ty
 
@@ -23,11 +23,11 @@ let rec zonk_expr : I.exp -> I.exp = function
   | Seq (e1, e2) -> Seq (zonk_expr e1, zonk_expr e2)
   | e -> e
 
-let mkbndrs : Ident.t list -> A.ty list -> I.binders = List.map2 (fun x y -> (x, y))
+let mkbndrs : Ident.t list -> T.ty list -> I.binders = List.map2 (fun x y -> (x, y))
 
 let rec check_exp env exp ty : I.exp = trans_exp env exp (Check ty)
 
-and infer_exp env exp : I.exp * A.ty =
+and infer_exp env exp : I.exp * T.ty =
   let ref = ref None in
   let exp' = trans_exp env exp (Infer ref) in
   (exp', T.zonk_type (Option.get !ref))
@@ -69,7 +69,7 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         let env' = List.fold_right2 (fun id ty -> E.extend id (ValBind ty)) vars var_tys env in
         let bndrs = mkbndrs vars var_tys in
         let body', body_ty = infer_exp env' body in
-        ref := Some (List.fold_right (fun l r -> A.FunTy (l, r)) var_tys body_ty);
+        ref := Some (List.fold_right (fun l r -> T.FunTy (l, r)) var_tys body_ty);
         Lam (bndrs, body')
     | OpExp {left; op= PlusOp; right}, exp_ty ->
         check_type T.tINT exp_ty;
@@ -123,15 +123,6 @@ and trans_exp env (exp : A.exp) (exp_ty : expected) : I.exp =
         in
         let bndrs, defs = List.split (trans_bnds env' bnds) in
         Let (true, bndrs, defs, trans_exp env' body exp_ty)
-    | SeqExp exps, exp_ty ->
-        let rec loop = function
-          | [] -> check_type T.tUNIT exp_ty; I.Int 0
-          | [e] -> trans_exp env e exp_ty
-          | e :: es ->
-              let e' = check_exp env e T.tUNIT in
-              Seq (e', loop es)
-        in
-        loop exps
   in
   try zonk_expr (trexp (exp, exp_ty))
   with E.Out_of_scope id ->
