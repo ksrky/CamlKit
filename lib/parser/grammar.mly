@@ -1,12 +1,13 @@
 %{
-open AbsSyn
+open Language.Syntax
+open Language.Ident
 %}
 
 %token EOF
 %token <string> ID
 %token <int> INT
 %token PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-%token LPAREN RPAREN LAND LOR LARROW SEMI
+%token LPAREN RPAREN LAND LOR LARROW
 %token IF THEN ELSE LET IN AND FUN REC
 %token TRUE FALSE
 
@@ -60,4 +61,4 @@ let bnd :=
   | name=id;  params=list(id); EQ; body=exp;    { {name; params; body} }
 
 let id :=
-  | name=ID;                                    { Ident.from_string name }
+  | name=ID;                                    { from_string name }

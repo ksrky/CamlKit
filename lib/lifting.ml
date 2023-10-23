@@ -1,4 +1,5 @@
 open IntSyn
+module Ident = Language.Ident
 
 let frags : frags ref = ref []
 

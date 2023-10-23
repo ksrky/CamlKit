@@ -1,5 +1,6 @@
 module I = IntSyn
 module T = Types
+module Ident = Language.Ident
 
 let openv : (string * T.ty) list =
   [ ("add", T.([tINT; tINT] --> tINT)); ("sub", T.([tINT; tINT] --> tINT))

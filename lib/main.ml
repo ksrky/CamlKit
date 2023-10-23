@@ -1,8 +1,11 @@
 (** [run path] evaluates a source file on the virtual machine. *)
+
+module Ident = Language.Ident
+
 let run (path : string) =
   let abssyn = Parse.parse path in
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
-  (* print_endline (AbsSyn.ppr_exp abssyn); *)
+  (* print_endline (Language.Syntax.ppr_exp abssyn); *)
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
@@ -16,7 +19,7 @@ let run (path : string) =
 let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
-  (* print_endline (AbsSyn.ppr_exp abssyn); *)
+  (* print_endline (Language.Syntax.ppr_exp abssyn); *)
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let instrs = Compile.f intsyn in
@@ -30,7 +33,7 @@ let eval (inp : string) =
 let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let abssyn' = Scoping.scoping_exp Scoping.initial abssyn in
-  (* print_endline (AbsSyn.ppr_exp abssyn'); *)
+  (* print_endline (Language.Syntax.ppr_exp abssyn'); *)
   let intsyn, _ = Semant.infer_exp Env.entry abssyn' in
   (* print_endline (IntSyn.ppr_exp Ident.name intsyn); *)
   let intsyn2 = Contraction.steps Contraction.max_steps intsyn in

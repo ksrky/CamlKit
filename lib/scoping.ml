@@ -1,6 +1,7 @@
-type scope = (string * Ident.t) list
+module A = Language.Syntax
+module Ident = Language.Ident
 
-module A = AbsSyn
+type scope = (string * Ident.t) list
 
 let empty : scope = []
 

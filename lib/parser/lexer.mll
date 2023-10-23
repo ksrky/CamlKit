@@ -1,5 +1,5 @@
 {
-open Parser
+open Grammar
 }
 
 let digit = ['0'-'9']
@@ -46,19 +46,18 @@ rule token = parse
 | "&&"          { LAND }
 | "||"          { LOR }
 | "->"          { LARROW }
-| ";"           { SEMI }
 
 (* integer and identifier *)
 | integer as i  { INT (int_of_string i) }
 | id as s       { ID s }
 
-| _             { ErrorMsg.error "illegal charcter"; token lexbuf }
+| _             { raise Error (* "illegal charcter"; token lexbuf *) }
 
 (* end of a file *)
 | eof           { EOF }
 
 and block_comment = parse
 | "*)"          { token lexbuf }
-| eof           { ErrorMsg.error "unterminated comment"; token lexbuf }
+| eof           { raise Error (* "unterminated comment"; token lexbuf *) }
 | newline       { Lexing.new_line lexbuf; block_comment lexbuf }
 | _             { block_comment lexbuf }

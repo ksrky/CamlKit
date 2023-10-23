@@ -1,3 +1,5 @@
+module Ident = Language.Ident
+
 type ty = NIL | TyconTy of {con: Ident.t; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
 and tyvar = {uniq: int; mutable repres: ty option}
 

@@ -1,5 +1,6 @@
 module I = IntSyn
 module M = Secd.Machine
+module Ident = Language.Ident
 
 let primitives : (string * M.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)

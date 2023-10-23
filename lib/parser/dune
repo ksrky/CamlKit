@@ -1,0 +1,13 @@
+(library
+ (name parser)
+ (libraries language))
+
+(env
+ (dev
+  (flags
+   (:standard -w "-8-30-39"))))
+
+(ocamllex lexer)
+
+(menhir
+ (modules grammar))

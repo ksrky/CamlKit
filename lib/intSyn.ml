@@ -1,3 +1,5 @@
+module Ident = Language.Ident
+
 type id = Ident.t
 
 type ty = Types.ty

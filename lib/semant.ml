@@ -1,4 +1,5 @@
-module A = AbsSyn
+module A = Language.Syntax
+module Ident = Language.Ident
 module I = IntSyn
 module E = Env
 module T = Types

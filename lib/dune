@@ -1,13 +1,8 @@
 (library
  (name CamlKit)
- (libraries secd llvm llvm.analysis))
+ (libraries language parser secd llvm llvm.analysis))
 
 (env
  (dev
   (flags
    (:standard -w "-8-30-39"))))
-
-(ocamllex lexer)
-
-(menhir
- (modules parser))

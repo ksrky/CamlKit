@@ -1,3 +1,5 @@
+module Ident = Language.Ident
+
 type binding = ValBind of Types.ty
 type env
 

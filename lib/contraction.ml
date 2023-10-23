@@ -1,4 +1,5 @@
 module I = IntSyn
+module Ident = Language.Ident
 module IT = Ident.Table
 
 (** the maximum contraction steps. *)

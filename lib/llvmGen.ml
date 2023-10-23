@@ -1,4 +1,5 @@
 open Llvm
+module Ident = Language.Ident
 
 let context = global_context ()
 
