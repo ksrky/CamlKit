@@ -6,8 +6,6 @@ exception Out_of_scope of Id.t
 
 val empty : env
 
-val entry : env
-
 val extend : Id.t -> binding -> env -> env
 
 val lookup : Id.t -> env -> binding

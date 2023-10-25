@@ -6,13 +6,6 @@ exception Out_of_scope of Id.t
 
 let empty : env = Id.Table.empty
 
-let entry : env =
-  List.fold_right
-    (fun (k, b) -> Id.Table.add k b)
-    [ (Scoping.get_reservedid "print_int", ValBind Types.([tINT] --> tUNIT))
-    ; (Scoping.get_reservedid "read_int", ValBind Types.([tUNIT] --> tINT)) ]
-    empty
-
 let extend (id : Id.t) (bind : binding) (env : env) = Id.Table.add id bind env
 
 let extend_list (binds : (Id.t * binding) list) (env : env) =
