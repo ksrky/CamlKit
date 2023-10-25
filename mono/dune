@@ -1,6 +1,5 @@
 (library
  (name mono)
- (modules main)
  (libraries common language parser semant core secd llvm llvm.analysis)
  (flags -open Common))
 

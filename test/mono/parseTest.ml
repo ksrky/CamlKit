@@ -1,4 +1,4 @@
-open CamlKit
+open Mono
 open Language.Syntax
 
 let%test _ = Parse.parse_line "42" = IntExp 42
