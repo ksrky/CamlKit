@@ -1,16 +1,4 @@
-type ty = NIL | TyconTy of {con: Id.t; args: ty list} | FunTy of ty * ty | MetaTy of tyvar
-
-and tyvar = {uniq: int; mutable repres: ty option}
-
-val ppr_ty : ty -> string
-
-val tNIL : ty
-
-val tINT : ty
-
-val tBOOL : ty
-
-val tUNIT : ty
+open Language.Syntax
 
 val ( --> ) : ty list -> ty -> ty
 

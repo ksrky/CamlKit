@@ -31,7 +31,7 @@ let rec trexp : L.exp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun {L.name; params; body} -> (name, C.Lam {vars= params; body= trexp body}))
+             (fun (L.Bind {name; params; body}) -> (name, C.Lam {vars= params; body= trexp body}))
              bnds )
       in
       Let {isrec= false; vars; bnds; body= trexp body}
@@ -39,7 +39,7 @@ let rec trexp : L.exp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun {L.name; params; body} -> (name, C.Lam {vars= params; body= trexp body}))
+             (fun (L.Bind {name; params; body}) -> (name, C.Lam {vars= params; body= trexp body}))
              bnds )
       in
       Let {isrec= true; vars; bnds; body= trexp body}

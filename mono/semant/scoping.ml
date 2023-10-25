@@ -36,17 +36,17 @@ let rec scoping_exp (sc : scope) : L.exp -> L.exp =
     | OpExp {left; op; right} -> OpExp {left= scexp left; op; right= scexp right}
     | IfExp {cond; then_; else_} -> IfExp {cond= scexp cond; then_= scexp then_; else_= scexp else_}
     | LetExp {bnds; body} ->
-        let sc' = extend_list (List.map (fun (d : L.bnd) -> d.name) bnds) sc in
+        let sc' = extend_list (List.map (fun (L.Bind d) -> d.name) bnds) sc in
         LetExp {bnds= scoping_bnds sc bnds; body= scoping_exp sc' body}
     | LetrecExp {bnds; body} ->
-        let sc' = extend_list (List.map (fun (d : L.bnd) -> d.name) bnds) sc in
+        let sc' = extend_list (List.map (fun (L.Bind d) -> d.name) bnds) sc in
         LetrecExp {bnds= scoping_bnds sc' bnds; body= scoping_exp sc' body}
   in
   scexp
 
 and scoping_bnds (sc : scope) (bnds : L.bnd list) : L.bnd list =
-  let scbnd ({name; params; body} : L.bnd) : L.bnd =
+  let scbnd (Bind {name; params; body} : L.bnd) : L.bnd =
     let sc' = extend_list params sc in
-    {name; params; body= scoping_exp sc' body}
+    Bind {name; params; body= scoping_exp sc' body}
   in
   List.map scbnd bnds

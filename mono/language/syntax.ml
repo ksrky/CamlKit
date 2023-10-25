@@ -12,9 +12,27 @@ type exp =
   | LetExp of {bnds: bnd list; body: exp}
   | LetrecExp of {bnds: bnd list; body: exp}
 
-and bnd = {name: id; params: id list; body: exp}
+and bnd = Bind of {name: id; params: id list; body: exp}
 
 and op = PlusOp | MinusOp | TimesOp | DivideOp | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
+
+type ty = NilTy | BoolTy | IntTy | FunTy of ty * ty | MetaTy of tyvar
+
+and tyvar = {uniq: int; mutable repres: ty option}
+
+type aexp =
+  | VarAExp of id * ty
+  | NilAExp
+  | BoolAExp of bool
+  | IntAExp of int
+  | AppAExp of {fcn: aexp; arg: aexp}
+  | LamAExp of {vars: id list; body: aexp}
+  | OpAExp of {left: aexp; op: op; right: aexp}
+  | IfAExp of {cond: aexp; then_: aexp; else_: aexp}
+  | LetAExp of {bnds: abnd list; body: aexp}
+  | LetrecAExp of {bnds: abnd list; body: aexp}
+
+and abnd = ABind of {name: id; params: (id * ty) list; body: aexp}
 
 let rec ppr_exp exp =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
@@ -50,5 +68,16 @@ let rec ppr_exp exp =
   in
   pretty 0 exp
 
-and ppr_bnd ({name; params; body} : bnd) : string =
+and ppr_bnd (Bind {name; params; body} : bnd) : string =
   String.concat " " (List.map Id.name (name :: params)) ^ " = " ^ ppr_exp body
+
+let ppr_ty (ty : ty) : string =
+  let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
+  let rec pretty ctx = function
+    | NilTy -> "nil"
+    | IntTy -> "int"
+    | BoolTy -> "bool"
+    | FunTy (fcn, arg) -> parens ctx 0 (pretty 1 fcn ^ " -> " ^ pretty 0 arg)
+    | MetaTy tv -> "$" ^ string_of_int tv.uniq
+  in
+  pretty 0 ty

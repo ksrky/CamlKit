@@ -57,7 +57,7 @@ let bnds ==
   | separated_nonempty_list(AND, bnd)
 
 let bnd :=
-  | name=id;  params=list(id); EQ; body=exp;    { {name; params; body} }
+  | name=id;  params=list(id); EQ; body=exp;    { Bind {name; params; body} }
 
 let id :=
   | name=ID;                                    { Id.from_string name }
