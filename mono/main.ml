@@ -1,7 +1,7 @@
 let semant abssyn =
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.initial abssyn in
   (* print_endline (Language.Syntax.ppr_exp abssyn); *)
-  Semant.TypeCheck.check_prog Semant.Env.empty abssyn';
+  let _aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
   abssyn'
 
 let secd instrs = Secd.Stack.init (); Secd.Machine.load_instrs instrs; Secd.Machine.run_commands ()
