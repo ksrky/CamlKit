@@ -1,6 +1,6 @@
 (library
- (name lifting)
- (libraries common core llvm llvm.analysis)
+ (name llvmGen)
+ (libraries common combinator llvm llvm.analysis)
  (flags -open Common))
 
 (env

@@ -1,3 +1,4 @@
+module C = Combinator.Syntax
 open Llvm
 
 let context = global_context ()
@@ -10,7 +11,7 @@ let named_values : (Id.t, llvalue) Hashtbl.t = Hashtbl.create 10
 
 let int_type = i64_type context
 
-let rec codegen_expr : Syntax.exp -> llvalue = function
+let rec codegen_expr : C.exp -> llvalue = function
   | Int i -> const_int int_type i
   | Nil -> const_null int_type
   | Var id -> Hashtbl.find named_values id
@@ -96,7 +97,7 @@ let rec codegen_expr : Syntax.exp -> llvalue = function
       phi
   | _ -> failwith "malformed intermediate syntax"
 
-and codegen_proto ((name, params) : string * Syntax.id list) : unit =
+and codegen_proto ((name, params) : string * C.id list) : unit =
   (* Make the function type: double(double,double) etc. *)
   let param_tys = Array.of_list (List.map (fun _ -> int_type) params) in
   let func_ty = function_type int_type param_tys in
@@ -113,7 +114,7 @@ and codegen_proto ((name, params) : string * Syntax.id list) : unit =
       Hashtbl.add named_values id a )
     (Llvm.params func)
 
-let codegen_func : Syntax.frag -> unit = function
+let codegen_func : C.frag -> unit = function
   | {name; params; body} -> (
       Hashtbl.clear named_values;
       let name = name in
@@ -139,8 +140,8 @@ let codegen_prims () : unit =
   codegen_proto ("printi", [Id.from_string "x"]);
   codegen_proto ("readi", [Id.from_string "x"])
 
-let codegen (modid : string) (frags : Syntax.frags) : unit =
+let codegen (modid : string) (frags : C.frags) : unit =
   the_module := create_module context modid;
   codegen_prims ();
-  List.iter (fun {Syntax.name; params; _} -> codegen_proto (name, params)) frags;
+  List.iter (fun {C.name; params; _} -> codegen_proto (name, params)) frags;
   List.iter (fun frag -> codegen_func frag) frags
