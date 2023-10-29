@@ -2,10 +2,10 @@
  (public_name camlkit)
  (name Camlkit)
  (modules Camlkit)
- (libraries CamlKit))
+ (libraries mono))
 
 (executable
  (public_name camlkitopt)
  (name Camlkitopt)
  (modules Camlkitopt)
- (libraries CamlKit))
+ (libraries mono))
