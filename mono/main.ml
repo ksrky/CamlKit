@@ -4,7 +4,8 @@ let semant abssyn =
   let _aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
   abssyn'
 
-let secd instrs = Secd.Stack.init (); Secd.Machine.load_instrs instrs; Secd.Machine.run_commands ()
+let secd instrs =
+  Secd.State.init (); Secd.Operation.load_instrs instrs; Secd.Operation.run_commands ()
 
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =
@@ -14,7 +15,7 @@ let run (path : string) =
   let coresyn = LangToCore.trexp abssyn' in
   (* print_endline (CoreSyn.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
-  (* print_endline (Secd.Machine.show_instrs instrs); *)
+  (* print_endline (Secd.Operation.show_instrs instrs); *)
   secd instrs; print_newline ()
 
 (** [eval inp] evaluates string [inp] on the virtual machine. *)
@@ -24,7 +25,7 @@ let eval (inp : string) =
   (* print_endline (IntSyn.ppr_exp Id.name intsyn); *)
   let coresyn = LangToCore.trexp abssyn' in
   let instrs = CoreToSecd.f coresyn in
-  (* print_endline (Secd.Machine.show_instrs instrs); *)
+  (* print_endline (Secd.Operation.show_instrs instrs); *)
   secd instrs; print_newline ()
 
 (*

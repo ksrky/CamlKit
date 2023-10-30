@@ -1,5 +1,5 @@
 module C = Core.Syntax
-module S = Secd.Machine
+module S = Secd.Operation
 
 let primitives : (string * S.t) list =
   [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)

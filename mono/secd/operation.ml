@@ -1,4 +1,4 @@
-open Stack
+open State
 
 type t =
   | NIL
