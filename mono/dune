@@ -1,6 +1,15 @@
 (library
  (name mono)
- (libraries common language parser semant core secd llvm llvm.analysis)
+ (libraries
+  common
+  language
+  parser
+  semant
+  core
+  secd
+  gmachine
+  llvm
+  llvm.analysis)
  (flags -open Common))
 
 (env
