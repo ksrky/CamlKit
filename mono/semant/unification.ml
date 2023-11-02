@@ -4,6 +4,8 @@ module T = Types
 let rec unify (ty1 : L.ty) (ty2 : L.ty) : unit =
   match (ty1, ty2) with
   | NilTy, _ | _, NilTy -> ()
+  | IntTy, IntTy -> ()
+  | BoolTy, BoolTy -> ()
   | FunTy (arg1, res1), FunTy (arg2, res2) -> unify arg1 arg2; unify res1 res2
   | MetaTy tv1, MetaTy tv2 when tv1.uniq = tv2.uniq -> ()
   | MetaTy tv1, _ -> unify_var tv1 ty2
@@ -30,7 +32,7 @@ let unify_fun : L.ty -> L.ty * L.ty = function
       unify ty (FunTy (arg_ty, res_ty));
       (arg_ty, res_ty)
 
-let unify_funs vars ty =
+let unify_funs vars ty : L.ty list * L.ty =
   let rec loop acc = function
     | [], ty -> (acc, ty)
     | _ :: rest, ty ->

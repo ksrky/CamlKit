@@ -27,12 +27,12 @@ let run_instr : t -> unit = function
       let n = pop () in
       stack.(!sp - k) <- n
   | Alloc k ->
-      for i = 1 to k do
+      for _ = 1 to k do
         push_hole ()
       done
   | Ap -> failwith ""
   | Add ->
-      let n1 = pop () in
-      let n2 = pop () in
+      let _n1 = pop () in
+      let _n2 = pop () in
       failwith ""
   | _ -> ()

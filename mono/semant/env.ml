@@ -6,10 +6,11 @@ exception Out_of_scope of Id.t
 
 let empty : env = Id.Table.empty
 
-let extend (id : Id.t) (bind : binding) (env : env) = Id.Table.add id bind env
+let extend : Id.t -> binding -> env -> env = Id.Table.add
 
-let extend_list (binds : (Id.t * binding) list) (env : env) =
-  List.fold_right (fun (id, bind) -> extend id bind) binds env
+let extend_list = List.fold_right (fun (id, bind) -> extend id bind)
+
+let extend_vals = List.fold_right2 (fun id ty -> extend id (ValBind ty))
 
 let lookup (id : Id.t) (env : env) =
   match Id.Table.find_opt id env with Some bind -> bind | None -> raise (Out_of_scope id)

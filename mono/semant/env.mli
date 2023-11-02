@@ -8,8 +8,10 @@ val empty : env
 
 val extend : Id.t -> binding -> env -> env
 
+val extend_list : (Id.t * binding) list -> env -> env
+
+val extend_vals : Id.t list -> Language.Syntax.ty list -> env -> env
+
 val lookup : Id.t -> env -> binding
 
 val lookup_type : Id.t -> env -> Language.Syntax.ty
-
-val extend_list : (Id.t * binding) list -> env -> env

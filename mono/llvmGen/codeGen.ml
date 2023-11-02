@@ -1,4 +1,4 @@
-module C = Combinator.Syntax
+(*module C = Combinator.Syntax
 open Llvm
 
 let context = global_context ()
@@ -145,3 +145,4 @@ let codegen (modid : string) (frags : C.frags) : unit =
   codegen_prims ();
   List.iter (fun {C.name; params; _} -> codegen_proto (name, params)) frags;
   List.iter (fun frag -> codegen_func frag) frags
+*)
