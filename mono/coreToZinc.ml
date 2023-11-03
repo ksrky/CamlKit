@@ -1,11 +1,11 @@
 module C = Core.Syntax
-module Z = Zinc.Operation
+module Z = Zinc.Code
 
 let rec find_idx x = function
   | [] -> raise Not_found
   | h :: t -> if x = h then 0 else 1 + find_idx x t
 
-let rec c2z_exp (env : Id.t list) : C.exp -> Z.code = function
+let rec c2z_exp (env : Id.t list) : C.exp -> Z.t = function
   | Nil -> [Z.PushInt 0]
   | Var x -> [Z.Access (find_idx x env)]
   | Int i -> [Z.PushInt i]

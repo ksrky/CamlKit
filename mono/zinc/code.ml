@@ -9,7 +9,7 @@ type instr =
   | Pushmark
   (* Abstractions *)
   | Grab
-  | Cur of code
+  | Cur of t
   | Return
   (* Local declaratitons *)
   | Let
@@ -18,6 +18,4 @@ type instr =
   | Update
   | Prim of prim
 
-and code = instr list
-
-val run_instr : unit -> unit
+and t = instr list
