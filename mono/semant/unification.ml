@@ -34,7 +34,7 @@ let unify_fun : L.ty -> L.ty * L.ty = function
 
 let unify_funs vars ty : L.ty list * L.ty =
   let rec loop acc = function
-    | [], ty -> (acc, ty)
+    | [], ty -> (List.rev acc, ty)
     | _ :: rest, ty ->
         let arg_ty, res_ty = unify_fun ty in
         loop (arg_ty :: acc) (rest, res_ty)

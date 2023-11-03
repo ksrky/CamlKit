@@ -58,7 +58,7 @@ let rec ppr_exp exp =
     | NilExp -> "nil"
     | BoolExp b -> string_of_bool b
     | IntExp i -> string_of_int i
-    | AppExp {fcn; arg} -> parens ctx 2 (pretty 2 fcn ^ " " ^ pretty 1 arg)
+    | AppExp {fcn; arg} -> parens ctx 1 (pretty 1 fcn ^ " " ^ pretty 2 arg)
     | OpExp {left; op; right} ->
         parens ctx 1 (pretty 1 left ^ " " ^ ppr_oper op ^ " " ^ pretty 1 right)
     | LamExp {vars; body} ->
@@ -93,22 +93,25 @@ let rec ppr_aexp ctx : aexp -> string = function
   | NilAExp -> "nil"
   | BoolAExp b -> string_of_bool b
   | IntAExp i -> string_of_int i
-  | AppAExp {fcn; arg} -> ppr_aexp ctx (fst fcn) ^ " " ^ ppr_aexp ctx (fst arg)
+  | AppAExp {fcn; arg} -> parens ctx 1 (ppr_aexp 1 (fst fcn) ^ " " ^ ppr_aexp 2 (fst arg))
   | OpAExp {left; op; right} ->
-      ppr_aexp ctx (fst left) ^ " " ^ ppr_oper op ^ " " ^ ppr_aexp ctx (fst right)
+      parens ctx 1 (ppr_aexp 1 (fst left) ^ " " ^ ppr_oper op ^ " " ^ ppr_aexp 1 (fst right))
   | LamAExp {vars; body} ->
-      "fun " ^ String.concat " " (List.map Id.name vars) ^ " -> " ^ ppr_aexp ctx (fst body)
+      parens ctx 0
+        ("fun " ^ String.concat " " (List.map Id.name vars) ^ " -> " ^ ppr_aexp 0 (fst body))
   | IfAExp {cond; then_; else_} ->
       "if "
-      ^ ppr_aexp ctx (fst cond)
+      ^ ppr_aexp 0 (fst cond)
       ^ " then "
-      ^ ppr_aexp ctx (fst then_)
+      ^ ppr_aexp 0 (fst then_)
       ^ " else "
-      ^ ppr_aexp ctx (fst else_)
+      ^ ppr_aexp 0 (fst else_)
   | LetAExp {bnds; body} ->
-      "let " ^ String.concat " and " (List.map ppr_abnd bnds) ^ " in " ^ ppr_aexp ctx (fst body)
+      parens ctx 0
+        ("let " ^ String.concat " and " (List.map ppr_abnd bnds) ^ " in " ^ ppr_aexp ctx (fst body))
   | LetrecAExp {bnds; body} ->
-      "let " ^ String.concat " and " (List.map ppr_abnd bnds) ^ " in " ^ ppr_aexp ctx (fst body)
+      parens ctx 0
+        ("let " ^ String.concat " and " (List.map ppr_abnd bnds) ^ " in " ^ ppr_aexp ctx (fst body))
 
 and ppr_abnd (ABind {name; params; body} : abnd) : string =
   Id.name name

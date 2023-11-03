@@ -2,31 +2,28 @@ let semant abssyn =
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.initial abssyn in
   (* print_endline (Language.Syntax.ppr_exp abssyn'); *)
   let _aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  print_endline (Language.Syntax.ppr_aexp 0 _aabssyn);
+  (* print_endline (Language.Syntax.ppr_aexp 0 _aabssyn); *)
   abssyn'
 
 let run_secd instrs =
+  (* print_endline (Secd.Operation.show_instrs instrs); *)
   Secd.State.init (); Secd.Operation.load_instrs instrs; Secd.Operation.run_commands ()
 
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
-  (* print_endline (IntSyn.ppr_exp Id.name intsyn); *)
   let coresyn = LangToCore.trexp abssyn' in
   (* print_endline (CoreSyn.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
-  (* print_endline (Secd.Operation.show_instrs instrs); *)
   run_secd instrs
 
 (** [eval inp] evaluates string [inp] on the virtual machine. *)
 let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let abssyn' = semant abssyn in
-  (* print_endline (IntSyn.ppr_exp Id.name intsyn); *)
   let coresyn = LangToCore.trexp abssyn' in
   let instrs = CoreToSecd.f coresyn in
-  (* print_endline (Secd.Operation.show_instrs instrs); *)
   run_secd instrs; print_newline ()
 
 (*

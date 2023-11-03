@@ -26,7 +26,6 @@ type t =
   | STOP
   | READI
   | PRINTI
-  | DIS
 
 let load_command (i : int) (n : int) : int = make_cons (make_int n) i
 
@@ -65,7 +64,6 @@ let rec load_instr i = function
   | STOP -> load_command i 22
   | READI -> load_command i 23
   | PRINTI -> load_command i 24
-  | DIS -> load_command i 25
 
 and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 
@@ -140,9 +138,7 @@ let run_command () : unit =
       push (make_int x) s
   | 24 (* PRINTI *) ->
       let x = pop s in
-      print_int (get_int x);
-      push (make_int 0) s
-  | 25 (* DIS *) -> ignore (pop s)
+      print_int (get_int x)
   | _ -> failwith "Invalid operation"
 
 let rec run_commands () : unit = if !c = 0 then () else (run_command (); run_commands ())
@@ -179,4 +175,3 @@ and show_instr : t -> string = function
   | STOP -> "STOP"
   | READI -> "READI"
   | PRINTI -> "PRINTI"
-  | DIS -> "DIS"
