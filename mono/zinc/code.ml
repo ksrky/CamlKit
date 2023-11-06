@@ -8,8 +8,8 @@ type instr =
   | Apply
   | Pushmark
   (* Abstractions *)
-  | Grab
   | Cur of t
+  | Grab
   | Return
   (* Local declaratitons *)
   | Let

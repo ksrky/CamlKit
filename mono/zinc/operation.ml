@@ -18,6 +18,16 @@ let run_instr () : unit =
       code := c
   | Pushmark -> push_arg Empty
   | Cur c -> push_arg (Closure (c, !env))
+  | Grab -> (
+      pop_arg () |> ignore;
+      match pop_arg () with
+      | Empty ->
+          let c, e = get_closure (pop_ret ()) in
+          push_arg (Closure (!code, !env));
+          code := c;
+          env := e;
+          ()
+      | v -> extend v )
   | Return -> (
       let v1 = pop_arg () in
       match pop_arg () with
@@ -29,6 +39,10 @@ let run_instr () : unit =
           let c, e = get_closure v1 in
           code := c;
           env := e;
-          extend v2;
-          failwith "Not implemented" )
+          extend v2 )
+  | Let ->
+      let v = pop_arg () in
+      extend v
+  | Endlet -> pop_arg () |> ignore
+  | Dummy -> extend Empty
   | _ -> failwith "Not implemented"
