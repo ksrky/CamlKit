@@ -1,5 +1,7 @@
 (library
- (name sequent))
+ (name sequent)
+ (libraries common core)
+ (flags -open Common))
 
 (env
  (dev
