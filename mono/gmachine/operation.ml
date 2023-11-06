@@ -1,22 +1,7 @@
+open Code
 open State
 
-type t =
-  | Push of int
-  | PushInt of int
-  | PushGlb of string
-  | Pop of int
-  | Ap
-  | Slide of int
-  | Update of int
-  | Alloc of int
-  | Add
-  | Sub
-  | Mul
-  | Div
-
-type code = t list
-
-let run_instr : t -> unit = function
+let run_instr : instr -> unit = function
   | Push k -> push k
   | PushInt n -> push_int n
   | Pop k -> decr_sp k
@@ -30,9 +15,21 @@ let run_instr : t -> unit = function
       for _ = 1 to k do
         push_hole ()
       done
-  | Ap -> failwith ""
+  | MkAp -> failwith ""
   | Add ->
-      let _n1 = pop () in
-      let _n2 = pop () in
-      failwith ""
+      let n1 = pop_int () in
+      let n2 = pop_int () in
+      push_int (n1 + n2)
+  | Sub ->
+      let n1 = pop_int () in
+      let n2 = pop_int () in
+      push_int (n1 - n2)
+  | Mul ->
+      let n1 = pop_int () in
+      let n2 = pop_int () in
+      push_int (n1 * n2)
+  | Div ->
+      let n1 = pop_int () in
+      let n2 = pop_int () in
+      push_int (n1 / n2)
   | _ -> ()

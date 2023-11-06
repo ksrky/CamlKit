@@ -1,16 +1,16 @@
 module C = Core.Syntax
-module G = Gmachine.Operation
+module G = Gmachine.Code
 
 let rec find_idx x = function
   | [] -> raise Not_found
   | h :: t -> if x = h then 0 else 1 + find_idx x t
 
-let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t list = function
+let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t = function
   | Int i -> [G.PushInt i]
   | Var x -> [G.Push (fsize - find_idx x stack)]
   | Nil -> [G.Alloc 1]
   | App {fcn; args} ->
-      List.concat_map (c2g_exp stack fsize) args @ c2g_exp stack (fsize + 1) fcn @ [G.Ap]
+      List.concat_map (c2g_exp stack fsize) args @ c2g_exp stack (fsize + 1) fcn @ [G.MkAp]
   | Lam _ -> failwith "impossible"
   | Let {isrec= false; vars; bnds; body} ->
       let n = List.length vars in
@@ -32,5 +32,5 @@ let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t list = function
         | "div" -> G.Div
         | _ -> failwith ""
       in
-      List.concat_map (c2g_exp stack fsize) args @ [oper'; G.Ap]
+      List.concat_map (c2g_exp stack fsize) args @ [oper'; G.MkAp]
   | _ -> failwith "not implemented"
