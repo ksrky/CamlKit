@@ -6,6 +6,7 @@
   parser
   semant
   core
+  combinator
   secd
   zinc
   gmachine

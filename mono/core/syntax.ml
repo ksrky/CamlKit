@@ -1,6 +1,6 @@
 type id = Id.t
 
-and exp =
+type exp =
   | Int of int
   | Nil
   | Var of id

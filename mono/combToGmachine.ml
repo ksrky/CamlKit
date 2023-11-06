@@ -1,4 +1,4 @@
-module C = Core.Syntax
+module C = Combinator.Syntax
 module G = Gmachine.Code
 
 let rec find_idx x = function
@@ -13,7 +13,6 @@ let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t = function
       List.concat_map (c2g_exp stack fsize) args
       @ c2g_exp stack (fsize + 1) fcn
       @ [G.MkAp]
-  | Lam _ -> failwith "impossible"
   | Let {isrec= false; vars; bnds; body} ->
       let n = List.length vars in
       let stack' = List.rev vars @ stack in

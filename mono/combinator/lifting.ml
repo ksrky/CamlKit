@@ -1,15 +1,18 @@
+module C = Core.Syntax
+module Cm = Syntax
+
 let notin : 'a list -> 'a list -> 'a list =
   List.fold_right (fun x -> List.filter (( <> ) x))
 
-let frags : Syntax.frags ref = ref []
+let frags : Cm.frags ref = ref []
 
-let append (frag : Syntax.frag) = frags := frag :: !frags
+let append (frag : Cm.frag) = frags := frag :: !frags
 
-let rec lift_lam (exp : Syntax.exp) : Syntax.id list * Syntax.exp =
+let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp =
   match exp with
-  | Var var -> ([var], exp)
-  | Int _ -> ([], exp)
-  | Nil -> ([], exp)
+  | Var var -> ([var], Var var)
+  | Int i -> ([], Int i)
+  | Nil -> ([], Nil)
   | App {fcn; args} ->
       let fvs1, fcn' = lift_lam fcn in
       let fvs2, args' = lift_lams args in
@@ -19,7 +22,7 @@ let rec lift_lam (exp : Syntax.exp) : Syntax.id list * Syntax.exp =
       let vars', body' = lift_lam body in
       let fvs = notin vars' vars in
       append {name= Id.unique_name tmp; params= fvs @ vars; body= body'};
-      (fvs, App {fcn= Var tmp; args= List.map (fun fv -> Syntax.Var fv) fvs})
+      (fvs, App {fcn= Var tmp; args= List.map (fun fv -> Cm.Var fv) fvs})
   | Prim {oper; args} ->
       let fvs, args' = lift_lams args in
       (fvs, Prim {oper; args= args'})
@@ -30,7 +33,7 @@ let rec lift_lam (exp : Syntax.exp) : Syntax.id list * Syntax.exp =
              (fun exp ->
                let ps1, exp' =
                  match exp with
-                 | Syntax.Lam {vars= ps1; body= exp} -> (ps1, exp)
+                 | C.Lam {vars= ps1; body= exp} -> (ps1, exp)
                  | _ -> ([], exp)
                in
                let ps2, exp' = lift_lam exp in
@@ -38,9 +41,9 @@ let rec lift_lam (exp : Syntax.exp) : Syntax.id list * Syntax.exp =
                let tmp = Id.fresh () in
                append {name= Id.unique_name tmp; params= fvs @ ps1; body= exp'};
                ( fvs
-               , Syntax.App
-                   { fcn= Syntax.Var tmp
-                   ; args= List.map (fun fv -> Syntax.Var fv) fvs } ) )
+               , Cm.App
+                   {fcn= Cm.Var tmp; args= List.map (fun fv -> Cm.Var fv) fvs}
+               ) )
              bnds )
       in
       let fvs_body, body' = lift_lam body in
@@ -52,10 +55,10 @@ let rec lift_lam (exp : Syntax.exp) : Syntax.id list * Syntax.exp =
       let fvs3, else' = lift_lam else_ in
       (fvs1 @ fvs2 @ fvs3, If {cond= cond'; then_= then'; else_= else'})
 
-and lift_lams (exps : Syntax.exp list) : Syntax.id list * Syntax.exp list =
+and lift_lams (exps : C.exp list) : Cm.id list * Cm.exp list =
   let varss, exps' = List.split (List.map lift_lam exps) in
   (List.concat varss, exps')
 
-let f (exp : Syntax.exp) : Syntax.frag list =
-  lift_lam exp |> ignore;
+let f (exp : C.exp) : Cm.frags =
+  append {name= "main"; params= []; body= snd (lift_lam exp)};
   List.rev !frags
