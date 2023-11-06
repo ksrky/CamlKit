@@ -15,7 +15,10 @@ let run_instr : instr -> unit = function
       for _ = 1 to k do
         push_hole ()
       done
-  | MkAp -> failwith ""
+  | MkAp ->
+      let n1 = pop () in
+      let n2 = pop () in
+      push_app n1 n2
   | Add ->
       let n1 = pop_int () in
       let n2 = pop_int () in

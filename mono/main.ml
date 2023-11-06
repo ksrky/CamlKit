@@ -16,7 +16,7 @@ let run (path : string) =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.trexp abssyn' in
-  (* print_endline (CoreSyn.ppr_exp Id.name coresyn); *)
+  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
   run_secd instrs
 
@@ -25,6 +25,7 @@ let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.trexp abssyn' in
+  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
   run_secd instrs; print_newline ()
 

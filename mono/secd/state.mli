@@ -6,6 +6,8 @@ val c : int ref
 
 val d : int ref
 
+exception Runtime_error of string
+
 val init : unit -> unit
 
 val make_int : int -> int

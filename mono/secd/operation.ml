@@ -143,10 +143,14 @@ let run_command () : unit =
   | 24 (* PRINTI *) ->
       let x = pop s in
       print_int (get_int x)
-  | _ -> failwith "Invalid operation"
+  | _ -> failwith "bug: Invalid number of operation"
 
 let rec run_commands () : unit =
-  if !c = 0 then () else (run_command (); run_commands ())
+  if !c = 0 then ()
+  else (
+    ( try run_command ()
+      with Runtime_error msg -> print_string ("error: " ^ msg) );
+    run_commands () )
 
 let rec show_instrs (instrs : t list) : string =
   match instrs with
@@ -170,9 +174,9 @@ and show_instr : t -> string = function
   | NE -> "NE"
   | LT -> "LT"
   | LE -> "LE"
-  | SEL (ct, cf) -> "SEL (" ^ show_instrs ct ^ ", " ^ show_instrs cf ^ ")"
+  | SEL (ct, cf) -> "SEL(" ^ show_instrs ct ^ ", " ^ show_instrs cf ^ ")"
   | JOIN -> "JOIN"
-  | LDF f -> "LDF (" ^ show_instrs f ^ ")"
+  | LDF f -> "LDF(" ^ show_instrs f ^ ")"
   | RTN -> "RTN"
   | AP -> "AP"
   | DUM -> "DUM"

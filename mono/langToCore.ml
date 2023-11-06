@@ -7,10 +7,11 @@ let rec trexp : L.exp -> C.exp = function
   | BoolExp true -> Int 1
   | BoolExp false -> Int 0
   | IntExp n -> Int n
-  | AppExp _ as exp ->
+  (* | AppExp _ as exp ->
       let fcn, args = appexp [] exp in
-      App {fcn; args}
-  | LamExp {vars; body} -> Lam {vars; body= trexp body}
+      App {fcn; args} *)
+  | AppExp {fcn; arg} -> App {fcn= trexp fcn; args= [trexp arg]}
+  | LamExp {vars; body} -> C.lams vars (trexp body)
   | OpExp {left; op; right} ->
       let oper =
         match op with
@@ -33,7 +34,7 @@ let rec trexp : L.exp -> C.exp = function
         List.split
           (List.map
              (fun (L.Bind {name; params; body}) ->
-               (name, C.Lam {vars= params; body= trexp body}) )
+               (name, C.lams params (trexp body)) )
              bnds )
       in
       Let {isrec= false; vars; bnds; body= trexp body}
@@ -42,11 +43,11 @@ let rec trexp : L.exp -> C.exp = function
         List.split
           (List.map
              (fun (L.Bind {name; params; body}) ->
-               (name, C.Lam {vars= params; body= trexp body}) )
+               (name, C.lams params (trexp body)) )
              bnds )
       in
       Let {isrec= true; vars; bnds; body= trexp body}
 
 and appexp (acc : C.exp list) : L.exp -> C.exp * C.exp list = function
   | AppExp {fcn; arg} -> appexp (trexp arg :: acc) fcn
-  | exp -> (trexp exp, List.rev acc)
+  | exp -> (trexp exp, acc)

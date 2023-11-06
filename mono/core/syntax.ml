@@ -14,11 +14,14 @@ let arith = ["add"; "sub"; "mul"; "div"]
 
 let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
 
+let lams (ids : id list) (exp : exp) : exp =
+  List.fold_right (fun id exp -> Lam {vars= [id]; body= exp}) ids exp
+
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pexp ctx exp =
     match exp with
-    | Var var -> parens ctx 0 (pprid var)
+    | Var var -> pprid var
     | Nil -> "nil"
     | Int i -> string_of_int i
     | App {fcn; args} ->
@@ -27,8 +30,8 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
     | Lam {vars; body} ->
         parens ctx 0
           ( "fun "
-          ^ String.concat " " (List.map (fun id -> "(" ^ pprid id ^ ")") vars)
-          ^ "-> " ^ pexp 0 body )
+          ^ String.concat " " (List.map (fun id -> pprid id) vars)
+          ^ " -> " ^ pexp 0 body )
     | Prim {oper; args} ->
         oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
     | If {cond; then_; else_} ->

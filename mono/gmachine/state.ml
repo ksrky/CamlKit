@@ -27,6 +27,10 @@ let push_int (n : int) : unit =
   stack.(!sp) <- INT n;
   incr sp
 
+let push_app (n1 : node) (n2 : node) : unit =
+  stack.(!sp) <- AP (n1, n2);
+  incr sp
+
 let push_hole () : unit =
   stack.(!sp) <- HOLE;
   incr sp
