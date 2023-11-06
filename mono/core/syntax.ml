@@ -22,20 +22,25 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
     | Nil -> "nil"
     | Int i -> string_of_int i
     | App {fcn; args} ->
-        parens ctx 1 (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
+        parens ctx 1
+          (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
     | Lam {vars; body} ->
         parens ctx 0
           ( "fun "
           ^ String.concat " " (List.map (fun id -> "(" ^ pprid id ^ ")") vars)
           ^ "-> " ^ pexp 0 body )
-    | Prim {oper; args} -> oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
+    | Prim {oper; args} ->
+        oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
     | If {cond; then_; else_} ->
-        parens ctx 0 ("if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else " ^ pexp 0 else_)
+        parens ctx 0
+          ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "
+          ^ pexp 0 else_ )
     | Let {isrec; vars; bnds; body} ->
         parens ctx 0
           ( "let "
           ^ (if isrec then "rec " else "")
-          ^ String.concat "; " (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
+          ^ String.concat "; "
+              (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
           ^ " in " ^ pexp 0 body )
   in
   pexp 0 exp

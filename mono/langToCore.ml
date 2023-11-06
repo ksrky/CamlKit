@@ -26,12 +26,14 @@ let rec trexp : L.exp -> C.exp = function
         | GeOp -> "ge"
       in
       Prim {oper; args= [trexp left; trexp right]}
-  | IfExp {cond; then_; else_} -> If {cond= trexp cond; then_= trexp then_; else_= trexp else_}
+  | IfExp {cond; then_; else_} ->
+      If {cond= trexp cond; then_= trexp then_; else_= trexp else_}
   | LetExp {bnds; body} ->
       let vars, bnds =
         List.split
           (List.map
-             (fun (L.Bind {name; params; body}) -> (name, C.Lam {vars= params; body= trexp body}))
+             (fun (L.Bind {name; params; body}) ->
+               (name, C.Lam {vars= params; body= trexp body}) )
              bnds )
       in
       Let {isrec= false; vars; bnds; body= trexp body}
@@ -39,7 +41,8 @@ let rec trexp : L.exp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun (L.Bind {name; params; body}) -> (name, C.Lam {vars= params; body= trexp body}))
+             (fun (L.Bind {name; params; body}) ->
+               (name, C.Lam {vars= params; body= trexp body}) )
              bnds )
       in
       Let {isrec= true; vars; bnds; body= trexp body}

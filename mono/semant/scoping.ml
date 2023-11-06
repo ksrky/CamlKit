@@ -5,7 +5,9 @@ type scope = (string * Id.t) list
 let empty : scope = []
 
 let initial : scope =
-  List.map (fun s -> (s, Id.from_string s)) ["read_int"; "print_int"; "int"; "bool"; "unit"]
+  List.map
+    (fun s -> (s, Id.from_string s))
+    ["read_int"; "print_int"; "int"; "bool"; "unit"]
 
 let get_reservedid (name : string) : Id.t =
   match List.assoc_opt name initial with
@@ -34,7 +36,8 @@ let rec scoping_exp (sc : scope) : L.exp -> L.exp =
         let sc' = extend_list vars sc in
         LamExp {vars; body= scoping_exp sc' body}
     | OpExp {left; op; right} -> OpExp {left= scexp left; op; right= scexp right}
-    | IfExp {cond; then_; else_} -> IfExp {cond= scexp cond; then_= scexp then_; else_= scexp else_}
+    | IfExp {cond; then_; else_} ->
+        IfExp {cond= scexp cond; then_= scexp then_; else_= scexp else_}
     | LetExp {bnds; body} ->
         let sc' = extend_list (List.map (fun (L.Bind d) -> d.name) bnds) sc in
         LetExp {bnds= scoping_bnds sc bnds; body= scoping_exp sc' body}

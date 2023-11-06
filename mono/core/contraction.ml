@@ -11,9 +11,13 @@ let thresh_ratio : float = 0.95 (* tmp *)
 let nred = ref 1
 
 type varinfo =
-  {mutable side_effect: bool; mutable usecount: int; mutable repres: C.exp; mutable simple: bool}
+  { mutable side_effect: bool
+  ; mutable usecount: int
+  ; mutable repres: C.exp
+  ; mutable simple: bool }
 
-let default_info () = {side_effect= false; usecount= 0; repres= C.Nil; simple= false}
+let default_info () =
+  {side_effect= false; usecount= 0; repres= C.Nil; simple= false}
 
 let hashtbl : (int, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
 
@@ -41,7 +45,9 @@ let is_usecount id cnt : bool = (hashtbl_find id).usecount = cnt
 let update_repres id exp =
   let info = hashtbl_find id in
   info.repres <- exp;
-  match exp with Int _ | Nil | Var _ -> info.simple <- true | _ -> info.simple <- false
+  match exp with
+  | Int _ | Nil | Var _ -> info.simple <- true
+  | _ -> info.simple <- false
 
 let find_repres (var : C.id) : C.exp =
   match Hashtbl.find_opt hashtbl (Id.unique var) with
@@ -59,7 +65,8 @@ let rec gather (sc : Id.t list) : C.exp -> unit = function
   | App {fcn= Lam {vars; body}; args} ->
       (* (fun x1 x2 .. xn -> e) a1 a2 .. ak *)
       init_varinfo vars;
-      (try List.iter2 update_repres vars args with Invalid_argument _ (* n > k *) -> ());
+      ( try List.iter2 update_repres vars args
+        with Invalid_argument _ (* n > k *) -> () );
       gather (vars @ sc) body;
       List.iter (gather sc) args
   | App {fcn; args} ->
@@ -69,7 +76,8 @@ let rec gather (sc : Id.t list) : C.exp -> unit = function
       init_varinfo vars;
       gather (vars @ sc) body
   | Prim {oper; args} ->
-      if List.mem oper [] then List.iter (fun v -> (hashtbl_find v).side_effect <- true) sc;
+      if List.mem oper [] then
+        List.iter (fun v -> (hashtbl_find v).side_effect <- true) sc;
       List.iter (gather sc) args
   | Let {vars; bnds; body; _} ->
       init_varinfo vars;
@@ -83,7 +91,9 @@ let rec reduce : C.exp -> C.exp = function
   | Var var ->
       let info = hashtbl_find var in
       if info.simple then (
-        incr nred; decr_usecount var; info.repres (* inlining a small function *) )
+        incr nred;
+        decr_usecount var;
+        info.repres (* inlining a small function *) )
       else if is_usecount var 1 then find_repres var
       else Var var
   | App {fcn= Lam {vars; body}; args} ->
@@ -91,11 +101,13 @@ let rec reduce : C.exp -> C.exp = function
         List.split
           (List.fold_right2
              (fun v a acc ->
-               if is_deadvar v then (incr nred; acc (* dead-variable elimination *))
+               if is_deadvar v then (
+                 incr nred; acc (* dead-variable elimination *) )
                else (v, reduce a) :: acc )
              vars args [] )
       in
-      (try List.iter2 update_repres vars' args' with Invalid_argument _ (* n > k *) -> ());
+      ( try List.iter2 update_repres vars' args'
+        with Invalid_argument _ (* n > k *) -> () );
       if vars' = [] then reduce body
       else App {fcn= Lam {vars= vars'; body= reduce body}; args= args'}
   | App {fcn; args} -> App {fcn= reduce fcn; args= List.map reduce args}
@@ -106,14 +118,17 @@ let rec reduce : C.exp -> C.exp = function
         List.split
           (List.fold_right2
              (fun v b acc ->
-               if is_deadvar v then (incr nred; acc (* dead-variable elimination *))
+               if is_deadvar v then (
+                 incr nred; acc (* dead-variable elimination *) )
                else if is_usecount v 1 then
-                 (v, b) :: acc (* not expand a let binding when it can be inlined. *)
+                 (v, b)
+                 :: acc (* not expand a let binding when it can be inlined. *)
                else (v, reduce b) :: acc )
              vars bnds [] )
       in
       List.iter2 update_repres vars' bnds';
-      if vars' = [] then reduce body else Let {isrec; vars= vars'; bnds= bnds'; body= reduce body}
+      if vars' = [] then reduce body
+      else Let {isrec; vars= vars'; bnds= bnds'; body= reduce body}
   | e -> e
 
 let step exp : C.exp =

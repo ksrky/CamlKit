@@ -29,7 +29,9 @@ let make_cons (i : int) (j : int) : int =
   n
 
 let get_cons (i : int) : int * int =
-  match cells.(i) with Cons (n, j) -> (n, j) | _ -> raise (Runtime_error "Cons required")
+  match cells.(i) with
+  | Cons (n, j) -> (n, j)
+  | _ -> raise (Runtime_error "Cons required")
 
 let push (i : int) (r : int ref) : unit = r := make_cons i !r
 
@@ -43,10 +45,14 @@ let pop (r : int ref) : int =
 let atom (i : int) : int = match cells.(i) with Int _ -> 1 | Cons _ -> 0
 
 let car (i : int) : int =
-  match cells.(i) with Cons (i, _) -> i | _ -> raise (Runtime_error "Cons required")
+  match cells.(i) with
+  | Cons (i, _) -> i
+  | _ -> raise (Runtime_error "Cons required")
 
 let cdr (i : int) : int =
-  match cells.(i) with Cons (_, j) -> j | _ -> raise (Runtime_error "Cons required")
+  match cells.(i) with
+  | Cons (_, j) -> j
+  | _ -> raise (Runtime_error "Cons required")
 
 let locate (ij : int) (r : int) =
   let rec loc (y, z) = if y = 1 then car z else loc (y - 1, cdr z) in

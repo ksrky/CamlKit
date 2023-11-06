@@ -2,9 +2,9 @@ module C = Core.Syntax
 module S = Secd.Operation
 
 let primitives : (string * S.t) list =
-  [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB); ("mul", MUL)
-  ; ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE); ("readi", READI)
-  ; ("printi", PRINTI) ]
+  [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB)
+  ; ("mul", MUL); ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE)
+  ; ("readi", READI); ("printi", PRINTI) ]
 
 let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
@@ -27,22 +27,29 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
       DUM :: NIL :: c2s_app bnds newn (c2s_lambda body newn (RAP :: c))
 
 and c2s_prim (args : C.exp list) (n : C.id list list) (c : S.t list) =
-  if args = [] then c else c2s_prim (List.tl args) n (c2s_exp (List.hd args) n c)
+  if args = [] then c
+  else c2s_prim (List.tl args) n (c2s_exp (List.hd args) n c)
 
 and c2s_lambda (body : C.exp) (n : C.id list list) (c : S.t list) : S.t list =
   LDF (c2s_exp body n [RTN]) :: c
 
-and c2s_if test tr fa n c = c2s_exp test n [SEL (c2s_exp tr n [JOIN], c2s_exp fa n [JOIN])] @ c
+and c2s_if test tr fa n c =
+  c2s_exp test n [SEL (c2s_exp tr n [JOIN], c2s_exp fa n [JOIN])] @ c
 
 and c2s_app (args : C.exp list) n c =
-  if args = [] then c else c2s_app (List.tl args) n (c2s_exp (List.hd args) n (CONS :: c))
+  if args = [] then c
+  else c2s_app (List.tl args) n (c2s_exp (List.hd args) n (CONS :: c))
 
 and index (x : Id.t) (n : Id.t list list) : int * int =
   let rec indx (x : Id.t) (n : Id.t list list) (i : int) : int * int =
-    if n = [] then ErrorMsg.impossible ("Occurance of '" ^ Id.name x ^ "' must be scope-checked")
+    if n = [] then
+      ErrorMsg.impossible
+        ("Occurance of '" ^ Id.name x ^ "' must be scope-checked")
     else
       let rec indx2 (x : Id.t) (n : Id.t list) (j : int) =
-        if n = [] then 0 else if List.hd n = x then j else indx2 x (List.tl n) (j + 1)
+        if n = [] then 0
+        else if List.hd n = x then j
+        else indx2 x (List.tl n) (j + 1)
       in
       let j = indx2 x (List.hd n) 1 in
       if j = 0 then indx x (List.tl n) (i + 1) else (i, j)

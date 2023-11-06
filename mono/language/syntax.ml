@@ -16,7 +16,17 @@ type exp =
 
 and bnd = Bind of {name: id; params: id list; body: exp}
 
-and op = PlusOp | MinusOp | TimesOp | DivideOp | EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
+and op =
+  | PlusOp
+  | MinusOp
+  | TimesOp
+  | DivideOp
+  | EqOp
+  | NeqOp
+  | LtOp
+  | LeOp
+  | GtOp
+  | GeOp
 
 type ty = NilTy | BoolTy | IntTy | FunTy of ty * ty | MetaTy of tyvar
 
@@ -62,15 +72,24 @@ let rec ppr_exp exp =
     | OpExp {left; op; right} ->
         parens ctx 1 (pretty 1 left ^ " " ^ ppr_oper op ^ " " ^ pretty 1 right)
     | LamExp {vars; body} ->
-        parens ctx 0 ("fun " ^ String.concat " " (List.map Id.name vars) ^ " -> " ^ pretty 0 body)
+        parens ctx 0
+          ( "fun "
+          ^ String.concat " " (List.map Id.name vars)
+          ^ " -> " ^ pretty 0 body )
     | IfExp {cond; then_; else_} ->
-        parens ctx 0 ("if " ^ pretty 0 cond ^ " then " ^ pretty 0 then_ ^ " else " ^ pretty 0 else_)
+        parens ctx 0
+          ( "if " ^ pretty 0 cond ^ " then " ^ pretty 0 then_ ^ " else "
+          ^ pretty 0 else_ )
     | LetExp {bnds; body} ->
         parens ctx 0
-          ("let " ^ String.concat " and " (List.map ppr_bnd bnds) ^ " in " ^ pretty 0 body)
+          ( "let "
+          ^ String.concat " and " (List.map ppr_bnd bnds)
+          ^ " in " ^ pretty 0 body )
     | LetrecExp {bnds; body} ->
         parens ctx 0
-          ("let " ^ String.concat " and " (List.map ppr_bnd bnds) ^ " in " ^ pretty 0 body)
+          ( "let "
+          ^ String.concat " and " (List.map ppr_bnd bnds)
+          ^ " in " ^ pretty 0 body )
   in
   pretty 0 exp
 
@@ -93,12 +112,19 @@ let rec ppr_aexp ctx : aexp -> string = function
   | NilAExp -> "nil"
   | BoolAExp b -> string_of_bool b
   | IntAExp i -> string_of_int i
-  | AppAExp {fcn; arg} -> parens ctx 1 (ppr_aexp 1 (fst fcn) ^ " " ^ ppr_aexp 2 (fst arg))
+  | AppAExp {fcn; arg} ->
+      parens ctx 1 (ppr_aexp 1 (fst fcn) ^ " " ^ ppr_aexp 2 (fst arg))
   | OpAExp {left; op; right} ->
-      parens ctx 1 (ppr_aexp 1 (fst left) ^ " " ^ ppr_oper op ^ " " ^ ppr_aexp 1 (fst right))
+      parens ctx 1
+        ( ppr_aexp 1 (fst left)
+        ^ " " ^ ppr_oper op ^ " "
+        ^ ppr_aexp 1 (fst right) )
   | LamAExp {vars; body} ->
       parens ctx 0
-        ("fun " ^ String.concat " " (List.map Id.name vars) ^ " -> " ^ ppr_aexp 0 (fst body))
+        ( "fun "
+        ^ String.concat " " (List.map Id.name vars)
+        ^ " -> "
+        ^ ppr_aexp 0 (fst body) )
   | IfAExp {cond; then_; else_} ->
       "if "
       ^ ppr_aexp 0 (fst cond)
@@ -108,17 +134,25 @@ let rec ppr_aexp ctx : aexp -> string = function
       ^ ppr_aexp 0 (fst else_)
   | LetAExp {bnds; body} ->
       parens ctx 0
-        ("let " ^ String.concat " and " (List.map ppr_abnd bnds) ^ " in " ^ ppr_aexp ctx (fst body))
+        ( "let "
+        ^ String.concat " and " (List.map ppr_abnd bnds)
+        ^ " in "
+        ^ ppr_aexp ctx (fst body) )
   | LetrecAExp {bnds; body} ->
       parens ctx 0
-        ("let " ^ String.concat " and " (List.map ppr_abnd bnds) ^ " in " ^ ppr_aexp ctx (fst body))
+        ( "let "
+        ^ String.concat " and " (List.map ppr_abnd bnds)
+        ^ " in "
+        ^ ppr_aexp ctx (fst body) )
 
 and ppr_abnd (ABind {name; params; body} : abnd) : string =
   Id.name name
   ^ ( if params = [] then ""
       else
         String.concat " "
-          (List.map (fun (id, ty) -> "(" ^ Id.name id ^ " : " ^ ppr_ty ty ^ ")") params) )
+          (List.map
+             (fun (id, ty) -> "(" ^ Id.name id ^ " : " ^ ppr_ty ty ^ ")")
+             params ) )
   ^ " : "
   ^ ppr_ty (snd body)
   ^ " = "

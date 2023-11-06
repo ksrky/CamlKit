@@ -92,10 +92,14 @@ let run_command () : unit =
   | 8 (* SUB *) -> binop s (fun a b -> make_int (get_int a - get_int b))
   | 9 (* MUL *) -> binop s (fun a b -> make_int (get_int a * get_int b))
   | 10 (* DIV *) -> binop s (fun a b -> make_int (get_int a / get_int b))
-  | 11 (* EQ *) -> binop s (fun a b -> make_int (if get_int a = get_int b then 1 else 0))
-  | 12 (* NE *) -> binop s (fun a b -> make_int (if get_int a <> get_int b then 1 else 0))
-  | 13 (* LT *) -> binop s (fun a b -> make_int (if get_int a < get_int b then 1 else 0))
-  | 14 (* LE *) -> binop s (fun a b -> make_int (if get_int a <= get_int b then 1 else 0))
+  | 11 (* EQ *) ->
+      binop s (fun a b -> make_int (if get_int a = get_int b then 1 else 0))
+  | 12 (* NE *) ->
+      binop s (fun a b -> make_int (if get_int a <> get_int b then 1 else 0))
+  | 13 (* LT *) ->
+      binop s (fun a b -> make_int (if get_int a < get_int b then 1 else 0))
+  | 14 (* LE *) ->
+      binop s (fun a b -> make_int (if get_int a <= get_int b then 1 else 0))
   | 15 (* SEL *) ->
       let x = match get_int (pop s) with 0 -> false | _ -> true in
       let ct = pop c in
@@ -141,7 +145,8 @@ let run_command () : unit =
       print_int (get_int x)
   | _ -> failwith "Invalid operation"
 
-let rec run_commands () : unit = if !c = 0 then () else (run_command (); run_commands ())
+let rec run_commands () : unit =
+  if !c = 0 then () else (run_command (); run_commands ())
 
 let rec show_instrs (instrs : t list) : string =
   match instrs with

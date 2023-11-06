@@ -1,4 +1,9 @@
-type node = INT of int | CONS of node * int | AP of node * node | FUN of int * Code.t | HOLE
+type node =
+  | INT of int
+  | CONS of node * int
+  | AP of node * node
+  | FUN of int * Code.t
+  | HOLE
 
 and stack = node array
 
@@ -36,7 +41,8 @@ let pop () : node =
   let k = !sp in
   decr sp; stack.(k)
 
-let pop_int () : int = match pop () with INT n -> n | _ -> failwith "INT required"
+let pop_int () : int =
+  match pop () with INT n -> n | _ -> failwith "INT required"
 
 let pop_fun () : int * Code.t =
   match pop () with FUN (k, c) -> (k, c) | _ -> failwith "FUN required"

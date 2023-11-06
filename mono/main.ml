@@ -7,7 +7,9 @@ let semant abssyn =
 
 let run_secd instrs =
   (* print_endline (Secd.Operation.show_instrs instrs); *)
-  Secd.State.init (); Secd.Operation.load_instrs instrs; Secd.Operation.run_commands ()
+  Secd.State.init ();
+  Secd.Operation.load_instrs instrs;
+  Secd.Operation.run_commands ()
 
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =

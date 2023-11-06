@@ -31,13 +31,17 @@ let rec check (env : E.env) (exp : L.exp) (exp_ty : L.ty) : L.expty =
   | OpExp {left; op= (EqOp | NeqOp) as op; right} -> (
       U.unify L.BoolTy exp_ty;
       try
-        let left' = check env left L.IntTy and right' = check env right L.IntTy in
+        let left' = check env left L.IntTy
+        and right' = check env right L.IntTy in
         (OpAExp {left= left'; op; right= right'}, BoolTy)
       with _ -> (
         try
-          let left' = check env left L.BoolTy and right' = check env right L.BoolTy in
+          let left' = check env left L.BoolTy
+          and right' = check env right L.BoolTy in
           (OpAExp {left= left'; op; right= right'}, BoolTy)
-        with _ -> Error.error "type mismatched"; (NilAExp, NilTy) ) )
+        with _ ->
+          Error.error "type mismatched";
+          (NilAExp, NilTy) ) )
   | IfExp {cond; then_; else_} ->
       let cond' = check env cond L.BoolTy
       and then_' = check env then_ exp_ty
@@ -46,20 +50,32 @@ let rec check (env : E.env) (exp : L.exp) (exp_ty : L.ty) : L.expty =
   | LetExp {bnds; body} ->
       let bnd_tys = List.map (fun _ -> T.new_tyvar ()) bnds in
       let bnds' = check_bnds env bnds bnd_tys in
-      let env' = E.extend_vals (List.map (fun (L.Bind {name; _}) -> name) bnds) bnd_tys env in
+      let env' =
+        E.extend_vals
+          (List.map (fun (L.Bind {name; _}) -> name) bnds)
+          bnd_tys env
+      in
       (LetAExp {bnds= bnds'; body= check env' body exp_ty}, exp_ty)
   | LetrecExp {bnds; body} ->
       let bnd_tys = List.map (fun _ -> T.new_tyvar ()) bnds in
-      let env' = E.extend_vals (List.map (fun (L.Bind {name; _}) -> name) bnds) bnd_tys env in
+      let env' =
+        E.extend_vals
+          (List.map (fun (L.Bind {name; _}) -> name) bnds)
+          bnd_tys env
+      in
       let bnds' = check_bnds env' bnds bnd_tys in
       (LetrecAExp {bnds= bnds'; body= check env' body exp_ty}, exp_ty)
 
-and check_bnds (env : E.env) (bnds : L.bnd list) (exp_tys : L.ty list) : L.abnd list =
+and check_bnds (env : E.env) (bnds : L.bnd list) (exp_tys : L.ty list) :
+    L.abnd list =
   List.map2
     (fun (L.Bind {name; params; body}) exp_ty ->
       let param_tys, body_ty = U.unify_funs params exp_ty in
       let env' = E.extend_vals params param_tys env in
-      L.ABind {name; params= List.combine params param_tys; body= check env' body body_ty} )
+      L.ABind
+        { name
+        ; params= List.combine params param_tys
+        ; body= check env' body body_ty } )
     bnds exp_tys
 
 let check_prog (env : E.env) (prog : L.exp) : L.aexp =

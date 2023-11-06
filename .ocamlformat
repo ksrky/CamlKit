@@ -1,5 +1,5 @@
 profile = ocamlformat
-margin = 100
+margin = 80
 break-cases = fit
 break-collection-expressions = wrap
 sequence-style = terminator
