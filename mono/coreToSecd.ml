@@ -9,7 +9,6 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
   | Const Nil -> NIL :: c
   | Const (Int x) -> LDC x :: c
-  | Const Tuple -> failwith "Tuple not implemented"
   | Var x ->
       let i, j = index x n in
       LD (i, j) :: c
@@ -25,6 +24,8 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Let {isrec= true; vars; bnds; body} ->
       let newn = vars :: n in
       DUM :: NIL :: c2s_app bnds newn (c2s_lambda body newn (RAP :: c))
+  | Tuple _ -> failwith "not implemented"
+  | Split _ -> failwith "not implemented"
 
 and c2s_prim (args : C.exp list) (n : C.id list list) (c : S.t list) =
   if args = [] then c
