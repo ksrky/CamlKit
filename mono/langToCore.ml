@@ -13,18 +13,18 @@ let rec trexp : L.exp -> C.exp = function
   | AppExp {fcn; arg} -> App {fcn= trexp fcn; args= [trexp arg]}
   | LamExp {vars; body} -> C.lams vars (trexp body)
   | OpExp {left; op; right} ->
-      let oper =
+      let oper : C.oper =
         match op with
-        | PlusOp -> "add"
-        | MinusOp -> "sub"
-        | TimesOp -> "mul"
-        | DivideOp -> "div"
-        | EqOp -> "eq"
-        | NeqOp -> "ne"
-        | LtOp -> "lt"
-        | LeOp -> "le"
-        | GtOp -> "gt"
-        | GeOp -> "ge"
+        | PlusOp -> Add
+        | MinusOp -> Sub
+        | TimesOp -> Mul
+        | DivideOp -> Div
+        | EqOp -> Eq
+        | NeqOp -> Ne
+        | LtOp -> Lt
+        | LeOp -> Le
+        | GtOp -> Gt
+        | GeOp -> Ge
       in
       Prim {oper; args= [trexp left; trexp right]}
   | IfExp {cond; then_; else_} ->

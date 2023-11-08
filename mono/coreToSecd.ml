@@ -1,10 +1,9 @@
 module C = Core.Syntax
 module S = Secd.Operation
 
-let primitives : (string * S.t) list =
-  [ ("car", CAR); ("cdr", CDR); ("cons", CONS); ("add", ADD); ("sub", SUB)
-  ; ("mul", MUL); ("div", DIV); ("eq", EQ); ("ne", NE); ("lt", LT); ("le", LE)
-  ; ("readi", READI); ("printi", PRINTI) ]
+let prims : (C.oper * S.t) list =
+  [ (Add, ADD); (Sub, SUB); (Mul, MUL); (Div, DIV); (Eq, EQ); (Ne, NE); (Lt, LT)
+  ; (Le, LE) ]
 
 let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
@@ -17,7 +16,7 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Lam {vars; body} ->
       let n' = vars :: n in
       c2s_lambda body n' c
-  | Prim {oper; args} -> c2s_prim args n (List.assoc oper primitives :: c)
+  | Prim {oper; args} -> c2s_prim args n (List.assoc oper prims :: c)
   | If {cond; then_; else_} -> c2s_if cond then_ else_ n c
   | Let {isrec= false; vars; bnds; body} ->
       let newn = vars :: n in

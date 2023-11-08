@@ -1,11 +1,13 @@
 type id = Id.t
 
+type oper = Core.Syntax.oper
+
 type exp =
   | Int of int
   | Nil
   | Var of id
   | App of {fcn: exp; args: exp list}
-  | Prim of {oper: string; args: exp list}
+  | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
 
@@ -13,9 +15,7 @@ type frag = {name: string; params: id list; body: exp}
 
 type frags = frag list
 
-let arith = ["add"; "sub"; "mul"; "div"]
-
-let rel = ["eq"; "ne"; "lt"; "le"; "gt"; "ge"]
+let ppr_oper = Core.Syntax.ppr_oper
 
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
@@ -28,7 +28,7 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
         parens ctx 1
           (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
     | Prim {oper; args} ->
-        oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
+        ppr_oper oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
     | If {cond; then_; else_} ->
         parens ctx 0
           ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "

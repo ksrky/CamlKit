@@ -30,12 +30,12 @@ let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t = function
               bnds )
       @ c2g_exp stack' fsize' body @ [G.Slide n]
   | Prim {oper; args} ->
-      let oper' =
+      let oper' : G.instr =
         match oper with
-        | "add" -> G.Add
-        | "sub" -> G.Sub
-        | "mul" -> G.Mul
-        | "div" -> G.Div
+        | Add -> Add
+        | Sub -> Sub
+        | Mul -> Mul
+        | Div -> Div
         | _ -> failwith ""
       in
       List.concat_map (c2g_exp stack fsize) args @ [oper'; G.MkAp]
