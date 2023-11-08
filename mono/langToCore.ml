@@ -3,13 +3,10 @@ module C = Core.Syntax
 
 let rec trexp : L.exp -> C.exp = function
   | VarExp x -> Var x
-  | NilExp -> Int 0
-  | BoolExp true -> Int 1
-  | BoolExp false -> Int 0
-  | IntExp n -> Int n
-  (* | AppExp _ as exp ->
-      let fcn, args = appexp [] exp in
-      App {fcn; args} *)
+  | NilExp -> Const Nil
+  | BoolExp true -> Const (Int 1)
+  | BoolExp false -> Const (Int 0)
+  | IntExp n -> Const (Int n)
   | AppExp {fcn; arg} -> App {fcn= trexp fcn; args= [trexp arg]}
   | LamExp {vars; body} -> C.lams vars (trexp body)
   | OpExp {left; op; right} ->

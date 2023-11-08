@@ -17,7 +17,7 @@ type varinfo =
   ; mutable simple: bool }
 
 let default_info () =
-  {side_effect= false; usecount= 0; repres= C.Nil; simple= false}
+  {side_effect= false; usecount= 0; repres= C.Const Nil; simple= false}
 
 let hashtbl : (int, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
 
@@ -46,7 +46,7 @@ let update_repres id exp =
   let info = hashtbl_find id in
   info.repres <- exp;
   match exp with
-  | Int _ | Nil | Var _ -> info.simple <- true
+  | Const _ | Var _ -> info.simple <- true
   | _ -> info.simple <- false
 
 let find_repres (var : C.id) : C.exp =

@@ -2,9 +2,10 @@ type id = Id.t
 
 type oper = Add | Sub | Mul | Div | Eq | Ne | Lt | Le | Gt | Ge
 
+type const = Int of int | Nil | Tuple
+
 type exp =
-  | Int of int
-  | Nil
+  | Const of const
   | Var of id
   | App of {fcn: exp; args: exp list}
   | Lam of {vars: id list; body: exp}
@@ -27,13 +28,17 @@ let ppr_oper : oper -> string = function
   | Gt -> "gt"
   | Ge -> "ge"
 
+let ppr_const : const -> string = function
+  | Int i -> string_of_int i
+  | Nil -> "nil"
+  | Tuple -> "tuple"
+
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pexp ctx exp =
     match exp with
     | Var var -> pprid var
-    | Nil -> "nil"
-    | Int i -> string_of_int i
+    | Const c -> ppr_const c
     | App {fcn; args} ->
         parens ctx 1
           (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")

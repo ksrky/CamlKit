@@ -6,9 +6,9 @@ let rec find_idx x = function
   | h :: t -> if x = h then 0 else 1 + find_idx x t
 
 let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t = function
-  | Int i -> [G.PushInt i]
+  | Const (Int i) -> [G.PushInt i]
+  | Const Nil -> [G.Alloc 1]
   | Var x -> [G.Push (fsize - find_idx x stack)]
-  | Nil -> [G.Alloc 1]
   | App {fcn; args} ->
       List.concat_map (c2g_exp stack fsize) args
       @ c2g_exp stack (fsize + 1) fcn

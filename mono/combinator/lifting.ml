@@ -11,8 +11,7 @@ let append (frag : Cm.frag) = frags := frag :: !frags
 let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp =
   match exp with
   | Var var -> ([var], Var var)
-  | Int i -> ([], Int i)
-  | Nil -> ([], Nil)
+  | Const c -> ([], Const c)
   | App {fcn; args} ->
       let fvs1, fcn' = lift_lam fcn in
       let fvs2, args' = lift_lams args in

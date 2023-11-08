@@ -13,8 +13,7 @@ let rec let_expansion : C.exp -> C.id list * C.exp list * C.exp = function
   | e -> ([], [], e)
 
 let rec f : C.exp -> C.exp = function
-  | Int i -> Int i
-  | Nil -> Nil
+  | Const c -> Const c
   | Var id -> Var id
   | App {fcn; args} -> App {fcn= f fcn; args= List.map f args}
   | Lam {vars; body} ->

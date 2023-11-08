@@ -2,9 +2,10 @@ type id = Id.t
 
 type oper = Core.Syntax.oper
 
+type const = Core.Syntax.const
+
 type exp =
-  | Int of int
-  | Nil
+  | Const of const
   | Var of id
   | App of {fcn: exp; args: exp list}
   | Prim of {oper: oper; args: exp list}
@@ -17,13 +18,14 @@ type frags = frag list
 
 let ppr_oper = Core.Syntax.ppr_oper
 
+let ppr_const = Core.Syntax.ppr_const
+
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pexp ctx exp =
     match exp with
     | Var var -> pprid var
-    | Nil -> "nil"
-    | Int i -> string_of_int i
+    | Const c -> ppr_const c
     | App {fcn; args} ->
         parens ctx 1
           (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")

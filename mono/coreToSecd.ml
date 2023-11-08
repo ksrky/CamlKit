@@ -7,8 +7,9 @@ let prims : (C.oper * S.t) list =
 
 let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
-  | Nil -> NIL :: c
-  | Int x -> LDC x :: c
+  | Const Nil -> NIL :: c
+  | Const (Int x) -> LDC x :: c
+  | Const Tuple -> failwith "Tuple not implemented"
   | Var x ->
       let i, j = index x n in
       LD (i, j) :: c

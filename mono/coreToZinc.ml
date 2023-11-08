@@ -6,9 +6,9 @@ let rec find_idx x = function
   | h :: t -> if x = h then 0 else 1 + find_idx x t
 
 let rec c2z_exp (env : Id.t list) : C.exp -> Z.t = function
-  | Nil -> [Z.PushInt 0]
+  | Const Nil -> [Z.PushInt 0]
+  | Const (Int i) -> [Z.PushInt i]
   | Var x -> [Z.Access (find_idx x env)]
-  | Int i -> [Z.PushInt i]
   | App {fcn; args} ->
       (Z.Pushmark :: List.concat_map (fun e -> c2z_exp env e) (List.rev args))
       @ c2z_exp env fcn @ [Z.Apply]
