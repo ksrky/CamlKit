@@ -1,12 +1,9 @@
-(*module C = Combinator.Syntax
+open Syntax
 
-  val the_module : Llvm.llmodule ref
+val codegen_exp : Llvm.llmodule -> exp -> Llvm.llvalue
 
-  val codegen_expr : C.exp -> Llvm.llvalue
+val codegen_proto : Llvm.llmodule -> string -> id list -> unit
 
-  val codegen_proto : string * C.id list -> unit
+val codegen_func : Llvm.llmodule -> code -> unit
 
-  val codegen_func : C.frag -> unit
-
-  val codegen : string -> C.frags -> unit
-*)
+val codegen : string -> codes -> unit

@@ -7,14 +7,23 @@ let rec conv_exp : exp -> id list * exp = function
   | Var x -> ([x], Var x)
   | App {fcn; args} ->
       let vs, fcn' = conv_exp fcn in
+      let code_var = Id.from_string "code" and env_var = Id.from_string "env" in
       let vss, args' = List.split (List.map conv_exp args) in
-      (vs @ List.concat vss, App {fcn= fcn'; args})
+      ( vs @ List.concat vss
+      , Split
+          { exp= fcn'
+          ; vars= [code_var; env_var]
+          ; body= App {fcn= Var code_var; args= Var env_var :: args'} } )
   | Lam {vars; body} ->
       let vs, body' = conv_exp body in
       let fvs = notin vs vars in
       let env_var = Id.from_string "env" in
       let v_env = Tuple (List.map (fun v -> Var v) fvs) in
-      let v_code = Lam {vars= env_var :: vars; body= body'} in
+      let v_code =
+        Lam
+          { vars= env_var :: vars
+          ; body= Split {exp= Var env_var; vars= fvs; body= body'} }
+      in
       (fvs, Tuple [v_code; v_env])
   | Prim {oper; args} ->
       let vss, args' = List.split (List.map conv_exp args) in
@@ -36,3 +45,5 @@ let rec conv_exp : exp -> id list * exp = function
       let vs, exp' = conv_exp exp in
       let fvs = notin vs vars in
       (fvs, Split {exp= exp'; vars; body})
+
+let conv_prog (exp : exp) : exp = conv_exp exp |> snd
