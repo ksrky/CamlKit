@@ -17,7 +17,7 @@ let run_secd instrs =
 let run (path : string) =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
-  let coresyn = LangToCore.trexp abssyn' in
+  let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
   run_secd instrs
@@ -26,7 +26,7 @@ let run (path : string) =
 let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let abssyn' = semant abssyn in
-  let coresyn = LangToCore.trexp abssyn' in
+  let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
   run_secd instrs
@@ -35,9 +35,9 @@ let eval (inp : string) =
 let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
-  let coresyn = LangToCore.trexp abssyn' in
+  let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let llcodes = CoreToLlvm.f coresyn in
+  let llcodes = CoreToLlvm.c2l_exp coresyn in
   (* print_endline (LlvmGen.Syntax.ppr_codes llcodes); *)
   let llmod = LlvmGen.CodeGen.codegen (Filename.basename path) llcodes in
   Llvm.print_module (Filename.remove_extension path ^ ".ll") llmod
