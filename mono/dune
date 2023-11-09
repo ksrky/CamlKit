@@ -11,8 +11,7 @@
   zinc
   gmachine
   llvmGen
-  llvm
-  llvm.analysis)
+  llvm)
  (flags -open Common))
 
 (env

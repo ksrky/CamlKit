@@ -116,7 +116,8 @@ let codegen_func (llmod : llmodule) ({name; params; body} : code) : unit =
     Llvm_analysis.assert_valid_function func
   with e -> delete_function func; raise e
 
-let codegen (modid : string) (codes : codes) : unit =
+let codegen (modid : string) (codes : codes) : llmodule =
   let llmod = create_module context modid in
   List.iter (fun {name; params; _} -> codegen_proto llmod name params) codes;
-  List.iter (codegen_func llmod) codes
+  List.iter (codegen_func llmod) codes;
+  llmod

@@ -33,3 +33,8 @@ let rec hoisting : C.exp -> L.exp = function
         List.mapi (fun idx _ -> L.Proj {exp= hoisting exp; idx}) vars
       in
       Let {vars; bnds; body= hoisting body}
+
+let f (exp : C.exp) : L.codes =
+  code_list := [];
+  let exp' = hoisting exp in
+  List.rev ({L.name= "main"; params= []; body= exp'} :: List.rev !code_list)

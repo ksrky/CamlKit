@@ -1,6 +1,6 @@
 (library
  (name llvmGen)
- (libraries common combinator llvm llvm.analysis)
+ (libraries common core llvm llvm.analysis)
  (flags -open Common))
 
 (env
