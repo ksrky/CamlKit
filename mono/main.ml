@@ -9,7 +9,9 @@ let run_secd instrs =
   (* print_endline (Secd.Operation.show_instrs instrs); *)
   Secd.State.init ();
   Secd.Operation.load_instrs instrs;
-  Secd.Operation.run_commands ()
+  Secd.Operation.run_commands ();
+  print_int (Secd.State.exit_code ());
+  print_newline ()
 
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =
@@ -27,7 +29,7 @@ let eval (inp : string) =
   let coresyn = LangToCore.trexp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.f coresyn in
-  run_secd instrs; print_newline ()
+  run_secd instrs
 
 (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)
 let compile (path : string) : unit =

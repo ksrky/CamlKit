@@ -1,10 +1,7 @@
 let rec repl () =
   print_string "# ";
   let inp = read_line () in
-  if inp = "#quit" then ()
-  else (
-    (try Mono.Main.eval inp with _ -> ());
-    repl () )
+  if inp = "#quit" then () else (Mono.Main.eval inp; repl ())
 
 let () =
   if Array.length Sys.argv = 1 then repl ()

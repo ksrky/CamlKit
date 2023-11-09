@@ -1,3 +1,0 @@
-let
-  dummy x y = x + y
-in dummy 0 0; 10
