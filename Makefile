@@ -13,7 +13,7 @@ dune-test:
 	$(DUNE) test
 
 runtime.ll:
-	$(CLANG) -S -emit-llvm lib/runtime.c
+	$(CLANG) -S -emit-llvm mono/runtime.c
 
 .PHONY: compile
 compile: dune-build runtime.ll
