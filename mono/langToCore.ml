@@ -44,7 +44,3 @@ let rec trexp : L.exp -> C.exp = function
              bnds )
       in
       Let {isrec= true; vars; bnds; body= trexp body}
-
-and appexp (acc : C.exp list) : L.exp -> C.exp * C.exp list = function
-  | AppExp {fcn; arg} -> appexp (trexp arg :: acc) fcn
-  | exp -> (trexp exp, acc)
