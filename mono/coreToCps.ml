@@ -3,51 +3,58 @@ module K = Cps.Syntax
 
 let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
   match exp with
-  | Const c -> K.App {fcn= k; args= [K.Const c]}
-  | Var id -> K.App {fcn= k; args= [K.Var id]}
+  | Const c -> K.apps k [K.Const c]
+  | Var id -> K.apps k [K.Var id]
   | App {fcn; args} ->
       let fcn_var = Id.from_string "fcn" in
       let arg_vars =
         List.mapi (fun i _ -> Id.from_string ("arg" ^ string_of_int i)) args
       in
-      failwith ""
-      (* List.fold_right
-         (fun arg exp -> K.App {fcn= c2k_exp k arg; args= exp})
-         (fcn :: args) (c2k_exp k fcn)*)
+      c2k_exp fcn
+        (K.lam fcn_var
+           (List.fold_right2
+              (fun var arg body -> c2k_exp arg (K.lam var body))
+              arg_vars args
+              (K.apps (Var fcn_var)
+                 (List.map (fun v -> K.Var v) arg_vars @ [k]) ) ) )
   | Lam {vars; body} ->
       let c_var = Id.from_string "c" in
-      K.App
-        { fcn= k
-        ; args= [K.Lam {vars= vars @ [c_var]; body= c2k_exp body (Var c_var)}]
-        }
+      K.apps k [K.lams (vars @ [c_var]) (c2k_exp body (Var c_var))]
   | Prim {oper; args} ->
-      failwith ""
-      (*
-      List.fold_right
-        (fun arg exp -> K.App {fcn= c2k_exp k arg; args= exp})
-        args (K.Prim oper*)
+      let name = Id.from_string "prim" in
+      let arg_vars =
+        List.mapi (fun i _ -> Id.from_string ("arg" ^ string_of_int i)) args
+      in
+      List.fold_right2
+        (fun var arg body -> c2k_exp arg (K.lam var body))
+        arg_vars args
+        (K.Let
+           { decs=
+               [ K.PrimDec
+                   {name; oper; args= List.map (fun v -> K.Var v) arg_vars} ]
+           ; body= K.app k (K.Var name) } )
   | If {cond; then_; else_} ->
       let cond_var = Id.from_string "cond" in
       c2k_exp cond
-        (K.Lam
-           { vars= [cond_var]
-           ; body=
-               K.If
-                 { cond= Var cond_var
-                 ; then_= c2k_exp then_ k
-                 ; else_= c2k_exp else_ k } } )
-  | Let {vars; bnds; body} -> failwith "not implemented"
+        (K.lam cond_var
+           (K.If
+              { cond= Var cond_var
+              ; then_= c2k_exp then_ k
+              ; else_= c2k_exp else_ k } ) )
+  | Let {vars; bnds; body} ->
+      List.fold_right2
+        (fun var bnd body -> c2k_exp bnd (K.lam var body))
+        vars bnds (c2k_exp body k)
   | Tuple exps ->
       let tuple_vars =
         List.mapi (fun i _ -> Id.from_string ("tuple" ^ string_of_int i)) exps
       in
       List.fold_right2
-        (fun var elm body -> c2k_exp elm (Lam {vars= [var]; body}))
+        (fun var elm body -> c2k_exp elm (K.lam var body))
         tuple_vars exps
-        (K.App {fcn= k; args= List.map (fun v -> K.Var v) tuple_vars})
+        (K.apps k (List.map (fun v -> K.Var v) tuple_vars))
   | Split {inp; vars; body} ->
       let split_var = Id.from_string "split" in
       c2k_exp inp
-        (Lam
-           { vars= [split_var]
-           ; body= Split {inp= Var split_var; vars; body= c2k_exp body k} } )
+        (K.lam split_var
+           (Split {inp= Var split_var; vars; body= c2k_exp body k}) )

@@ -21,3 +21,11 @@ and dec =
   | VarDec of {name: id; value: value}
   | ProjDec of {name: id; tuple: value; index: int}
   | PrimDec of {name: id; oper: oper; args: value list}
+
+let lam var body = Lam {vars= [var]; body}
+
+let lams vars body = Lam {vars; body}
+
+let app fcn arg = App {fcn; args= [arg]}
+
+let apps fcn args = App {fcn; args}
