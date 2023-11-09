@@ -27,4 +27,4 @@ let rec f : C.exp -> C.exp = function
       Let {isrec= true; vars; bnds= List.map f bnds; body= f body}
   | If {cond; then_; else_} -> If {cond= f cond; then_= f then_; else_= f else_}
   | Tuple es -> Tuple (List.map f es)
-  | Split {exp; vars; body} -> Split {exp= f exp; vars; body= f body}
+  | Split {inp; vars; body} -> Split {inp= f inp; vars; body= f body}

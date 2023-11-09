@@ -11,7 +11,7 @@ let rec conv_exp : exp -> id list * exp = function
       let vss, args' = List.split (List.map conv_exp args) in
       ( vs @ List.concat vss
       , Split
-          { exp= fcn'
+          { inp= fcn'
           ; vars= [code_var; env_var]
           ; body= App {fcn= Var code_var; args= Var env_var :: args'} } )
   | Lam {vars; body} ->
@@ -22,7 +22,7 @@ let rec conv_exp : exp -> id list * exp = function
       let v_code =
         Lam
           { vars= env_var :: vars
-          ; body= Split {exp= Var env_var; vars= fvs; body= body'} }
+          ; body= Split {inp= Var env_var; vars= fvs; body= body'} }
       in
       (fvs, Tuple [v_code; v_env])
   | Prim {oper; args} ->
@@ -41,9 +41,9 @@ let rec conv_exp : exp -> id list * exp = function
   | Tuple exps ->
       List.split (List.map conv_exp exps)
       |> fun (vss, exps') -> (List.concat vss, Tuple exps')
-  | Split {exp; vars; body} ->
-      let vs, exp' = conv_exp exp in
+  | Split {inp; vars; body} ->
+      let vs, inp' = conv_exp inp in
       let fvs = notin vs vars in
-      (fvs, Split {exp= exp'; vars; body})
+      (fvs, Split {inp= inp'; vars; body})
 
 let conv_prog (exp : exp) : exp = conv_exp exp |> snd

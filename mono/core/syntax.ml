@@ -13,7 +13,7 @@ type exp =
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
   | Tuple of exp list
-  | Split of {exp: exp; vars: id list; body: exp}
+  | Split of {inp: exp; vars: id list; body: exp}
 
 let lams (ids : id list) (exp : exp) : exp =
   List.fold_right (fun id exp -> Lam {vars= [id]; body= exp}) ids exp
@@ -62,7 +62,7 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
               (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
           ^ " in " ^ pexp 0 body )
     | Tuple exps -> "(" ^ String.concat ", " (List.map (pexp 0) exps) ^ ")"
-    | Split {exp; vars; body} ->
+    | Split {inp; vars; body} ->
         parens ctx 0
           ( "split " ^ pexp 0 exp ^ " as ("
           ^ String.concat " " (List.map (fun id -> pprid id) vars)

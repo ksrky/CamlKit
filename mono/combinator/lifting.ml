@@ -56,10 +56,10 @@ let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp =
   | Tuple exps ->
       let fvs, exps' = lift_lams exps in
       (fvs, Tuple exps')
-  | Split {exp; vars; body} ->
-      let fvs1, exp' = lift_lam exp in
+  | Split {inp; vars; body} ->
+      let fvs1, inp' = lift_lam inp in
       let fvs2, body' = lift_lam body in
-      (fvs1 @ fvs2, Split {exp= exp'; vars; body= body'})
+      (fvs1 @ fvs2, Split {inp= inp'; vars; body= body'})
 
 and lift_lams (exps : C.exp list) : Cm.id list * Cm.exp list =
   let varss, exps' = List.split (List.map lift_lam exps) in
