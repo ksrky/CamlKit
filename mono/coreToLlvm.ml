@@ -29,4 +29,7 @@ let rec hoisting : C.exp -> L.exp = function
       hoisting body
   | Tuple exps -> Tuple (List.map hoisting exps)
   | Split {exp; vars; body} ->
-      Split {exp= hoisting exp; vars; body= hoisting body}
+      let bnds =
+        List.mapi (fun idx _ -> L.Proj {exp= hoisting exp; idx}) vars
+      in
+      Let {vars; bnds; body= hoisting body}

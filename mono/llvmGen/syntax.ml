@@ -12,7 +12,7 @@ type exp =
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {vars: id list; bnds: exp list; body: exp}
   | Tuple of exp list
-  | Split of {exp: exp; vars: id list; body: exp}
+  | Proj of {exp: exp; idx: int}
 
 type code = {name: string; params: id list; body: exp}
 
@@ -44,11 +44,7 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
               (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
           ^ " in " ^ pexp 0 body )
     | Tuple exps -> "(" ^ String.concat ", " (List.map (pexp 0) exps) ^ ")"
-    | Split {exp; vars; body} ->
-        parens ctx 0
-          ( "split " ^ pexp 0 exp ^ " as ("
-          ^ String.concat ", " (List.map pprid vars)
-          ^ ") in " ^ pexp 0 body )
+    | Proj {exp; idx} -> pexp 2 exp ^ "." ^ string_of_int idx
   in
   pexp 0 exp
 
