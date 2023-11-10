@@ -37,9 +37,9 @@ let compile (path : string) : unit =
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let codes = CoreToLlvm.c2l_exp coresyn in
-  (* print_endline (CodeGen.Syntax.ppr_codes llcodes); *)
-  let llmod = CodeGen.codegen (Filename.basename path) codes in
+  let cgcodes = CoreToCg.c2l_exp coresyn in
+  (* print_endline (CodeGen.Syntax.ppr_codes codes); *)
+  let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
   CodeGen.format path llmod
 
 (*
