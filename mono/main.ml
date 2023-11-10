@@ -40,7 +40,7 @@ let compile (path : string) : unit =
   let llcodes = CoreToLlvm.c2l_exp coresyn in
   (* print_endline (LlvmGen.Syntax.ppr_codes llcodes); *)
   let llmod = LlvmGen.CodeGen.codegen (Filename.basename path) llcodes in
-  Llvm.print_module (Filename.remove_extension path ^ ".ll") llmod
+  LlvmGen.CodeGen.format path llmod
 
 (*
     (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)

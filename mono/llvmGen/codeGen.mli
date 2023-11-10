@@ -7,3 +7,5 @@ val codegen_proto : Llvm.llmodule -> string -> id list -> unit
 val codegen_func : Llvm.llmodule -> code -> unit
 
 val codegen : string -> codes -> Llvm.llmodule
+
+val format : string -> Llvm.llmodule -> unit

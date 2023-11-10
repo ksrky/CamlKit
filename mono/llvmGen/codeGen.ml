@@ -121,3 +121,6 @@ let codegen (modid : string) (codes : codes) : llmodule =
   List.iter (fun {name; params; _} -> codegen_proto llmod name params) codes;
   List.iter (codegen_func llmod) codes;
   llmod
+
+let format (path : string) (llmod : llmodule) : unit =
+  Llvm.print_module (Filename.remove_extension path ^ ".ll") llmod

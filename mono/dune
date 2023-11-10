@@ -11,8 +11,7 @@
   secd
   zinc
   gmachine
-  llvmGen
-  llvm)
+  llvmGen)
  (flags -open Common))
 
 (env
