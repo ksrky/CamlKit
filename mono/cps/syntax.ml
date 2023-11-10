@@ -18,7 +18,7 @@ and exp =
   | Halt of value
 
 and dec =
-  | VarDec of {name: id; value: value}
+  | ValDec of {name: id; value: value}
   | ProjDec of {name: id; tuple: value; index: int}
   | PrimDec of {name: id; oper: oper; args: value list}
 

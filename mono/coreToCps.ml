@@ -41,10 +41,11 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
               { cond= Var cond_var
               ; then_= c2k_exp then_ k
               ; else_= c2k_exp else_ k } ) )
-  | Let {vars; bnds; body} ->
+  | Let {isrec= false; vars; bnds; body} ->
       List.fold_right2
         (fun var bnd body -> c2k_exp bnd (K.lam var body))
         vars bnds (c2k_exp body k)
+  | Let {isrec= true; vars; bnds; body} -> failwith "TODO"
   | Tuple exps ->
       let tuple_vars =
         List.mapi (fun i _ -> Id.from_string ("tuple" ^ string_of_int i)) exps

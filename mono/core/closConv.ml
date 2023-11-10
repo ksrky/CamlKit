@@ -39,8 +39,8 @@ let rec conv_exp : exp -> id list * exp = function
       let vs3, else' = conv_exp else_ in
       (vs1 @ vs2 @ vs3, If {cond= cond'; then_= then'; else_= else'})
   | Tuple exps ->
-      List.split (List.map conv_exp exps)
-      |> fun (vss, exps') -> (List.concat vss, Tuple exps')
+      let vss, exps' = List.split (List.map conv_exp exps) in
+      (List.concat vss, Tuple exps')
   | Split {inp; vars; body} ->
       let vs, inp' = conv_exp inp in
       let fvs = notin vs vars in
