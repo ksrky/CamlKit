@@ -1,11 +1,11 @@
-open Syntax
+module Syntax = Syntax
 
-val codegen_exp : Llvm.llmodule -> exp -> Llvm.llvalue
+val codegen_exp : Llvm.llmodule -> Syntax.exp -> Llvm.llvalue
 
-val codegen_proto : Llvm.llmodule -> string -> id list -> unit
+val codegen_proto : Llvm.llmodule -> string -> Syntax.id list -> unit
 
-val codegen_func : Llvm.llmodule -> code -> unit
+val codegen_func : Llvm.llmodule -> Syntax.code -> unit
 
-val codegen : string -> codes -> Llvm.llmodule
+val codegen : string -> Syntax.codes -> Llvm.llmodule
 
 val format : string -> Llvm.llmodule -> unit

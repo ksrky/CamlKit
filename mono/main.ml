@@ -37,10 +37,10 @@ let compile (path : string) : unit =
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let llcodes = CoreToLlvm.c2l_exp coresyn in
-  (* print_endline (LlvmGen.Syntax.ppr_codes llcodes); *)
-  let llmod = LlvmGen.CodeGen.codegen (Filename.basename path) llcodes in
-  LlvmGen.CodeGen.format path llmod
+  let codes = CoreToLlvm.c2l_exp coresyn in
+  (* print_endline (CodeGen.Syntax.ppr_codes llcodes); *)
+  let llmod = CodeGen.codegen (Filename.basename path) codes in
+  CodeGen.format path llmod
 
 (*
     (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)

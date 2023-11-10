@@ -11,7 +11,7 @@
   secd
   zinc
   gmachine
-  llvmGen)
+  codeGen)
  (flags -open Common))
 
 (env

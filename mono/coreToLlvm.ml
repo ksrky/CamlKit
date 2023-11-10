@@ -1,11 +1,11 @@
 module C = Core.Syntax
-module L = LlvmGen.Syntax
+module Cg = CodeGen.Syntax
 
-let code_list : L.codes ref = ref []
+let code_list : Cg.codes ref = ref []
 
-let append_code (code : L.code) : unit = code_list := code :: !code_list
+let append_code (code : Cg.code) : unit = code_list := code :: !code_list
 
-let rec hoisting : C.exp -> L.exp = function
+let rec hoisting : C.exp -> Cg.exp = function
   | Const c -> Const c
   | Var id -> Var id
   | App {fcn= Var id; args} ->
@@ -30,11 +30,11 @@ let rec hoisting : C.exp -> L.exp = function
   | Tuple exps -> Tuple (List.map hoisting exps)
   | Split {inp; vars; body} ->
       let bnds =
-        List.mapi (fun idx _ -> L.Proj {exp= hoisting inp; idx}) vars
+        List.mapi (fun idx _ -> Cg.Proj {exp= hoisting inp; idx}) vars
       in
       Let {vars; bnds; body= hoisting body}
 
-let c2l_exp (exp : C.exp) : L.codes =
+let c2l_exp (exp : C.exp) : Cg.codes =
   code_list := [];
   let exp' = hoisting exp in
-  List.rev ({L.name= "main"; params= []; body= exp'} :: List.rev !code_list)
+  List.rev ({Cg.name= "main"; params= []; body= exp'} :: List.rev !code_list)

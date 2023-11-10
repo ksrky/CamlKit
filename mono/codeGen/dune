@@ -1,5 +1,5 @@
 (library
- (name llvmGen)
+ (name codeGen)
  (libraries common core llvm llvm.analysis)
  (flags -open Common))
 
