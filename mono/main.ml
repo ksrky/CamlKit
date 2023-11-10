@@ -19,7 +19,7 @@ let run (path : string) =
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let instrs = CoreToSecd.f coresyn in
+  let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
 
 (** [eval inp] evaluates string [inp] on the virtual machine. *)
@@ -28,7 +28,7 @@ let eval (inp : string) =
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let instrs = CoreToSecd.f coresyn in
+  let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
 
 (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)
@@ -37,7 +37,7 @@ let compile (path : string) : unit =
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let cgcodes = CoreToCg.c2l_exp coresyn in
+  let cgcodes = CoreToCg.c2cg_exp coresyn in
   (* print_endline (CodeGen.Syntax.ppr_codes codes); *)
   let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
   CodeGen.format path llmod

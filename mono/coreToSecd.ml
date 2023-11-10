@@ -57,4 +57,4 @@ and index (x : Id.t) (n : Id.t list list) : int * int =
   in
   indx x n 1
 
-let f (e : C.exp) : S.t list = c2s_exp e [] [S.STOP]
+let c2s_prog (e : C.exp) : S.t list = c2s_exp e [] [S.STOP]

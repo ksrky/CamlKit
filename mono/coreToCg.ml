@@ -34,7 +34,7 @@ let rec hoisting : C.exp -> Cg.exp = function
       in
       Let {vars; bnds; body= hoisting body}
 
-let c2l_exp (exp : C.exp) : Cg.codes =
+let c2cg_exp (exp : C.exp) : Cg.codes =
   code_list := [];
   let exp' = hoisting exp in
   List.rev ({Cg.name= "main"; params= []; body= exp'} :: List.rev !code_list)
