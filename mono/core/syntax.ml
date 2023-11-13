@@ -18,6 +18,10 @@ type exp =
 let lams (ids : id list) (exp : exp) : exp =
   List.fold_right (fun id exp -> Lam {vars= [id]; body= exp}) ids exp
 
+let unlam : exp -> id list * exp = function
+  | Lam {vars; body} -> (vars, body)
+  | exp -> ([], exp)
+
 let ppr_oper : oper -> string = function
   | Add -> "add"
   | Sub -> "sub"

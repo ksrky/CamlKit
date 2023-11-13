@@ -7,7 +7,7 @@ type const = Core.Syntax.const
 type exp =
   | Const of const
   | Var of id
-  | App of {fcn: string; args: exp list}
+  | App of {fcn: exp; args: exp list}
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {vars: id list; bnds: exp list; body: exp}
@@ -30,7 +30,7 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
     | Const c -> ppr_const c
     | App {fcn; args} ->
         parens ctx 1
-          (fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
+          (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
     | Prim {oper; args} ->
         ppr_oper oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
     | If {cond; then_; else_} ->

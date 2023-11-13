@@ -11,18 +11,19 @@ let int_type = i64_type context
 
 let tuple_type (tys : lltype list) = struct_type context (Array.of_list tys)
 
+let find_func_or_val (id : Id.t) (llmod : llmodule) : llvalue =
+  match lookup_function (Id.unique_name id) llmod with
+  | Some func -> func
+  | None -> Hashtbl.find named_values id
+
 let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
   | Const Nil -> const_null int_type
   | Const (Int i) -> const_int int_type i
-  | Var id -> Hashtbl.find named_values id
+  | Var id -> find_func_or_val id llmod
   | App {fcn; args} ->
-      let callee =
-        match lookup_function fcn llmod with
-        | Some callee -> callee
-        | None -> failwith "unknown function referenced"
-      in
+      let fcn' = codegen_exp llmod fcn in
       let args' = Array.of_list (List.map (codegen_exp llmod) args) in
-      build_call callee args' "calltmp" builder
+      build_call fcn' args' "calltmp" builder
   | Prim {oper; args= [lhs; rhs]} ->
       let lhs_val = codegen_exp llmod lhs in
       let rhs_val = codegen_exp llmod rhs in
@@ -48,7 +49,7 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       codegen_exp llmod body
   | If {cond; then_; else_} ->
       let cond' = codegen_exp llmod cond in
-      let zero = const_int int_type 0 in
+      let zero = const_int (i1_type context) 0 in
       let cond_val = build_icmp Icmp.Ne cond' zero "ifcond" builder in
       let start_bb = insertion_block builder in
       let the_function = block_parent start_bb in
@@ -61,6 +62,7 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       let else_val = codegen_exp llmod else_ in
       let new_else_bb = insertion_block builder in
       let merge_bb = append_block context "ifcont" the_function in
+      position_at_end merge_bb builder;
       let incoming = [(then_val, new_then_bb); (else_val, new_else_bb)] in
       let phi = build_phi incoming "iftmp" builder in
       position_at_end start_bb builder;

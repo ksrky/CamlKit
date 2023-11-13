@@ -37,8 +37,8 @@ let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
   let coresyn = LangToCore.l2c_exp abssyn' in
-  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
+  print_endline (Core.Syntax.ppr_exp Id.name coresyn);
   let cgcodes = CoreToCg.c2cg_exp coresyn in
-  (* print_endline (CodeGen.Syntax.ppr_codes codes); *)
+  print_endline (CodeGen.Syntax.ppr_codes cgcodes);
   let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
   CodeGen.format path llmod

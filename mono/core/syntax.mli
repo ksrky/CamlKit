@@ -17,6 +17,8 @@ type exp =
 
 val lams : id list -> exp -> exp
 
+val unlam : exp -> id list * exp
+
 val ppr_const : const -> string
 
 val ppr_oper : oper -> string
