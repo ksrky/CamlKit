@@ -40,8 +40,10 @@ let compile (path : string) : unit =
   let abssyn' = semant abssyn in
   if !Semant.Error.has_error then exit 1;
   let coresyn = LangToCore.l2c_exp abssyn' in
-  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-  let cgcodes = CoreToCg.c2cg_exp coresyn in
-  (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
+  print_endline (Core.Syntax.ppr_exp Id.name coresyn);
+  let coresyn' = Core.ClosConv.conv_prog coresyn in
+  print_endline (Core.Syntax.ppr_exp Id.name coresyn');
+  let cgcodes = CoreToCg.c2cg_exp coresyn' in
+  print_endline (CodeGen.Syntax.ppr_codes cgcodes);
   let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
   CodeGen.format path llmod

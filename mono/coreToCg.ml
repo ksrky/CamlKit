@@ -17,13 +17,20 @@ let rec hoisting : C.exp -> Cg.exp = function
   | If {cond; then_; else_} ->
       If {cond= hoisting cond; then_= hoisting then_; else_= hoisting else_}
   | Let {vars; bnds; body} ->
+      let locals = ref [] in
       List.iter2
         (fun var bnd ->
-          let params, exp = C.unlam bnd in
-          append_code {name= Id.unique_name var; params; body= hoisting exp} )
+          match bnd with
+          | C.Lam {vars= params; body= exp} ->
+              append_code {name= Id.unique_name var; params; body= hoisting exp}
+          | _ -> locals := (var, hoisting bnd) :: !locals )
         vars bnds;
-      hoisting body
+      if !locals = [] then hoisting body
+      else
+        let vars', bnds' = List.split !locals in
+        Let {vars= vars'; bnds= bnds'; body= hoisting body}
   | Tuple exps -> Tuple (List.map hoisting exps)
+  | Split {inp; vars= []; body} -> hoisting body
   | Split {inp; vars; body} ->
       let bnds =
         List.mapi (fun idx _ -> Cg.Proj {exp= hoisting inp; idx}) vars

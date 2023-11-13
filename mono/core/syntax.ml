@@ -40,8 +40,7 @@ let ppr_const : const -> string = function
 
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
-  let rec pexp ctx exp =
-    match exp with
+  let rec pexp ctx = function
     | Var var -> pprid var
     | Const c -> ppr_const c
     | App {fcn; args} ->
@@ -68,8 +67,8 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
     | Tuple exps -> "(" ^ String.concat ", " (List.map (pexp 0) exps) ^ ")"
     | Split {inp; vars; body} ->
         parens ctx 0
-          ( "split " ^ pexp 0 exp ^ " as ("
-          ^ String.concat " " (List.map (fun id -> pprid id) vars)
+          ( "split " ^ pexp 0 inp ^ " as ("
+          ^ String.concat ", " (List.map (fun id -> pprid id) vars)
           ^ ") in " ^ pexp 0 body )
   in
   pexp 0 exp
