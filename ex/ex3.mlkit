@@ -1,4 +1,3 @@
-
 let quad x =
   let double x = x + x in
   double (double x)
