@@ -87,7 +87,7 @@ let rec ppr_exp exp =
           ^ " in " ^ pretty 0 body )
     | LetrecExp {bnds; body} ->
         parens ctx 0
-          ( "let "
+          ( "let rec "
           ^ String.concat " and " (List.map ppr_bnd bnds)
           ^ " in " ^ pretty 0 body )
   in

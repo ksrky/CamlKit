@@ -1,4 +1,5 @@
 let semant abssyn =
+  (* print_endline (Language.Syntax.ppr_exp abssyn); *)
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.initial abssyn in
   (* print_endline (Language.Syntax.ppr_exp abssyn'); *)
   let _aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
@@ -41,20 +42,3 @@ let compile (path : string) : unit =
   (* print_endline (CodeGen.Syntax.ppr_codes codes); *)
   let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
   CodeGen.format path llmod
-
-(*
-    (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)
-    let compile (path : string) : unit =
-      let abssyn = Parse.parse path in
-      let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.initial abssyn in
-      (* print_endline (Language.Syntax.ppr_exp abssyn); *)
-      let intsyn, _ = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-      (* print_endline (IntSyn.ppr_exp Id.name intsyn); *)
-      let intsyn2 = Contraction.steps Contraction.max_steps intsyn in
-      let intsyn3 = Simplify.f intsyn2 in
-      (* print_endline (IntSyn.ppr_exp Id.name intsyn4); *)
-      let frags = Lifting.f intsyn3 in
-      (* print_endline (IntSyn.ppr_frags frags); *)
-      LlvmGen.codegen (Filename.basename path) frags;
-      Llvm.print_module (Filename.remove_extension path ^ ".ll") !LlvmGen.the_module
-*)
