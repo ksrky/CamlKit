@@ -41,3 +41,10 @@ let%expect_test _ =
 let%expect_test _ =
   Main.eval "let f x = let g y = let h z = x + y + z in h 3 in g 2 in f 1";
   [%expect {| 6 |}]
+
+(* mutually recursive functions *)
+let%expect_test _ =
+  Main.eval
+    "let rec even n = if n = 0 then true else odd (n - 1)\n\
+    \    and odd n = if n = 0 then false else even (n - 1) in even 10";
+  [%expect {| 1 |}]
