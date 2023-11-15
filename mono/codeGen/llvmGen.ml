@@ -9,12 +9,17 @@ let named_values : (id, llvalue) Hashtbl.t = Hashtbl.create 100
 
 let int_type = i64_type context
 
+let bool_type = i1_type context
+
 let tuple_type (tys : lltype list) = struct_type context (Array.of_list tys)
 
 let find_func_or_val (id : Id.t) (llmod : llmodule) : llvalue =
   match lookup_function (Id.unique_name id) llmod with
   | Some func -> func
-  | None -> Hashtbl.find named_values id
+  | None -> (
+    try Hashtbl.find named_values id
+    with Not_found ->
+      failwith ("no such function or value: " ^ Id.unique_name id) )
 
 let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
   | Const Nil -> const_null int_type
@@ -49,7 +54,7 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       codegen_exp llmod body
   | If {cond; then_; else_} ->
       let cond' = codegen_exp llmod cond in
-      let zero = const_int (i1_type context) 0 in
+      let zero = const_int bool_type 0 in
       let cond_val = build_icmp Icmp.Ne cond' zero "ifcond" builder in
       let start_bb = insertion_block builder in
       let the_function = block_parent start_bb in
