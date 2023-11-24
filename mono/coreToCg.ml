@@ -29,7 +29,12 @@ let rec hoisting : C.exp -> Cg.exp = function
       else
         let vars', bnds' = List.split !locals in
         Let {vars= vars'; bnds= bnds'; body= hoisting body}
-  | Clos clos -> failwith "not implemented"
+  | Clos clos -> Clos (c2cg_clos clos)
+
+and c2cg_clos : C.clos -> Cg.clos = function
+  | Clos {env; code} -> Cg.Clos {env; code= hoisting code}
+  | ClosApp {clos; args} ->
+      Cg.ClosApp {clos= c2cg_clos clos; args= List.map hoisting args}
 
 let c2cg_exp (exp : C.exp) : Cg.codes =
   code_list := [];

@@ -24,7 +24,10 @@ let rec conv_exp : exp -> id list * exp_clos = function
   | Lam {vars; body} ->
       let vs, body' = conv_exp body in
       let fvs = remove_dup (notin vs vars) in
-      (fvs, C (Clos {env= fvs; code= Lam {vars; body= unE body'}}))
+      let env_var = Id.from_string "env" in
+      ( fvs
+      , C (Clos {env= fvs; code= Lam {vars= env_var :: vars; body= unE body'}})
+      )
   | Prim {oper; args} ->
       let vss, args' = List.split (List.map conv_exp args) in
       (List.concat vss, E (Prim {oper; args= List.map unE args'}))
@@ -39,6 +42,6 @@ let rec conv_exp : exp -> id list * exp_clos = function
       let fvs3, else' = conv_exp else_ in
       ( fvs1 @ fvs2 @ fvs3
       , E (If {cond= unE cond'; then_= unE then'; else_= unE else'}) )
-  | Clos _ -> failwith ""
+  | Clos clos -> ([], C clos)
 
 let conv_prog (exp : exp) : exp = conv_exp exp |> snd |> unE

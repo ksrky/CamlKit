@@ -95,7 +95,16 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
        build_load tuple_ptr "projtmp" builder *)
 
 and codegen_clos llmod : clos -> llvalue * llvalue = function
-  | Clos {env; code} -> failwith "not implemented"
+  | Clos {env; code} ->
+      let tys = List.map (fun _ -> int_type) env in
+      let env_val = build_alloca (tuple_type tys) "tupletmp" builder in
+      List.iteri
+         (fun i id ->
+           let fv_ptr = build_struct_gep env_val i "tupleptr" builder in
+           Hashtbl.add named_values id fv_ptr )
+         env;
+      let code_val = codegen_exp llmod code in
+      failwith "not implemented"
   | ClosApp {clos; args} ->
       let env_ptr, fcn' = codegen_clos llmod clos in
       let args' =
