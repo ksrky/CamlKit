@@ -24,6 +24,7 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Let {isrec= true; vars; bnds; body} ->
       let newn = vars :: n in
       DUM :: NIL :: c2s_app bnds newn (c2s_lambda body newn (RAP :: c))
+  | Clos _ -> failwith ""
 
 and c2s_prim (args : C.exp list) (n : C.id list list) (c : S.t list) =
   if args = [] then c

@@ -46,4 +46,4 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
         (fun var bnd body -> c2k_exp bnd (K.lam var body))
         vars bnds (c2k_exp body k)
   | Let {isrec= true; vars; bnds; body} -> failwith "TODO"
-
+  | Clos _ -> failwith "TODO"

@@ -11,8 +11,6 @@ type exp =
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
-  | Tuple of exp list
-  | Split of {inp: exp; vars: id list; body: exp}
 
 type frag = {name: string; params: id list; body: exp}
 
@@ -44,12 +42,6 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
           ^ String.concat "; "
               (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
           ^ " in " ^ pexp 0 body )
-    | Tuple exps -> "(" ^ String.concat ", " (List.map (pexp 0) exps) ^ ")"
-    | Split {inp; vars; body} ->
-        parens ctx 0
-          ( "split " ^ pexp 0 inp ^ " as ("
-          ^ String.concat ", " (List.map pprid vars)
-          ^ ") in " ^ pexp 0 body )
   in
   pexp 0 exp
 

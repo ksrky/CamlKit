@@ -53,6 +53,7 @@ let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp =
       let fvs2, then' = lift_lam then_ in
       let fvs3, else' = lift_lam else_ in
       (fvs1 @ fvs2 @ fvs3, If {cond= cond'; then_= then'; else_= else'})
+  | Clos _ -> assert false
 
 and lift_lams (exps : C.exp list) : Cm.id list * Cm.exp list =
   let varss, exps' = List.split (List.map lift_lam exps) in
