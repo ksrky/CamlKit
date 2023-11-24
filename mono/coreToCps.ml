@@ -46,16 +46,4 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
         (fun var bnd body -> c2k_exp bnd (K.lam var body))
         vars bnds (c2k_exp body k)
   | Let {isrec= true; vars; bnds; body} -> failwith "TODO"
-  | Tuple exps ->
-      let tuple_vars =
-        List.mapi (fun i _ -> Id.from_string ("tuple" ^ string_of_int i)) exps
-      in
-      List.fold_right2
-        (fun var elm body -> c2k_exp elm (K.lam var body))
-        tuple_vars exps
-        (K.apps k (List.map (fun v -> K.Var v) tuple_vars))
-  | Split {inp; vars; body} ->
-      let split_var = Id.from_string "split" in
-      c2k_exp inp
-        (K.lam split_var
-           (Split {inp= Var split_var; vars; body= c2k_exp body k}) )
+

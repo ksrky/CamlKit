@@ -78,20 +78,30 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       build_br merge_bb builder |> ignore;
       position_at_end merge_bb builder;
       phi
-  | Tuple exps ->
-      let tys = List.map (fun _ -> int_type) exps in
-      let tuple_val = build_alloca (tuple_type tys) "tupletmp" builder in
-      List.iteri
-        (fun i exp ->
-          let exp_val = codegen_exp llmod exp in
-          let tuple_ptr = build_struct_gep tuple_val i "tupleptr" builder in
-          build_store exp_val tuple_ptr builder |> ignore )
-        exps;
-      tuple_val
-  | Proj {exp; idx} ->
-      let exp_val = codegen_exp llmod exp in
-      let tuple_ptr = build_struct_gep exp_val idx "tupleptr" builder in
-      build_load tuple_ptr "projtmp" builder
+  | Clos clos -> codegen_clos llmod clos |> snd
+(* | Tuple exps ->
+       let tys = List.map (fun _ -> int_type) exps in
+       let tuple_val = build_alloca (tuple_type tys) "tupletmp" builder in
+       List.iteri
+         (fun i exp ->
+           let exp_val = codegen_exp llmod exp in
+           let tuple_ptr = build_struct_gep tuple_val i "tupleptr" builder in
+           build_store exp_val tuple_ptr builder |> ignore )
+         exps;
+       tuple_val
+   | Proj {exp; idx} ->
+       let exp_val = codegen_exp llmod exp in
+       let tuple_ptr = build_struct_gep exp_val idx "tupleptr" builder in
+       build_load tuple_ptr "projtmp" builder *)
+
+and codegen_clos llmod : clos -> llvalue * llvalue = function
+  | Clos {env; code} -> failwith "not implemented"
+  | ClosApp {clos; args} ->
+      let env_ptr, fcn' = codegen_clos llmod clos in
+      let args' =
+        Array.of_list (env_ptr :: List.map (codegen_exp llmod) args)
+      in
+      (env_ptr, build_call fcn' args' "calltmp" builder)
 
 let set_params (func : llvalue) (params : id list) : unit =
   Array.iteri

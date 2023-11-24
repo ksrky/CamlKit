@@ -11,8 +11,11 @@ type exp =
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {vars: id list; bnds: exp list; body: exp}
-  | Tuple of exp list
-  | Proj of {exp: exp; idx: int}
+  | Clos of clos
+
+and clos =
+  | Clos of {env: id list; code: exp}
+  | ClosApp of {clos: clos; args: exp list}
 
 type code = {name: string; params: id list; body: exp}
 
@@ -22,7 +25,7 @@ let ppr_oper = Core.Syntax.ppr_oper
 
 let ppr_const = Core.Syntax.ppr_const
 
-let ppr_exp (pprid : id -> string) (exp : exp) =
+let rec ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pexp ctx exp =
     match exp with
@@ -43,10 +46,19 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
           ^ String.concat "; "
               (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
           ^ " in " ^ pexp 0 body )
-    | Tuple exps -> "(" ^ String.concat ", " (List.map (pexp 0) exps) ^ ")"
-    | Proj {exp; idx} -> pexp 2 exp ^ "." ^ string_of_int idx
+    | Clos clos -> ppr_clos pprid clos
   in
   pexp 0 exp
+
+and ppr_clos (pprid : id -> string) : clos -> string = function
+  | Clos {env; code} ->
+      "<{"
+      ^ String.concat ", " (List.map pprid env)
+      ^ "}, " ^ ppr_exp pprid code ^ ">"
+  | ClosApp {clos; args} ->
+      ppr_clos pprid clos ^ "("
+      ^ String.concat ", " (List.map (ppr_exp pprid) args)
+      ^ ")"
 
 let ppr_code {name; params; body} =
   name ^ "("

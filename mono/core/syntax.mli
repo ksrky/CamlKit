@@ -12,8 +12,11 @@ type exp =
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
-  | Tuple of exp list
-  | Split of {inp: exp; vars: id list; body: exp}
+  | Clos of clos
+
+and clos =
+  | Clos of {env: id list; code: exp}
+  | ClosApp of {clos: clos; args: exp list}
 
 val lams : id list -> exp -> exp
 

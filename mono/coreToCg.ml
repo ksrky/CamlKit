@@ -29,13 +29,7 @@ let rec hoisting : C.exp -> Cg.exp = function
       else
         let vars', bnds' = List.split !locals in
         Let {vars= vars'; bnds= bnds'; body= hoisting body}
-  | Tuple exps -> Tuple (List.map hoisting exps)
-  | Split {inp; vars= []; body} -> hoisting body
-  | Split {inp; vars; body} ->
-      let bnds =
-        List.mapi (fun idx _ -> Cg.Proj {exp= hoisting inp; idx}) vars
-      in
-      Let {vars; bnds; body= hoisting body}
+  | Clos clos -> failwith "not implemented"
 
 let c2cg_exp (exp : C.exp) : Cg.codes =
   code_list := [];
