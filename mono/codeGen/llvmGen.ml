@@ -45,12 +45,8 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       | Ge -> build_icmp Icmp.Sge )
         lhs_val rhs_val "primtmp" builder
   | Prim _ -> failwith "no such primitives"
-  | Let {vars; bnds; body} ->
-      List.iter2
-        (fun id bnd ->
-          let bnd_val = codegen_exp llmod bnd in
-          Hashtbl.add named_values id bnd_val )
-        vars bnds;
+  | Let {decs; body} ->
+      List.iter (codegen_dec llmod) decs;
       codegen_exp llmod body
   | If {cond; then_; else_} ->
       let cond' = codegen_exp llmod cond in
@@ -78,8 +74,23 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       build_br merge_bb builder |> ignore;
       position_at_end merge_bb builder;
       phi
-  | Clos clos -> codegen_clos llmod clos
 
+and codegen_dec llmod : dec -> unit = function
+  | ValDec {var; exp} ->
+      let exp_val = codegen_exp llmod exp in
+      Hashtbl.add named_values var exp_val
+  | ClosDec {var; env; code} ->
+      let tys = List.map (fun _ -> int_type) env in
+      let env_val = build_alloca (tuple_type tys) "envtmp" builder in
+      List.iteri
+        (fun i id ->
+          let fv_ptr = build_struct_gep env_val i "fvptr" builder in
+          Hashtbl.add named_values id fv_ptr )
+        env;
+      let code_val = codegen_exp llmod code in
+      Hashtbl.add named_values var code_val
+
+(*
 and codegen_clos llmod : clos -> llvalue = function
   | Clos {env; code} ->
       let tys = List.map (fun _ -> int_type) env in
@@ -93,7 +104,7 @@ and codegen_clos llmod : clos -> llvalue = function
   | ClosApp {clos; args} ->
       let fcn' = codegen_clos llmod clos in
       let args' = Array.of_list (List.map (codegen_exp llmod) args) in
-      build_call fcn' args' "calltmp" builder
+      build_call fcn' args' "calltmp" builder *)
 
 let set_params (func : llvalue) (params : id list) : unit =
   Array.iteri

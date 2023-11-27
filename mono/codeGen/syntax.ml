@@ -10,12 +10,11 @@ type exp =
   | App of {fcn: exp; args: exp list}
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
-  | Let of {vars: id list; bnds: exp list; body: exp}
-  | Clos of clos
+  | Let of {decs: dec list; body: exp}
 
-and clos =
-  | Clos of {env: id list; code: exp}
-  | ClosApp of {clos: clos; args: exp list}
+and dec =
+  | ValDec of {var: id; exp: exp}
+  | ClosDec of {var: id; env: id list; code: exp}
 
 type code = {name: string; params: id list; body: exp}
 
@@ -40,25 +39,20 @@ let rec ppr_exp (pprid : id -> string) (exp : exp) =
         parens ctx 0
           ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "
           ^ pexp 0 else_ )
-    | Let {vars; bnds; body} ->
+    | Let {decs; body} ->
         parens ctx 0
           ( "let "
-          ^ String.concat "; "
-              (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
+          ^ String.concat "; " (List.map (ppr_dec pprid) decs)
           ^ " in " ^ pexp 0 body )
-    | Clos clos -> ppr_clos pprid clos
   in
   pexp 0 exp
 
-and ppr_clos (pprid : id -> string) : clos -> string = function
-  | Clos {env; code} ->
-      "<{"
+and ppr_dec (pprid : id -> string) : dec -> string = function
+  | ValDec {var; exp} -> pprid var ^ " = " ^ ppr_exp pprid exp
+  | ClosDec {var; env; code} ->
+      pprid var ^ "=" ^ "<{"
       ^ String.concat ", " (List.map pprid env)
       ^ "}, " ^ ppr_exp pprid code ^ ">"
-  | ClosApp {clos; args} ->
-      ppr_clos pprid clos ^ "("
-      ^ String.concat ", " (List.map (ppr_exp pprid) args)
-      ^ ")"
 
 let ppr_code {name; params; body} =
   name ^ "("

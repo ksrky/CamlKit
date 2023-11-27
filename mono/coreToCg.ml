@@ -17,24 +17,29 @@ let rec hoisting : C.exp -> Cg.exp = function
   | If {cond; then_; else_} ->
       If {cond= hoisting cond; then_= hoisting then_; else_= hoisting else_}
   | Let {vars; bnds; body} ->
-      let locals = ref [] in
+      let decs = ref [] in
       List.iter2
         (fun var bnd ->
           match bnd with
           | C.Lam {vars= params; body= exp} ->
               append_code {name= Id.unique_name var; params; body= hoisting exp}
-          | _ -> locals := (var, hoisting bnd) :: !locals )
+          | C.Clos (Clos {env; code}) ->
+              decs := Cg.ClosDec {var; env; code= hoisting code} :: !decs
+          | _ -> decs := Cg.ValDec {var; exp= hoisting bnd} :: !decs )
         vars bnds;
-      if !locals = [] then hoisting body
-      else
-        let vars', bnds' = List.split !locals in
-        Let {vars= vars'; bnds= bnds'; body= hoisting body}
-  | Clos clos -> Clos (c2cg_clos clos)
+      if !decs = [] then hoisting body
+      else Let {decs= !decs; body= hoisting body}
+  | Clos clos ->
+      let dec, body = c2cg_clos clos in
+      Let {decs= [dec]; body}
 
-and c2cg_clos : C.clos -> Cg.clos = function
-  | Clos {env; code} -> Cg.Clos {env; code= hoisting code}
+and c2cg_clos : C.clos -> Cg.dec * Cg.exp = function
+  | Clos {env; code} ->
+      let clos_var = Id.from_string "clos" in
+      (ClosDec {var= clos_var; env; code= hoisting code}, Var clos_var)
   | ClosApp {clos; args} ->
-      Cg.ClosApp {clos= c2cg_clos clos; args= List.map hoisting args}
+      let dec, exp = c2cg_clos clos in
+      (dec, Cg.App {fcn= exp; args= List.map hoisting args})
 
 let c2cg_exp (exp : C.exp) : Cg.codes =
   code_list := [];
