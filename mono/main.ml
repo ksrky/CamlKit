@@ -44,6 +44,6 @@ let compile (path : string) : unit =
   let coresyn' = Core.ClosConv.cc_prog coresyn in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn'); *)
   let cgcodes = CoreToCg.c2cg_exp coresyn' in
-  print_endline (CodeGen.Syntax.ppr_codes cgcodes);
+  (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
   let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
   CodeGen.format path llmod

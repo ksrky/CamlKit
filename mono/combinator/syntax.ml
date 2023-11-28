@@ -7,6 +7,7 @@ type const = Core.Syntax.const
 type exp =
   | Const of const
   | Var of id
+  | Fun of id
   | App of {fcn: exp; args: exp list}
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
@@ -24,8 +25,8 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
   let rec pexp ctx exp =
     match exp with
-    | Var var -> pprid var
     | Const c -> ppr_const c
+    | Var id | Fun id -> pprid id
     | App {fcn; args} ->
         parens ctx 1
           (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")

@@ -25,6 +25,7 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
   | Const Nil -> const_null int_type
   | Const (Int i) -> const_int int_type i
   | Var id -> find_func_or_val id llmod
+  | Fun id -> find_func_or_val id llmod
   | App {fcn; args} ->
       let fcn' = codegen_exp llmod fcn in
       let args' = Array.of_list (List.map (codegen_exp llmod) args) in
