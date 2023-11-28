@@ -52,69 +52,71 @@ let is_deadvar (id : Id.t) =
   let info = hashtbl_find id in
   info.usecount = 0
 
-let rec register : C.exp -> unit = function
-  | Var var -> incr_usecount var
-  | App {fcn= Lam {vars; body}; args} ->
-      (* (fun x1 x2 .. xn -> e) a1 a2 .. ak *)
-      init_varinfo vars;
-      ( try List.iter2 update_repres vars args
-        with Invalid_argument _ (* n > k *) -> () );
-      register body; List.iter register args
-  | App {fcn; args} -> register fcn; List.iter register args
-  | Lam {vars; body} -> init_varinfo vars; register body
-  | Prim {oper; args} -> List.iter register args
-  | Let {vars; bnds; body; _} ->
-      init_varinfo vars;
-      List.iter2 update_repres vars bnds;
-      List.iter2 (fun v b -> register b) vars bnds;
-      register body
-  | If {cond; then_; else_} -> register cond; register then_; register else_
-  | _ -> ()
+let rec register : C.exp -> unit = failwith ""
+(* function
+     | Var var -> incr_usecount var
+     | App {fcn= Lam {vars; body}; args} ->
+         (* (fun x1 x2 .. xn -> e) a1 a2 .. ak *)
+         init_varinfo vars;
+         ( try List.iter2 update_repres vars args
+           with Invalid_argument _ (* n > k *) -> () );
+         register body; List.iter register args
+     | App {fcn; args} -> register fcn; List.iter register args
+     | Lam {vars; body} -> init_varinfo vars; register body
+     | Prim {oper; args} -> List.iter register args
+     | Let {vars; bnds; body; _} ->
+         init_varinfo vars;
+         List.iter2 update_repres vars bnds;
+         List.iter2 (fun v b -> register b) vars bnds;
+         register body
+     | If {cond; then_; else_} -> register cond; register then_; register else_
+     | _ -> () *)
 
-let rec reduce : C.exp -> C.exp = function
-  | Var var ->
-      let info = hashtbl_find var in
-      if info.is_simple then (
-        incr nred;
-        decr_usecount var;
-        info.repres (* inlining a small function *) )
-      else if is_usecount var 1 then
-        find_repres var (* inlining a function used exactly once *)
-      else Var var
-  | App {fcn= Lam {vars; body}; args} ->
-      let vars', args' =
-        List.split
-          (List.fold_right2
-             (fun v a acc ->
-               if is_deadvar v then (
-                 incr nred; acc (* dead-variable elimination *) )
-               else (v, reduce a) :: acc )
-             vars args [] )
-      in
-      ( try List.iter2 update_repres vars' args'
-        with Invalid_argument _ (* n > k *) -> () );
-      if vars' = [] then reduce body
-      else App {fcn= Lam {vars= vars'; body= reduce body}; args= args'}
-  | App {fcn; args} -> App {fcn= reduce fcn; args= List.map reduce args}
-  | Lam {vars; body} -> Lam {vars; body= reduce body}
-  | Prim {oper; args} -> Prim {oper; args= List.map reduce args}
-  | Let {isrec; vars; bnds; body} ->
-      let vars', bnds' =
-        List.split
-          (List.fold_right2
-             (fun v b acc ->
-               if is_deadvar v then (
-                 incr nred; acc (* dead-variable elimination *) )
-               else if is_usecount v 1 then
-                 (* not expand a let binding when it can be inlined. *)
-                 (v, b) :: acc
-               else (v, reduce b) :: acc )
-             vars bnds [] )
-      in
-      List.iter2 update_repres vars' bnds';
-      if vars' = [] then reduce body
-      else Let {isrec; vars= vars'; bnds= bnds'; body= reduce body}
-  | e -> e
+let rec reduce : C.exp -> C.exp = failwith ""
+(* function
+   | Var var ->
+       let info = hashtbl_find var in
+       if info.is_simple then (
+         incr nred;
+         decr_usecount var;
+         info.repres (* inlining a small function *) )
+       else if is_usecount var 1 then
+         find_repres var (* inlining a function used exactly once *)
+       else Var var
+   | App {fcn= Lam {vars; body}; args} ->
+       let vars', args' =
+         List.split
+           (List.fold_right2
+              (fun v a acc ->
+                if is_deadvar v then (
+                  incr nred; acc (* dead-variable elimination *) )
+                else (v, reduce a) :: acc )
+              vars args [] )
+       in
+       ( try List.iter2 update_repres vars' args'
+         with Invalid_argument _ (* n > k *) -> () );
+       if vars' = [] then reduce body
+       else App {fcn= Lam {vars= vars'; body= reduce body}; args= args'}
+   | App {fcn; args} -> App {fcn= reduce fcn; args= List.map reduce args}
+   | Lam {vars; body} -> Lam {vars; body= reduce body}
+   | Prim {oper; args} -> Prim {oper; args= List.map reduce args}
+   | Let {isrec; vars; bnds; body} ->
+       let vars', bnds' =
+         List.split
+           (List.fold_right2
+              (fun v b acc ->
+                if is_deadvar v then (
+                  incr nred; acc (* dead-variable elimination *) )
+                else if is_usecount v 1 then
+                  (* not expand a let binding when it can be inlined. *)
+                  (v, b) :: acc
+                else (v, reduce b) :: acc )
+              vars bnds [] )
+       in
+       List.iter2 update_repres vars' bnds';
+       if vars' = [] then reduce body
+       else Let {isrec; vars= vars'; bnds= bnds'; body= reduce body}
+   | e -> e*)
 
 let step exp : C.exp =
   nred := 1;

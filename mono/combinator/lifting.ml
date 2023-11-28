@@ -13,15 +13,16 @@ let append (frag : Cm.frag) = frags := frag :: !frags
 
 type exp_clos = EXP of Cm.exp | CLOS of (Cm.id list * Cm.exp)
 
-let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp =
+let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp = failwith ""
+(*
   match exp with
   | Var var -> ([var], Var var)
   | Const c -> ([], Const c)
-  | App {fcn; args} ->
+  | App {fcn; arg} ->
       let fvs1, fcn' = lift_lam fcn in
-      let fvs2, args' = lift_lams args in
-      (fvs1 @ fvs2, App {fcn= fcn'; args= args'})
-  | Lam {vars; body} ->
+      let fvs2, args' = lift_lam arg in
+      (fvs1 @ fvs2, App {fcn= fcn'; args= arg'})
+  | Lam {var; body} ->
       let tmp = Id.from_string "lamtmp" in
       let vars', body' = lift_lam body in
       let fvs = remove_dup vars' // vars in
@@ -48,7 +49,7 @@ let rec lift_lam (exp : C.exp) : Cm.id list * Cm.exp =
       let fvs2, then' = lift_lam then_ in
       let fvs3, else' = lift_lam else_ in
       (fvs1 @ fvs2 @ fvs3, If {cond= cond'; then_= then'; else_= else'})
-  | Clos clos -> failwith "not implemented"
+  | Clos clos -> failwith "not implemented" *)
 
 and lift_lams (exps : C.exp list) : Cm.id list * Cm.exp list =
   let varss, exps' = List.split (List.map lift_lam exps) in

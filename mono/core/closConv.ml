@@ -1,54 +1,125 @@
-open Syntax
+module CS = Syntax
+
+type exp =
+  | Const of CS.const
+  | Var of CS.id
+  | App of {fcn: exp; arg: exp}
+  | Prim of {oper: CS.oper; args: exp list}
+  | Let of {isrec: bool; vars: CS.id list; bnds: exp list; body: exp}
+  | If of {cond: exp; then_: exp; else_: exp}
+  | Clos of clos
+  | Select of {clos: clos; idx: int}
+
+and clos =
+  | CVar of CS.id
+  | CAbs of {cvar: CS.id; var: CS.id; body: exp; env: escapes}
+
+and escapes = CS.id list
+
+type state = {escs: escapes; locs: CS.id list; cvar: CS.id}
+
+let ppr_const : CS.const -> string = function
+  | Int i -> string_of_int i
+  | Nil -> "nil"
+
+let rec ppr_exp (exp : exp) =
+  let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
+  let rec pexp ctx = function
+    | Var var -> Id.unique_name var
+    | Const c -> ppr_const c
+    | App {fcn; arg} -> parens ctx 1 (pexp 1 fcn ^ "(" ^ pexp 0 arg ^ ")")
+    | Prim {oper; args} ->
+        CS.ppr_oper oper ^ "("
+        ^ String.concat ", " (List.map (pexp 0) args)
+        ^ ")"
+    | If {cond; then_; else_} ->
+        parens ctx 0
+          ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "
+          ^ pexp 0 else_ )
+    | Let {isrec; vars; bnds; body} ->
+        parens ctx 0
+          ( "let "
+          ^ (if isrec then "rec " else "")
+          ^ String.concat "; "
+              (List.map2
+                 (fun v e -> Id.unique_name v ^ " = " ^ pexp 0 e)
+                 vars bnds )
+          ^ " in " ^ pexp 0 body )
+    | Clos _ -> failwith ""
+    | Select {clos; idx} -> failwith ""
+  in
+  pexp 0 exp
+
+and ppr_clos : clos -> string = function
+  | CVar var -> Id.unique_name var
+  | CAbs {cvar; var; body; env} ->
+      "[fun " ^ Id.unique_name var ^ " -> " ^ ppr_exp body
+      ^ String.concat ", " (List.map Id.unique_name env)
+      ^ "]"
 
 let ( // ) xs ys = List.filter (fun y -> not (List.mem y ys)) xs
 
 let remove_dup xs =
   List.fold_right (fun x xs -> if List.mem x xs then xs else x :: xs) xs []
 
-type exp_clos = E of exp | C of clos
+let named_func : CS.id list ref = ref []
 
-let unE : exp_clos -> exp = function E exp -> exp | C clos -> Clos clos
+let lookup_env (escs : escapes) (x : CS.id) : int * escapes =
+  let rec find_idx i = function
+    | [] -> (i, escs @ [x])
+    | y :: ys -> if x = y then (i, escs) else find_idx (i + 1) ys
+  in
+  find_idx 0 escs
 
-let named_func : id list ref = ref []
-
-let rec cc_exp : exp -> id list * exp_clos = function
-  | Const c -> ([], E (Const c))
-  | Var x when List.mem x !named_func -> ([], E (Var x))
-  | Var x -> ([x], E (Var x))
-  | App {fcn; args} ->
-      let vs, fcn' = cc_exp fcn in
-      let vss, args' = List.split (List.map cc_exp args) in
-      let res =
-        match fcn' with
-        | E exp -> E (App {fcn= exp; args= List.map unE args'})
-        | C clos -> C (ClosApp {clos; args= List.map unE args'})
-      in
-      (vs @ List.concat vss, res)
-  | Lam {vars; body} ->
-      let vs, body' = cc_exp body in
-      let fvs = remove_dup vs // vars in
-      let res =
-        if fvs = [] then E (Lam {vars; body= unE body'})
-        else C (Clos {env= fvs; code= Lam {vars; body= unE body'}})
-      in
-      (fvs, res)
-  | Prim {oper; args} ->
-      let vss, args' = List.split (List.map cc_exp args) in
-      (List.concat vss, E (Prim {oper; args= List.map unE args'}))
-  | Let {isrec; vars; bnds; body} ->
-      named_func := vars @ !named_func;
-      let vss, bnds' = List.split (List.map cc_exp bnds) in
-      let vs, body' = cc_exp body in
-      let fvs = remove_dup (List.concat vss @ vs) // vars in
-      (fvs, E (Let {isrec; vars; bnds= List.map unE bnds'; body= unE body'}))
+let rec cc_exp : CS.exp -> exp = function
+  | Const c -> Const c
+  | Var x -> Var x
+  | App {fcn; arg} -> App {fcn= cc_exp fcn; arg= cc_exp arg}
+  | Lam {var; body} ->
+      let cvar = Id.from_string "c" in
+      let body', env = cc_loc {escs= []; locs= [var]; cvar} body in
+      Clos (CAbs {cvar; var; body= body'; env})
+  | Prim {oper; args} -> Prim {oper; args= List.map cc_exp args}
+  | Let {isrec; vars; bnds; body} -> failwith "let is not supported"
   | If {cond; then_; else_} ->
-      let fvs1, cond' = cc_exp cond in
-      let fvs2, then' = cc_exp then_ in
-      let fvs3, else' = cc_exp else_ in
-      ( fvs1 @ fvs2 @ fvs3
-      , E (If {cond= unE cond'; then_= unE then'; else_= unE else'}) )
-  | Clos clos -> ([], C clos)
+      If {cond= cc_exp cond; then_= cc_exp then_; else_= cc_exp else_}
 
-let cc_prog (exp : exp) : exp =
-  named_func := [];
-  cc_exp exp |> snd |> unE
+and cc_loc ({escs; locs; cvar} as st : state) : CS.exp -> exp * escapes =
+  function
+  | Const c -> (Const c, escs)
+  | Var x when List.mem x locs -> (Var x, escs)
+  | Var x ->
+      let idx, env' = lookup_env escs x in
+      (Select {clos= CVar cvar; idx}, env')
+  | App {fcn; arg} ->
+      let fcn', escs1 = cc_loc st fcn in
+      let arg', escs2 = cc_loc {escs= escs1; locs; cvar} arg in
+      (App {fcn= fcn'; arg= arg'}, escs2)
+  | Lam {var; body} ->
+      let cvar' = Id.from_string "c" in
+      let body', escs' = cc_loc {escs= []; locs= [var]; cvar= cvar'} body in
+      (Clos (CAbs {cvar= cvar'; var; body= body'; env= escs'}), escs @ escs')
+  | Prim {oper; args} ->
+      let args', env' = cc_loc_seq st args in
+      (Prim {oper; args= args'}, env')
+  | Let {isrec; vars; bnds; body} ->
+      let bnds', escs1 = cc_loc_seq st bnds in
+      let body', escs2 = cc_loc {escs= escs1; locs; cvar} body in
+      (Let {isrec; vars; bnds= bnds'; body= body'}, escs2)
+  | If {cond; then_; else_} ->
+      let cond', escs1 = cc_loc st cond in
+      let then', escs2 = cc_loc {escs= escs1; locs; cvar} then_ in
+      let else', escs3 = cc_loc {escs= escs2; locs; cvar} else_ in
+      (If {cond= cond'; then_= then'; else_= else'}, escs3)
+
+and cc_loc_seq ({escs; locs; cvar} : state) (exps : CS.exp list) :
+    exp list * escapes =
+  let rec loop acc env = function
+    | [] -> (List.rev acc, env)
+    | exp :: exps ->
+        let exp', env' = cc_loc {escs; locs; cvar} exp in
+        loop (exp' :: acc) env' exps
+  in
+  loop [] escs exps
+
+let cc_prog (exp : CS.exp) : exp = cc_exp exp

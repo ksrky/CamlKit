@@ -7,7 +7,7 @@ let rec l2c_exp : L.exp -> C.exp = function
   | BoolExp true -> Const (Int 1)
   | BoolExp false -> Const (Int 0)
   | IntExp n -> Const (Int n)
-  | AppExp {fcn; arg} -> App {fcn= l2c_exp fcn; args= [l2c_exp arg]}
+  | AppExp {fcn; arg} -> App {fcn= l2c_exp fcn; arg= l2c_exp arg}
   | LamExp {vars; body} -> C.lams vars (l2c_exp body)
   | OpExp {left; op; right} ->
       let oper : C.oper =

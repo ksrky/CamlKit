@@ -1,11 +1,12 @@
 module C = Core.Syntax
 module K = Cps.Syntax
 
-let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
+let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp = failwith ""
+(*
   match exp with
   | Const c -> K.apps k [K.Const c]
   | Var id -> K.apps k [K.Var id]
-  | App {fcn; args} ->
+  | App {fcn; arg} ->
       let fcn_var = Id.from_string "fcn" in
       let arg_vars =
         List.mapi (fun i _ -> Id.from_string ("arg" ^ string_of_int i)) args
@@ -14,12 +15,12 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
         (K.lam fcn_var
            (List.fold_right2
               (fun var arg body -> c2k_exp arg (K.lam var body))
-              arg_vars args
+              arg_vars arg
               (K.apps (Var fcn_var)
                  (List.map (fun v -> K.Var v) arg_vars @ [k]) ) ) )
-  | Lam {vars; body} ->
+  | Lam {var; body} ->
       let c_var = Id.from_string "c" in
-      K.apps k [K.lams (vars @ [c_var]) (c2k_exp body (Var c_var))]
+      K.apps k [K.lams (var :: [c_var]) (c2k_exp body (Var c_var))]
   | Prim {oper; args} ->
       let name = Id.from_string "prim" in
       let arg_vars =
@@ -45,5 +46,4 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
       List.fold_right2
         (fun var bnd body -> c2k_exp bnd (K.lam var body))
         vars bnds (c2k_exp body k)
-  | Let {isrec= true; vars; bnds; body} -> failwith "TODO"
-  | Clos _ -> failwith "TODO"
+  | Let {isrec= true; vars; bnds; body} -> failwith "TODO" *)

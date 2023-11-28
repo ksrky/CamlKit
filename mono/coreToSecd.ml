@@ -12,9 +12,9 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Var x ->
       let i, j = index x n in
       LD (i, j) :: c
-  | App {fcn; args} -> NIL :: c2s_app args n (c2s_exp fcn n (AP :: c))
-  | Lam {vars; body} ->
-      let n' = vars :: n in
+  | App {fcn; arg} -> NIL :: c2s_app [arg] n (c2s_exp fcn n (AP :: c))
+  | Lam {var; body} ->
+      let n' = [var] :: n in
       c2s_lambda body n' c
   | Prim {oper; args} -> c2s_prim args n (List.assoc oper prims :: c)
   | If {cond; then_; else_} -> c2s_if cond then_ else_ n c
@@ -24,7 +24,6 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Let {isrec= true; vars; bnds; body} ->
       let newn = vars :: n in
       DUM :: NIL :: c2s_app bnds newn (c2s_lambda body newn (RAP :: c))
-  | Clos _ -> failwith ""
 
 and c2s_prim (args : C.exp list) (n : C.id list list) (c : S.t list) =
   if args = [] then c

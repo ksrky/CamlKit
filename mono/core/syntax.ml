@@ -7,22 +7,17 @@ type const = Int of int | Nil
 type exp =
   | Const of const
   | Var of id
-  | App of {fcn: exp; args: exp list}
-  | Lam of {vars: id list; body: exp}
+  | App of {fcn: exp; arg: exp}
+  | Lam of {var: id; body: exp}
   | Prim of {oper: oper; args: exp list}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
-  | Clos of clos
-
-and clos =
-  | Clos of {env: id list; code: exp}
-  | ClosApp of {clos: clos; args: exp list}
 
 let lams (ids : id list) (exp : exp) : exp =
-  List.fold_right (fun id exp -> Lam {vars= [id]; body= exp}) ids exp
+  List.fold_right (fun id exp -> Lam {var= id; body= exp}) ids exp
 
 let unlam : exp -> id list * exp = function
-  | Lam {vars; body} -> (vars, body)
+  | Lam {var; body} -> ([var], body)
   | exp -> ([], exp)
 
 let ppr_oper : oper -> string = function
@@ -46,14 +41,8 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
   let rec pexp ctx = function
     | Var var -> pprid var
     | Const c -> ppr_const c
-    | App {fcn; args} ->
-        parens ctx 1
-          (pexp 1 fcn ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")")
-    | Lam {vars; body} ->
-        parens ctx 0
-          ( "fun "
-          ^ String.concat " " (List.map (fun id -> pprid id) vars)
-          ^ " -> " ^ pexp 0 body )
+    | App {fcn; arg} -> parens ctx 1 (pexp 1 fcn ^ "(" ^ pexp 0 arg ^ ")")
+    | Lam {var; body} -> parens ctx 0 ("fun " ^ pprid var ^ " -> " ^ pexp 0 body)
     | Prim {oper; args} ->
         ppr_oper oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
     | If {cond; then_; else_} ->
@@ -67,6 +56,5 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
           ^ String.concat "; "
               (List.map2 (fun v e -> pprid v ^ " = " ^ pexp 0 e) vars bnds)
           ^ " in " ^ pexp 0 body )
-    | Clos _clos -> "" (* tmp *)
   in
   pexp 0 exp
