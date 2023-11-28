@@ -1,19 +1,18 @@
-module C = Core.Syntax
+module C = Core.ClosConv
 module Cg = CodeGen.Syntax
 
 let code_list : Cg.codes ref = ref []
 
 let append_code (code : Cg.code) : unit = code_list := code :: !code_list
 
-let rec hoisting : C.exp -> Cg.exp = failwith ""
-(* function
+(** function
     | Const c -> Const c
     | Var id -> Var id
-    | App {fcn; arg} -> App {fcn= hoisting fcn; args= List.map hoisting arg}
-    | Lam {var; body} ->
+    | App {fcn; arg} -> App {fcn= hoisting fcn; arg= hoisting arg}
+   (* | Lam {var; body} ->
         let tmp = Id.from_string "lamtmp" in
         append_code {name= Id.unique_name tmp; params= var; body= hoisting body};
-        Var tmp
+        Var tmp *)
     | Prim {oper; args} -> Prim {oper; args= List.map hoisting args}
     | If {cond; then_; else_} ->
         If {cond= hoisting cond; then_= hoisting then_; else_= hoisting else_}
@@ -22,7 +21,7 @@ let rec hoisting : C.exp -> Cg.exp = failwith ""
         List.iter2
           (fun var bnd ->
             match bnd with
-            | C.Lam {var= params; body= exp} ->
+            | C.Clos {var= params; body= exp} ->
                 append_code {name= Id.unique_name var; params; body= hoisting exp}
             (*| C.Clos (Clos {env; code}) ->
                   decs := Cg.ClosDec {var; env; code= hoisting code} :: !decs
@@ -31,9 +30,8 @@ let rec hoisting : C.exp -> Cg.exp = failwith ""
           vars bnds;
         if !decs = [] then hoisting body
         else Let {decs= !decs; body= hoisting body}
-   | Clos clos ->
-           let dec, body = c2cg_clos clos in
-           Let {decs= [dec]; body}
+   | Clos clos -> Clos clos
+   | Select {clos; idx} -> Select {clos= hoisting clos; idx} 
 
      and c2cg_clos : C.clos -> Cg.dec * Cg.exp = function
        | Clos {env; code} ->
@@ -42,8 +40,10 @@ let rec hoisting : C.exp -> Cg.exp = failwith ""
        | ClosApp {clos; args} ->
            let dec, exp = c2cg_clos clos in
            (dec, Cg.App {fcn= exp; args= List.map hoisting args}) *)
+let rec hoisting : C.exp -> Cg.exp = failwith ""
 
-let c2cg_exp (exp : C.exp) : Cg.codes =
+let c2cg_exp (exp : Core.Syntax.exp) : Cg.codes =
   code_list := [];
-  let exp' = hoisting exp in
-  List.rev ({Cg.name= "main"; params= []; body= exp'} :: List.rev !code_list)
+  let exp' = C.cc_prog exp in
+  let exp'' = hoisting exp' in
+  List.rev ({Cg.name= "main"; params= []; body= exp''} :: List.rev !code_list)

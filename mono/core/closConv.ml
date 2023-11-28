@@ -45,8 +45,8 @@ let rec ppr_exp (exp : exp) =
                  (fun v e -> Id.unique_name v ^ " = " ^ pexp 0 e)
                  vars bnds )
           ^ " in " ^ pexp 0 body )
-    | Clos _ -> failwith ""
-    | Select {clos; idx} -> failwith ""
+    | Clos clos -> ppr_clos clos
+    | Select {clos; idx} -> ppr_clos clos ^ "#" ^ string_of_int idx
   in
   pexp 0 exp
 
