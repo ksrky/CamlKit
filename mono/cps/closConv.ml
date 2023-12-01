@@ -1,57 +1,94 @@
-open Syntax
+module K = Syntax
 
-let notin xs ys = List.filter (fun y -> not (List.mem y ys)) xs
+type value =
+  | Const of K.const
+  | Var of K.id
+  | Tuple of value list
+  | Fix of fundef list
+  | Clos of clos
+  | Select of {clos: clos; idx: int}
 
-let rec conv_val : value -> id list * value = function
-  | Const c -> ([], Const c)
-  | Var x -> ([x], Var x)
+and fundef = {name: K.id; vars: K.id list; body: exp}
+
+and exp =
+  | Let of {dec: dec; body: exp}
+  | App of {fcn: value; args: value list}
+  | If of {cond: value; then_: exp; else_: exp}
+  | Split of {inp: value; vars: K.id list; body: exp}
+  | Halt of value
+
+and dec =
+  | ValDec of {name: K.id; val_: value}
+  | PrimDec of {name: K.id; oper: K.oper; args: value list}
+
+and clos =
+  | CVar of K.id
+  | CLam of {cvar: K.id; vars: K.id list; body: exp; env: escapes}
+
+and escapes = K.id list
+
+let ( // ) xs ys = List.filter (fun y -> not (List.mem y ys)) xs
+
+let remove_dup xs =
+  List.fold_right (fun x xs -> if List.mem x xs then xs else x :: xs) xs []
+
+let lookup_env (escs : escapes) (x : K.id) : int * escapes =
+  let rec find_idx i = function
+    | [] -> (i, escs @ [x])
+    | y :: ys -> if x = y then (i, escs) else find_idx (i + 1) ys
+  in
+  find_idx 0 escs
+
+let locals : K.id list ref = ref []
+
+let cvar : K.id ref = ref (Id.fresh ())
+
+let rec conv_val (escs : escapes) : K.value -> value * escapes = function
+  | Const c -> (Const c, escs)
+  | Var x when List.mem x !locals -> (Var x, escs)
+  | Var x ->
+      let idx, env' = lookup_env escs x in
+      (Select {clos= CVar !cvar; idx}, env')
   | Lam {vars; body} ->
-      let vs, body' = conv_exp body in
-      let fvs = notin vs vars in
-      let env_var = Id.from_string "env" in
-      let v_env = Tuple (List.map (fun v -> Var v) fvs) in
-      let v_code =
-        Lam
-          { vars= env_var :: vars
-          ; body= Split {inp= Var env_var; vars= fvs; body= body'} }
-      in
-      (fvs, Tuple [v_code; v_env])
-  | Tuple vals ->
-      let vs', vals' = List.split (List.map conv_val vals) in
-      (List.concat vs', Tuple vals')
-  | Fix fundef -> failwith "not implemented"
+      let cvar' = Id.from_string "clos" in
+      let body', escs' = conv_exp escs body in
+      (Clos (CLam {cvar= cvar'; vars; body= body'; env= escs'}), escs @ escs')
+  | Fix fundefs -> failwith "not implemented"
 
-and conv_exp : exp -> id list * exp = function
+and conv_val_seq (escs : escapes) (vals : K.value list) : value list * escapes =
+  let loop (acc : value list) (escs : escapes) :
+      K.value list -> value list * escapes = function
+    | [] -> (List.rev acc, escs)
+    | val_ :: vals ->
+        let val', escs' = conv_val escs val_ in
+        (val' :: acc, escs')
+  in
+  loop [] escs vals
+
+and conv_exp (escs : escapes) : K.exp -> exp * escapes = function
   | Let {dec; body} ->
-      let vs1, dec' = conv_dec dec in
-      let vs2, body' = conv_exp body in
-      (vs1 @ vs2, Let {dec= dec'; body= body'})
+      let dec', escs1 = conv_dec escs dec in
+      let body', escs2 = conv_exp escs1 body in
+      (Let {dec= dec'; body= body'}, escs2)
   | App {fcn; args} ->
-      let vs, fcn' = conv_val fcn in
-      let code_var = Id.from_string "code" and env_var = Id.from_string "env" in
-      let vss, args' = List.split (List.map conv_val args) in
-      ( vs @ List.concat vss
-      , Split
-          { inp= fcn'
-          ; vars= [code_var; env_var]
-          ; body= App {fcn= Var code_var; args= Var env_var :: args'} } )
+      let fcn', escs1 = conv_val escs fcn in
+      let args', escs2 = conv_val_seq escs1 args in
+      (App {fcn= fcn'; args= args'}, escs2)
   | If {cond; then_; else_} ->
-      let vs1, cond' = conv_val cond in
-      let vs2, then' = conv_exp then_ in
-      let vs3, else' = conv_exp else_ in
-      (vs1 @ vs2 @ vs3, If {cond= cond'; then_= then'; else_= else'})
-  | Split {inp; vars; body} -> failwith "not implemented"
-  | Halt value ->
-      let vs, value' = conv_val value in
-      (vs, Halt value')
+      let cond', escs1 = conv_val escs cond in
+      let then', escs2 = conv_exp escs1 then_ in
+      let else', escs3 = conv_exp escs2 else_ in
+      (If {cond= cond'; then_= then'; else_= else'}, escs3)
+  | Halt val_ ->
+      let val', escs' = conv_val escs val_ in
+      (Halt val', escs')
 
-and conv_dec : dec -> id list * dec = function
-  | ValDec {name; value} ->
-      let vs, value' = conv_val value in
-      (notin vs [name], ValDec {name; value= value'})
-  | ProjDec {name; index; tuple} ->
-      let vs, tuple' = conv_val tuple in
-      (notin vs [name], ProjDec {name; index; tuple= tuple'})
+and conv_dec (escs : escapes) : K.dec -> dec * escapes = function
+  | ValDec {name; val_} ->
+      let val', escs' = conv_val escs val_ in
+      (ValDec {name; val_= val'}, escs')
   | PrimDec {name; oper; args} ->
-      let vss, body' = List.split (List.map conv_val args) in
-      (notin (List.concat vss) [name], PrimDec {name; oper; args})
+      let args', escs' = conv_val_seq escs args in
+      (PrimDec {name; oper; args= args'}, escs')
+
+let conv_prog (exp : K.exp) : exp = conv_exp [] exp |> fst

@@ -8,7 +8,6 @@ type value =
   | Const of const
   | Var of id
   | Lam of {vars: id list; body: exp}
-  | Tuple of value list
   | Fix of fundef list
 
 and fundef = {name: id; vars: id list; body: exp}
@@ -17,12 +16,10 @@ and exp =
   | Let of {dec: dec; body: exp}
   | App of {fcn: value; args: value list}
   | If of {cond: value; then_: exp; else_: exp}
-  | Split of {inp: value; vars: id list; body: exp}
   | Halt of value
 
 and dec =
-  | ValDec of {name: id; value: value}
-  | ProjDec of {name: id; tuple: value; index: int}
+  | ValDec of {name: id; val_: value}
   | PrimDec of {name: id; oper: oper; args: value list}
 
 let lam var body = Lam {vars= [var]; body}
@@ -33,7 +30,8 @@ let app fcn arg = App {fcn; args= [arg]}
 
 let apps fcn args = App {fcn; args}
 
-let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s
+let parens (outer : int) (prec : int) s =
+  if outer > prec then "(" ^ s ^ ")" else s
 
 let rec ppr_val prec : value -> string = function
   | Const c -> Core.Syntax.ppr_const c
@@ -42,9 +40,6 @@ let rec ppr_val prec : value -> string = function
       let vars = String.concat " " (List.map Id.unique_name vars) in
       let body = ppr_exp 0 body in
       parens prec 0 (Printf.sprintf "fun %s -> %s" vars body)
-  | Tuple vs ->
-      let vs = String.concat ", " (List.map (ppr_val 0) vs) in
-      Printf.sprintf "(%s)" vs
   | Fix fds ->
       let fds = String.concat " and " (List.map ppr_fundef fds) in
       Printf.sprintf "fix %s" fds
@@ -69,24 +64,17 @@ and ppr_exp prec : exp -> string = function
       let then_ = ppr_exp 0 then_ in
       let else_ = ppr_exp 0 else_ in
       parens prec 0 (Printf.sprintf "if %s then %s else %s" cond then_ else_)
-  | Split {inp; vars; body} ->
-      let inp = ppr_val 0 inp in
-      let vars = String.concat " " (List.map Id.unique_name vars) in
-      let body = ppr_exp 0 body in
-      parens prec 0 (Printf.sprintf "split %s as %s in %s" inp vars body)
   | Halt v -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 v))
 
 and ppr_dec : dec -> string = function
-  | ValDec {name; value} ->
+  | ValDec {name; val_} ->
       let name = Id.unique_name name in
-      let value = ppr_val 0 value in
+      let value = ppr_val 0 val_ in
       Printf.sprintf "%s = %s" name value
-  | ProjDec {name; tuple; index} ->
-      let name = Id.unique_name name in
-      let tuple = ppr_val 0 tuple in
-      Printf.sprintf "%s = %s.%d" name tuple index
   | PrimDec {name; oper; args} ->
       let name = Id.unique_name name in
       let oper = Core.Syntax.ppr_oper oper in
       let args = String.concat " " (List.map (ppr_val 0) args) in
       Printf.sprintf "%s = %s %s" name oper args
+
+and ppr_prog exp = ppr_exp 0 exp

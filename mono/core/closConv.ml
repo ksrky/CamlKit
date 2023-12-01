@@ -62,8 +62,6 @@ let ( // ) xs ys = List.filter (fun y -> not (List.mem y ys)) xs
 let remove_dup xs =
   List.fold_right (fun x xs -> if List.mem x xs then xs else x :: xs) xs []
 
-let named_func : CS.id list ref = ref []
-
 let lookup_env (escs : escapes) (x : CS.id) : int * escapes =
   let rec find_idx i = function
     | [] -> (i, escs @ [x])
