@@ -19,12 +19,13 @@ let rec conv_val : value -> id list * value = function
   | Tuple vals ->
       let vs', vals' = List.split (List.map conv_val vals) in
       (List.concat vs', Tuple vals')
+  | Fix fundef -> failwith "not implemented"
 
 and conv_exp : exp -> id list * exp = function
-  | Let {decs; body} ->
-      let vss, decs' = List.split (List.map conv_dec decs) in
-      let vs, body' = conv_exp body in
-      (List.concat vss @ vs, Let {decs= decs'; body= body'})
+  | Let {dec; body} ->
+      let vs1, dec' = conv_dec dec in
+      let vs2, body' = conv_exp body in
+      (vs1 @ vs2, Let {dec= dec'; body= body'})
   | App {fcn; args} ->
       let vs, fcn' = conv_val fcn in
       let code_var = Id.from_string "code" and env_var = Id.from_string "env" in
