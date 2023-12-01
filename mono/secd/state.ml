@@ -66,5 +66,3 @@ let binop (r : int ref) (op : int -> int -> int) : unit =
 let rplaca (x : int) (y : int) : int =
   cells.(x) <- Cons (y, cdr x);
   x
-
-let exit_code () : int = get_int (pop s)

@@ -136,7 +136,9 @@ let run_command () : unit =
       e := rplaca ne v;
       push !s d;
       s := 0
-  | 22 (* STOP *) -> c := 0
+  | 22 (* STOP *) ->
+      c := 0;
+      exit (get_int (pop s))
   | 23 (* READI *) ->
       let x = read_int () in
       push (make_int x) s

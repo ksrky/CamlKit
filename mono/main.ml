@@ -10,9 +10,7 @@ let run_secd instrs =
   (* print_endline (Secd.Operation.show_instrs instrs); *)
   Secd.State.init ();
   Secd.Operation.load_instrs instrs;
-  Secd.Operation.run_commands ();
-  print_int (Secd.State.exit_code ());
-  print_newline ()
+  Secd.Operation.run_commands ()
 
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =
@@ -42,7 +40,7 @@ let compile (path : string) : unit =
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
-  ()
+  print_endline (Cps.Syntax.ppr_prog cpssyn)
 (* let cgcodes = CoreToCg.c2cg_exp coresyn' in
    (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
    let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
