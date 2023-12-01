@@ -4,11 +4,8 @@ type value =
   | Const of K.const
   | Var of K.id
   | Tuple of value list
-  | Fix of fundef list
   | Clos of clos
   | Select of {clos: clos; idx: int}
-
-and fundef = {name: K.id; vars: K.id list; body: exp}
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -24,10 +21,11 @@ and dec =
 and clos =
   | CVar of K.id
   | CLam of {cvar: K.id; vars: K.id list; body: exp; env: escapes}
+  | CFix of fundef list
+
+and fundef = {name: K.id; cvar: K.id; vars: K.id list; body: exp; env: escapes}
 
 and escapes = K.id list
-
-let ( // ) xs ys = List.filter (fun y -> not (List.mem y ys)) xs
 
 let remove_dup xs =
   List.fold_right (fun x xs -> if List.mem x xs then xs else x :: xs) xs []
@@ -43,7 +41,7 @@ let locals : K.id list ref = ref []
 
 let cvar : K.id ref = ref (Id.fresh ())
 
-let rec conv_val (escs : escapes) : K.value -> value * escapes = function
+let rec cc_val (escs : escapes) : K.value -> value * escapes = function
   | Const c -> (Const c, escs)
   | Var x when List.mem x !locals -> (Var x, escs)
   | Var x ->
@@ -51,44 +49,57 @@ let rec conv_val (escs : escapes) : K.value -> value * escapes = function
       (Select {clos= CVar !cvar; idx}, env')
   | Lam {vars; body} ->
       let cvar' = Id.from_string "clos" in
-      let body', escs' = conv_exp escs body in
-      (Clos (CLam {cvar= cvar'; vars; body= body'; env= escs'}), escs @ escs')
-  | Fix fundefs -> failwith "not implemented"
+      cvar := cvar';
+      locals := vars;
+      let body', escs' = cc_exp [] body in
+      ( Clos (CLam {cvar= cvar'; vars; body= body'; env= escs'})
+      , escs @ escs' |> remove_dup )
+  | Fix fundefs ->
+      let names = List.map (fun {K.name} -> name) fundefs in
+      let cc_fundef ({name; vars; body} : K.fundef) : fundef * escapes =
+        let cvar' = Id.from_string "clos" in
+        cvar := cvar';
+        locals := names @ vars;
+        let body', escs' = cc_exp [] body in
+        ({name; cvar= cvar'; vars; body= body'; env= escs'}, escs')
+      in
+      let fundefs', escss = List.split (List.map cc_fundef fundefs) in
+      (Clos (CFix fundefs'), List.concat (escs :: escss) |> remove_dup)
 
-and conv_val_seq (escs : escapes) (vals : K.value list) : value list * escapes =
+and cc_val_seq (escs : escapes) (vals : K.value list) : value list * escapes =
   let loop (acc : value list) (escs : escapes) :
       K.value list -> value list * escapes = function
     | [] -> (List.rev acc, escs)
     | val_ :: vals ->
-        let val', escs' = conv_val escs val_ in
+        let val', escs' = cc_val escs val_ in
         (val' :: acc, escs')
   in
   loop [] escs vals
 
-and conv_exp (escs : escapes) : K.exp -> exp * escapes = function
+and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
   | Let {dec; body} ->
-      let dec', escs1 = conv_dec escs dec in
-      let body', escs2 = conv_exp escs1 body in
+      let dec', escs1 = cc_dec escs dec in
+      let body', escs2 = cc_exp escs1 body in
       (Let {dec= dec'; body= body'}, escs2)
   | App {fcn; args} ->
-      let fcn', escs1 = conv_val escs fcn in
-      let args', escs2 = conv_val_seq escs1 args in
+      let fcn', escs1 = cc_val escs fcn in
+      let args', escs2 = cc_val_seq escs1 args in
       (App {fcn= fcn'; args= args'}, escs2)
   | If {cond; then_; else_} ->
-      let cond', escs1 = conv_val escs cond in
-      let then', escs2 = conv_exp escs1 then_ in
-      let else', escs3 = conv_exp escs2 else_ in
+      let cond', escs1 = cc_val escs cond in
+      let then', escs2 = cc_exp escs1 then_ in
+      let else', escs3 = cc_exp escs2 else_ in
       (If {cond= cond'; then_= then'; else_= else'}, escs3)
   | Halt val_ ->
-      let val', escs' = conv_val escs val_ in
+      let val', escs' = cc_val escs val_ in
       (Halt val', escs')
 
-and conv_dec (escs : escapes) : K.dec -> dec * escapes = function
+and cc_dec (escs : escapes) : K.dec -> dec * escapes = function
   | ValDec {name; val_} ->
-      let val', escs' = conv_val escs val_ in
+      let val', escs' = cc_val escs val_ in
       (ValDec {name; val_= val'}, escs')
   | PrimDec {name; oper; args} ->
-      let args', escs' = conv_val_seq escs args in
+      let args', escs' = cc_val_seq escs args in
       (PrimDec {name; oper; args= args'}, escs')
 
-let conv_prog (exp : K.exp) : exp = conv_exp [] exp |> fst
+let cc_prog (exp : K.exp) : exp = cc_exp [] exp |> fst
