@@ -1,0 +1,9 @@
+(library
+ (name imp)
+ (libraries common cps)
+ (flags -open Common))
+
+(env
+ (dev
+  (flags
+   (:standard -w "-8-30-39"))))
