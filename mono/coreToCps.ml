@@ -42,8 +42,7 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
   | Let {isrec= true; vars; bnds; body} ->
       let fundefs = List.map2 c2k_fundef vars bnds in
       let body' = c2k_exp body k in
-      let name = Id.from_string "letrec" in
-      Let {dec= K.ValDec {name; val_= K.Fix fundefs}; body= body'}
+      Letrec {fundefs; body= body'}
 
 and c2k_fundef (name : C.id) : C.exp -> K.fundef = function
   | C.Lam {var; body} ->

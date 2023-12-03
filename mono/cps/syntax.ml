@@ -4,16 +4,13 @@ type oper = Core.Syntax.oper
 
 type const = Core.Syntax.const
 
-type value =
-  | Const of const
-  | Var of id
-  | Lam of {vars: id list; body: exp}
-  | Fix of fundef list
+type value = Const of const | Var of id | Lam of {vars: id list; body: exp}
 
 and fundef = {name: id; vars: id list; body: exp}
 
 and exp =
   | Let of {dec: dec; body: exp}
+  | Letrec of {fundefs: fundef list; body: exp}
   | App of {fcn: value; args: value list}
   | If of {cond: value; then_: exp; else_: exp}
   | Halt of value
@@ -40,9 +37,6 @@ let rec ppr_val prec : value -> string = function
       let vars = String.concat " " (List.map Id.unique_name vars) in
       let body = ppr_exp 0 body in
       parens prec 0 (Printf.sprintf "fun %s -> %s" vars body)
-  | Fix fds ->
-      let fds = String.concat " and " (List.map ppr_fundef fds) in
-      Printf.sprintf "fix %s" fds
 
 and ppr_fundef {name; vars; body} =
   let vars = String.concat " " (List.map Id.unique_name vars) in
@@ -55,6 +49,9 @@ and ppr_exp prec : exp -> string = function
       let dec = ppr_dec dec in
       let body = ppr_exp 0 body in
       parens prec 0 (Printf.sprintf "let %s in %s" dec body)
+  | Letrec {fundefs; body} ->
+      let fundefs = String.concat " and " (List.map ppr_fundef fundefs) in
+      parens prec 0 (Printf.sprintf "let rec %s" fundefs)
   | App {fcn; args} ->
       let fcn = ppr_val 1 fcn in
       let args = String.concat " " (List.map (ppr_val 2) args) in

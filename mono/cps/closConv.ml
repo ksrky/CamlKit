@@ -3,15 +3,14 @@ module K = Syntax
 type value =
   | Const of K.const
   | Var of K.id
-  | Tuple of value list
   | Clos of clos
   | Select of {clos: clos; idx: int}
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | App of {fcn: value; args: value list}
+  | Letrec of {fundefs: fundef list; body: exp}
+  | ClosApp of {fcn: value; args: value list}
   | If of {cond: value; then_: exp; else_: exp}
-  | Split of {inp: value; vars: K.id list; body: exp}
   | Halt of value
 
 and dec =
@@ -21,7 +20,6 @@ and dec =
 and clos =
   | CVar of K.id
   | CLam of {cvar: K.id; vars: K.id list; body: exp; env: escapes}
-  | CFix of fundef list
 
 and fundef = {name: K.id; cvar: K.id; vars: K.id list; body: exp; env: escapes}
 
@@ -54,17 +52,6 @@ let rec cc_val (escs : escapes) : K.value -> value * escapes = function
       let body', escs' = cc_exp [] body in
       ( Clos (CLam {cvar= cvar'; vars; body= body'; env= escs'})
       , escs @ escs' |> remove_dup )
-  | Fix fundefs ->
-      let names = List.map (fun {K.name} -> name) fundefs in
-      let cc_fundef ({name; vars; body} : K.fundef) : fundef * escapes =
-        let cvar' = Id.from_string "clos" in
-        cvar := cvar';
-        locals := names @ vars;
-        let body', escs' = cc_exp [] body in
-        ({name; cvar= cvar'; vars; body= body'; env= escs'}, escs')
-      in
-      let fundefs', escss = List.split (List.map cc_fundef fundefs) in
-      (Clos (CFix fundefs'), List.concat (escs :: escss) |> remove_dup)
 
 and cc_val_seq (escs : escapes) (vals : K.value list) : value list * escapes =
   let loop (acc : value list) (escs : escapes) :
@@ -81,10 +68,23 @@ and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
       let dec', escs1 = cc_dec escs dec in
       let body', escs2 = cc_exp escs1 body in
       (Let {dec= dec'; body= body'}, escs2)
+  | Letrec {fundefs; body} ->
+      let names = List.map (fun {K.name} -> name) fundefs in
+      let cc_fundef ({name; vars; body} : K.fundef) : fundef * escapes =
+        let cvar' = Id.from_string "clos" in
+        cvar := cvar';
+        locals := names @ vars;
+        let body', escs' = cc_exp [] body in
+        ({name; cvar= cvar'; vars; body= body'; env= escs'}, escs')
+      in
+      let fundefs', escss = List.split (List.map cc_fundef fundefs) in
+      let escs' = List.concat (escs :: escss) |> remove_dup in
+      let body', escs'' = cc_exp escs' body in
+      (Letrec {fundefs= fundefs'; body= body'}, escs'')
   | App {fcn; args} ->
       let fcn', escs1 = cc_val escs fcn in
       let args', escs2 = cc_val_seq escs1 args in
-      (App {fcn= fcn'; args= args'}, escs2)
+      (ClosApp {fcn= fcn'; args= args'}, escs2)
   | If {cond; then_; else_} ->
       let cond', escs1 = cc_val escs cond in
       let then', escs2 = cc_exp escs1 then_ in
