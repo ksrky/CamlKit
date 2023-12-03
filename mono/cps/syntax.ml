@@ -61,7 +61,7 @@ and ppr_exp prec : exp -> string = function
       let then_ = ppr_exp 0 then_ in
       let else_ = ppr_exp 0 else_ in
       parens prec 0 (Printf.sprintf "if %s then %s else %s" cond then_ else_)
-  | Halt v -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 v))
+  | Halt val_ -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 val_))
 
 and ppr_dec : dec -> string = function
   | ValDec {name; val_} ->

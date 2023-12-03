@@ -1,6 +1,6 @@
 type id = Id.t
 
-type binop = PLUS | MINUS | TIMES | DIV
+type binop = PLUS | MINUS | TIMES | DIVIDE
 
 type relop = EQ | NE | LT | GT | LE | GE
 
@@ -13,6 +13,7 @@ type exp =
   | CALL of exp * exp list
   | MALLOC of ty list
   | UPDATE of exp * int * exp
+  | PROJ of exp * int
   | ESEQ of stm * exp
 
 and stm =
