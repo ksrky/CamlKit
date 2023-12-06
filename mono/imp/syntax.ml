@@ -1,5 +1,36 @@
 type id = Id.t
 
+type value = Const of int | Var of id | Tuple of value list
+
+and exp =
+  | Let of {dec: dec; body: exp}
+  | App of {fcn: value; args: value list}
+  | If of {oper: relop; left: value; right: value; then_: exp; else_: exp}
+  | Halt of value
+
+and dec =
+  | ValDec of {name: id; val_: value}
+  | PrimDec of {name: id; oper: arithop; args: value list}
+  | ProjDec of {name: id; val_: value; idx: int}
+  | MallocDec of {name: id; len: int}
+  | UpdateDec of {name: id; var: id; idx: int; val_: value}
+
+and arithop = Add | Sub | Mul | Div
+
+and relop = Eq | Ne | Lt | Le | Gt | Ge
+
+type heap = Code of {name: id; vars: id list; body: exp} | Tuple of value list
+
+type prog = heap list * exp
+
+let let_decs decs body =
+  List.fold_right (fun dec body -> Let {dec; body}) decs body
+
+(*
+
+type name = string
+type label 
+
 type binop = PLUS | MINUS | TIMES | DIVIDE
 
 type relop = EQ | NE | LT | GT | LE | GE
@@ -8,7 +39,7 @@ type ty = INT | VOID
 
 type exp =
   | CONST of int
-  | VAR of id
+  | VAR of name
   | BINOP of binop * exp * exp
   | CALL of exp * exp list
   | MALLOC of ty list
@@ -17,10 +48,10 @@ type exp =
   | ESEQ of stm * exp
 
 and stm =
-  | EXP of exp
-  | IF of exp * exp * exp
-  | ASSIGN of id * exp
-  | EXIT of exp
-  | SEQ of stm * stm
+  | Let of dec * exp
+  | CJUMP of relop * exp * exp * label * label
+  | ASSIGN of name * exp
+  | EXIT of exp 
+  | LABEL of label
 
-type frag = PROC of {name: id; body: stm}
+type frag = PROC of {name: name; body: stm}*)

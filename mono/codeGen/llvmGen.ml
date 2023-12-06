@@ -54,14 +54,17 @@ let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
       let cond_val = build_icmp Icmp.Ne cond' zero "ifcond" builder in
       let start_bb = insertion_block builder in
       let the_function = block_parent start_bb in
+      (* then *)
       let then_bb = append_block context "then" the_function in
       position_at_end then_bb builder;
       let then_val = codegen_exp llmod then_ in
       let new_then_bb = insertion_block builder in
+      (* else *)
       let else_bb = append_block context "else" the_function in
       position_at_end else_bb builder;
       let else_val = codegen_exp llmod else_ in
       let new_else_bb = insertion_block builder in
+      (* merge *)
       let merge_bb = append_block context "ifcont" the_function in
       position_at_end merge_bb builder;
       let incoming = [(then_val, new_then_bb); (else_val, new_else_bb)] in

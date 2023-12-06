@@ -1,6 +1,6 @@
 (library
  (name imp)
- (libraries common cps)
+ (libraries common cps llvm llvm.analysis)
  (flags -open Common))
 
 (env
