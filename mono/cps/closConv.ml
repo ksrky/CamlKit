@@ -95,12 +95,14 @@ and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
       let body', escs'' = cc_exp escs' body in
       (Letrec {fundefs= fundefs'; body= body'}, escs'')
   | App {fcn; args} ->
+      let clos_var = Id.from_string "clos" in
       let code_var = Id.from_string "code" in
       let env_var = Id.from_string "env" in
       let fcn', escs1 = cc_val escs fcn in
       let args', escs2 = cc_val_seq escs1 args in
       ( mk_let
-          (proj_decs fcn' [code_var; env_var])
+          ( ValDec {name= clos_var; val_= fcn'}
+          :: proj_decs (Var clos_var) [code_var; env_var] )
           (App {fcn= Var code_var; args= Var env_var :: args'})
       , escs2 )
   | If {cond; then_; else_} ->
@@ -123,3 +125,60 @@ and cc_dec (escs : escapes) : K.dec -> dec * escapes = function
       (PrimDec {name; left= left'; oper; right= right'}, escs2)
 
 let cc_prog (exp : K.exp) : exp = cc_exp [] exp |> fst
+
+let parens (outer : int) (prec : int) s =
+  if outer > prec then "(" ^ s ^ ")" else s
+
+let rec ppr_val prec : value -> string = function
+  | Const c -> Core.Syntax.ppr_const c
+  | Var x -> Id.unique_name x
+  | Lam {vars; body} ->
+      let vars = String.concat " " (List.map Id.unique_name vars) in
+      let body = ppr_exp 0 body in
+      parens prec 0 (Printf.sprintf "fun %s -> %s" vars body)
+  | Tuple vals ->
+      let vals = String.concat ", " (List.map (ppr_val 0) vals) in
+      parens prec 0 (Printf.sprintf "(%s)" vals)
+
+and ppr_fundef {name; vars; body} =
+  let vars = String.concat " " (List.map Id.unique_name vars) in
+  let body = ppr_exp 0 body in
+  if vars = "" then Printf.sprintf "%s = %s" (Id.unique_name name) body
+  else Printf.sprintf "%s %s = %s" (Id.unique_name name) vars body
+
+and ppr_exp prec : exp -> string = function
+  | Let {dec; body} ->
+      let dec = ppr_dec dec in
+      let body = ppr_exp 0 body in
+      parens prec 0 (Printf.sprintf "let %s in %s" dec body)
+  | Letrec {fundefs; body} ->
+      let fundefs = String.concat " and " (List.map ppr_fundef fundefs) in
+      parens prec 0 (Printf.sprintf "let rec %s" fundefs)
+  | App {fcn; args} ->
+      let fcn = ppr_val 1 fcn in
+      let args = String.concat " " (List.map (ppr_val 2) args) in
+      parens prec 1 (Printf.sprintf "%s %s" fcn args)
+  | If {cond; then_; else_} ->
+      let cond = ppr_val 0 cond in
+      let then_ = ppr_exp 0 then_ in
+      let else_ = ppr_exp 0 else_ in
+      parens prec 0 (Printf.sprintf "if %s then %s else %s" cond then_ else_)
+  | Halt val_ -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 val_))
+
+and ppr_dec : dec -> string = function
+  | ValDec {name; val_} ->
+      let name = Id.unique_name name in
+      let value = ppr_val 0 val_ in
+      Printf.sprintf "%s = %s" name value
+  | PrimDec {name; left; oper; right} ->
+      let name = Id.unique_name name in
+      let oper = Core.Syntax.ppr_oper oper in
+      let left = ppr_val 0 left in
+      let right = ppr_val 0 right in
+      Printf.sprintf "%s = %s %s %s" name left oper right
+  | ProjDec {name; val_; idx} ->
+      let name = Id.unique_name name in
+      let val_ = ppr_val 0 val_ in
+      Printf.sprintf "%s = #%d %s" name idx val_
+
+and ppr_prog exp = ppr_exp 0 exp

@@ -56,3 +56,56 @@ let hoist_prog (prog : CC.exp) : prog =
   code_list := [];
   let exp = hoist_exp prog in
   (!code_list, exp)
+
+let parens (outer : int) (prec : int) s =
+  if outer > prec then "(" ^ s ^ ")" else s
+
+let rec ppr_val prec : value -> string = function
+  | Const c -> Core.Syntax.ppr_const c
+  | Var x -> Id.unique_name x
+  | Tuple vals ->
+      let vals = String.concat ", " (List.map (ppr_val 0) vals) in
+      parens prec 0 (Printf.sprintf "(%s)" vals)
+
+and ppr_fundef {name; vars; body} =
+  let vars = String.concat " " (List.map Id.unique_name vars) in
+  let body = ppr_exp 0 body in
+  if vars = "" then Printf.sprintf "%s = %s" (Id.unique_name name) body
+  else Printf.sprintf "%s %s = %s" (Id.unique_name name) vars body
+
+and ppr_exp prec : exp -> string = function
+  | Let {dec; body} ->
+      let dec = ppr_dec dec in
+      let body = ppr_exp 0 body in
+      parens prec 0 (Printf.sprintf "let %s in %s" dec body)
+  | App {fcn; args} ->
+      let fcn = ppr_val 1 fcn in
+      let args = String.concat " " (List.map (ppr_val 2) args) in
+      parens prec 1 (Printf.sprintf "%s %s" fcn args)
+  | If {cond; then_; else_} ->
+      let cond = ppr_val 0 cond in
+      let then_ = ppr_exp 0 then_ in
+      let else_ = ppr_exp 0 else_ in
+      parens prec 0 (Printf.sprintf "if %s then %s else %s" cond then_ else_)
+  | Halt val_ -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 val_))
+
+and ppr_dec : dec -> string = function
+  | ValDec {name; val_} ->
+      let name = Id.unique_name name in
+      let value = ppr_val 0 val_ in
+      Printf.sprintf "%s = %s" name value
+  | PrimDec {name; left; oper; right} ->
+      let name = Id.unique_name name in
+      let oper = Core.Syntax.ppr_oper oper in
+      let left = ppr_val 0 left in
+      let right = ppr_val 0 right in
+      Printf.sprintf "%s = %s %s %s" name left oper right
+  | ProjDec {name; val_; idx} ->
+      let name = Id.unique_name name in
+      let val_ = ppr_val 0 val_ in
+      Printf.sprintf "%s = #%d %s" name idx val_
+
+and ppr_prog (heaps, exp) =
+  let heaps = String.concat "\n" (List.map ppr_fundef heaps) in
+  let exp = ppr_exp 0 exp in
+  Printf.sprintf "%s\n%s" heaps exp

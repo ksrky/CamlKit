@@ -28,7 +28,8 @@ let rec c2i_val : H.value -> I.dec list * I.value = function
               ; val_= vi }
             :: mk_tuple (i - 1)
       in
-      (!decs @ mk_tuple (List.length vals), Var (List.hd (List.rev vars)))
+      ( !decs @ List.rev (mk_tuple (List.length vals))
+      , Var (List.hd (List.rev vars)) )
 
 let rec c2i_exp : H.exp -> I.exp = function
   | Let {dec= PrimDec {name; left; oper; right}; body}

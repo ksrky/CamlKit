@@ -9,12 +9,20 @@ let int_type : lltype = i64_type context
 
 let named_values : (id, llvalue) Hashtbl.t = Hashtbl.create 100
 
+let find_func_or_val (id : Id.t) (llmod : llmodule) : llvalue =
+  match lookup_function (Id.unique_name id) llmod with
+  | Some func -> func
+  | None -> (
+    try Hashtbl.find named_values id
+    with Not_found ->
+      failwith ("no such function or value: " ^ Id.unique_name id) )
+
 let codegen_val (llmod : llmodule) : value -> llvalue = function
   | Const i -> const_int int_type i
-  | Var x -> Hashtbl.find named_values x
+  | Var x -> find_func_or_val x llmod
 
 let rec codegen_exp (llmod : llmodule) : exp -> unit = function
-  | Let {dec; body} -> failwith ""
+  | Let {dec; body} -> codegen_dec llmod dec; codegen_exp llmod body
   | App {fcn; args} ->
       let fcn' = codegen_val llmod fcn in
       let args' = Array.of_list (List.map (codegen_val llmod) args) in
@@ -80,7 +88,7 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
       let tuple_val = Hashtbl.find named_values var in
       let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
       build_store (codegen_val llmod val_) elm_ptr builder |> ignore;
-      Hashtbl.add named_values name elm_ptr
+      Hashtbl.add named_values name tuple_val
 
 let set_params (func : llvalue) (params : id list) : unit =
   Array.iteri

@@ -40,13 +40,20 @@ let compile (path : string) : unit =
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
-  let cpssyn' = Cps.Hoisting.hoist_prog (Cps.ClosConv.cc_prog cpssyn) in
-  let impsyn = CpsToImp.c2i_prog cpssyn' in
-  print_endline (Imp.Syntax.ppr_prog impsyn)
+  (* print_endline (Cps.Syntax.ppr_prog cpssyn); *)
+  let cpssyn1 = Cps.ClosConv.cc_prog cpssyn in
+  (* print_endline (Cps.ClosConv.ppr_prog cpssyn1); *)
+  let cpssyn2 = Cps.Hoisting.hoist_prog cpssyn1 in
+  (* print_endline (Cps.Hoisting.ppr_prog cpssyn2); *)
+  let impsyn = CpsToImp.c2i_prog cpssyn2 in
+  (* print_endline (Imp.Syntax.ppr_prog impsyn) *)
+  let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
+  CodeGen.format path llmod
+
 (* let cgcodes = CoreToCg.c2cg_exp coresyn' in
-   (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
-   let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
-   CodeGen.format path llmod *)
+    (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
+    let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
+    CodeGen.format path llmod *)
 
 (* let compile (path : string) : unit =
      let abssyn = Parse.parse path in
