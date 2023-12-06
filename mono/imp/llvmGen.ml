@@ -9,24 +9,23 @@ let int_type : lltype = i64_type context
 
 let named_values : (id, llvalue) Hashtbl.t = Hashtbl.create 100
 
-let find_func_or_val (id : Id.t) (llmod : llmodule) : llvalue =
-  match lookup_function (Id.unique_name id) llmod with
-  | Some func -> func
-  | None -> (
-    try Hashtbl.find named_values id
-    with Not_found ->
-      failwith ("no such function or value: " ^ Id.unique_name id) )
-
 let codegen_val (llmod : llmodule) : value -> llvalue = function
   | Const i -> const_int int_type i
-  | Var x -> find_func_or_val x llmod
+  | Var x -> (
+    try Hashtbl.find named_values x
+    with _ -> failwith ("no such variable " ^ Id.unique_name x) )
+  | Glb x -> (
+    match lookup_function (Id.unique_name x) llmod with
+    | Some func -> func
+    | None -> failwith ("no such function " ^ Id.unique_name x) )
 
 let rec codegen_exp (llmod : llmodule) : exp -> unit = function
   | Let {dec; body} -> codegen_dec llmod dec; codegen_exp llmod body
   | App {fcn; args} ->
       let fcn' = codegen_val llmod fcn in
       let args' = Array.of_list (List.map (codegen_val llmod) args) in
-      build_call fcn' args' "calltmp" builder |> ignore
+      let call_val = build_call fcn' args' "calltmp" builder in
+      build_ret call_val builder |> ignore
   | If {oper; left; right; then_; else_} ->
       let left_val = codegen_val llmod left in
       let right_val = codegen_val llmod right in
@@ -123,6 +122,18 @@ let codegen_func (llmod : llmodule) : heap -> unit = function
       with e -> delete_function func; raise e )
   | Tuple _ -> failwith "not implemented"
 
+let codegen_main (llmod : llmodule) (exp : exp) : unit =
+  let func_ty = function_type int_type [||] in
+  let func = declare_function "main" func_ty llmod in
+  set_params func [];
+  Hashtbl.clear named_values;
+  let bb = append_block context "main" func in
+  position_at_end bb builder;
+  try
+    codegen_exp llmod exp;
+    Llvm_analysis.assert_valid_function func
+  with e -> delete_function func; raise e
+
 let codegen (modid : string) ((heaps, exp) : prog) : llmodule =
   let llmod = create_module context modid in
   List.iter
@@ -130,7 +141,7 @@ let codegen (modid : string) ((heaps, exp) : prog) : llmodule =
       | Code {name; vars; _} -> codegen_proto llmod name vars | Tuple _ -> () )
     heaps;
   List.iter (codegen_func llmod) heaps;
-  codegen_exp llmod exp;
+  codegen_main llmod exp;
   llmod
 
 let format (path : string) (llmod : llmodule) : unit =

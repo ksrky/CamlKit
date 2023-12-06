@@ -1,6 +1,6 @@
 type id = Id.t
 
-type value = Const of int | Var of id
+type value = Const of int | Var of id | Glb of id
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -34,6 +34,7 @@ let parens (outer : int) (prec : int) s =
 let rec ppr_val prec : value -> string = function
   | Const i -> Printf.sprintf "%i" i
   | Var x -> Id.unique_name x
+  | Glb x -> Id.unique_name x
 
 and ppr_exp prec : exp -> string = function
   | Let {dec; body} ->
@@ -94,7 +95,7 @@ let ppr_heap : heap -> string = function
       let name = Id.unique_name name in
       let vars = List.map Id.unique_name vars in
       let body = ppr_exp 0 body in
-      Printf.sprintf "%s = code(%s) =\n  %s" name (String.concat ", " vars) body
+      Printf.sprintf "%s = code(%s).\n  %s" name (String.concat ", " vars) body
   | Tuple {name; vals} ->
       let name = Id.unique_name name in
       let vals = List.map (ppr_val 0) vals in

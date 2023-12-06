@@ -1,7 +1,11 @@
 module K = Syntax
 module CC = ClosConv
 
-type value = Const of K.const | Var of K.id | Tuple of value list
+type value =
+  | Const of K.const
+  | Var of K.id
+  | Glb of K.id
+  | Tuple of value list
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -27,10 +31,11 @@ let append_code (code : code) : unit = code_list := code :: !code_list
 let rec hoist_val : CC.value -> value = function
   | Const c -> Const c
   | Var x -> Var x
+  | Glb x -> Glb x
   | Lam {vars; body} ->
       let name = Id.from_string "lamtmp" in
       append_code {name; vars; body= hoist_exp body};
-      Var name
+      Glb name
   | Tuple vals -> Tuple (List.map hoist_val vals)
 
 and hoist_exp : CC.exp -> exp = function
@@ -63,6 +68,7 @@ let parens (outer : int) (prec : int) s =
 let rec ppr_val prec : value -> string = function
   | Const c -> Core.Syntax.ppr_const c
   | Var x -> Id.unique_name x
+  | Glb x -> Id.unique_name x
   | Tuple vals ->
       let vals = String.concat ", " (List.map (ppr_val 0) vals) in
       parens prec 0 (Printf.sprintf "(%s)" vals)

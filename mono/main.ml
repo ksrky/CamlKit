@@ -46,7 +46,7 @@ let compile (path : string) : unit =
   let cpssyn2 = Cps.Hoisting.hoist_prog cpssyn1 in
   (* print_endline (Cps.Hoisting.ppr_prog cpssyn2); *)
   let impsyn = CpsToImp.c2i_prog cpssyn2 in
-  (* print_endline (Imp.Syntax.ppr_prog impsyn) *)
+  print_endline (Imp.Syntax.ppr_prog impsyn);
   let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
   CodeGen.format path llmod
 

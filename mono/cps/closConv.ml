@@ -3,6 +3,7 @@ module K = Syntax
 type value =
   | Const of K.const
   | Var of K.id
+  | Glb of K.id
   | Lam of {vars: K.id list; body: exp}
   | Tuple of value list
 
@@ -47,7 +48,8 @@ let globals : K.id list ref = ref []
 
 let rec cc_val (escs : escapes) : K.value -> value * escapes = function
   | Const c -> (Const c, escs)
-  | Var x when List.mem x !locals || List.mem x !globals -> (Var x, escs)
+  | Var x when List.mem x !locals -> (Var x, escs)
+  | Var x when List.mem x !globals -> (Glb x, escs)
   | Var x ->
       let _, escs' = lookup_env escs x in
       (Var x, escs')
@@ -55,12 +57,15 @@ let rec cc_val (escs : escapes) : K.value -> value * escapes = function
       let cvar = Id.from_string "clos" in
       locals := vars;
       let body', escs' = cc_exp [] body in
-      ( Tuple
-          [ Lam
-              { vars= cvar :: vars
-              ; body= mk_let (proj_decs (Var cvar) escs') body' }
-          ; Tuple (mk_vars escs') ]
-      , escs @ escs' |> remove_dup )
+      if escs' = [] then
+        (Lam {vars; body= mk_let (proj_decs (Var cvar) escs') body'}, escs)
+      else
+        ( Tuple
+            [ Lam
+                { vars= cvar :: vars
+                ; body= mk_let (proj_decs (Var cvar) escs') body' }
+            ; Tuple (mk_vars escs') ]
+        , escs @ escs' |> remove_dup )
 
 and cc_val_seq (escs : escapes) (vals : K.value list) : value list * escapes =
   let loop (acc : value list) (escs : escapes) :
@@ -94,17 +99,20 @@ and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
       let escs' = List.concat (escs :: escss) |> remove_dup in
       let body', escs'' = cc_exp escs' body in
       (Letrec {fundefs= fundefs'; body= body'}, escs'')
-  | App {fcn; args} ->
-      let clos_var = Id.from_string "clos" in
-      let code_var = Id.from_string "code" in
-      let env_var = Id.from_string "env" in
+  | App {fcn; args} -> (
       let fcn', escs1 = cc_val escs fcn in
       let args', escs2 = cc_val_seq escs1 args in
-      ( mk_let
-          ( ValDec {name= clos_var; val_= fcn'}
-          :: proj_decs (Var clos_var) [code_var; env_var] )
-          (App {fcn= Var code_var; args= Var env_var :: args'})
-      , escs2 )
+      match fcn' with
+      | Lam _ -> (App {fcn= fcn'; args= args'}, escs2)
+      | _ ->
+          let clos_var = Id.from_string "clos" in
+          let code_var = Id.from_string "code" in
+          let env_var = Id.from_string "env" in
+          ( mk_let
+              ( ValDec {name= clos_var; val_= fcn'}
+              :: proj_decs (Var clos_var) [code_var; env_var] )
+              (App {fcn= Var code_var; args= Var env_var :: args'})
+          , escs2 ) )
   | If {cond; then_; else_} ->
       let cond', escs1 = cc_val escs cond in
       let then', escs2 = cc_exp escs1 then_ in
@@ -132,6 +140,7 @@ let parens (outer : int) (prec : int) s =
 let rec ppr_val prec : value -> string = function
   | Const c -> Core.Syntax.ppr_const c
   | Var x -> Id.unique_name x
+  | Glb x -> Id.unique_name x
   | Lam {vars; body} ->
       let vars = String.concat " " (List.map Id.unique_name vars) in
       let body = ppr_exp 0 body in

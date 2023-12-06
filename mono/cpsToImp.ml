@@ -7,6 +7,7 @@ let c2i_const : C.const -> int = function Int i -> i | Nil -> 0
 let rec c2i_val : H.value -> I.dec list * I.value = function
   | Const c -> ([], Const (c2i_const c))
   | Var x -> ([], Var x)
+  | Glb x -> ([], Glb x)
   | Tuple vals ->
       let var0 = Id.from_string "y0" in
       let vars =
