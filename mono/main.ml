@@ -1,10 +1,10 @@
-let semant abssyn =
+let semant (abssyn : Language.Syntax.exp) : Language.Syntax.aexp =
   (* print_endline (Language.Syntax.ppr_exp abssyn); *)
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.empty abssyn in
   (* print_endline (Language.Syntax.ppr_exp abssyn'); *)
-  let _aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
+  let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
   (* print_endline (Language.Syntax.ppr_aexp 0 _aabssyn); *)
-  abssyn'
+  aabssyn
 
 let run_secd instrs =
   (* print_endline (Secd.Operation.show_instrs instrs); *)
