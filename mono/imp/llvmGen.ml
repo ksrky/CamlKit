@@ -69,15 +69,18 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
       Hashtbl.add named_values name prim_val
   | ProjDec {name; val_; idx} ->
       let tuple_val = codegen_val llmod val_ in
-      let elm_val = build_struct_gep tuple_val (idx - 1) "elmtmp" builder in
+      let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
+      let elm_val = build_load elm_ptr "elmtmp" builder in
       Hashtbl.add named_values name elm_val
-  | MallocDec {name; len= _} ->
-      let tys = [] in
-      (* tmp *)
-      let ty = struct_type context (Array.of_list tys) in
-      let tuple_val = build_alloca ty "envtmp" builder in
+  | MallocDec {name; len} ->
+      let tys = Array.make len int_type in
+      let tuple_val = build_alloca (struct_type context tys) "envtmp" builder in
       Hashtbl.add named_values name tuple_val
-  | UpdateDec {name; var; idx; val_} -> failwith ""
+  | UpdateDec {name; var; idx; val_} ->
+      let tuple_val = Hashtbl.find named_values var in
+      let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
+      build_store (codegen_val llmod val_) elm_ptr builder |> ignore;
+      Hashtbl.add named_values name elm_ptr
 
 let set_params (func : llvalue) (params : id list) : unit =
   Array.iteri

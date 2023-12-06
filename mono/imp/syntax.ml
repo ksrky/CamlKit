@@ -28,32 +28,79 @@ type prog = heap list * exp
 let let_decs decs body =
   List.fold_right (fun dec body -> Let {dec; body}) decs body
 
-(*
+let parens (outer : int) (prec : int) s =
+  if outer > prec then "(" ^ s ^ ")" else s
 
-type name = string
-type label 
+let rec ppr_val prec : value -> string = function
+  | Const i -> Printf.sprintf "%i" i
+  | Var x -> Id.unique_name x
 
-type binop = PLUS | MINUS | TIMES | DIVIDE
+and ppr_exp prec : exp -> string = function
+  | Let {dec; body} ->
+      let dec = ppr_dec dec in
+      let body = ppr_exp 0 body in
+      parens prec 0 (Printf.sprintf "let %s in\n%s" dec body)
+  | App {fcn; args} ->
+      let fcn = ppr_val 1 fcn in
+      let args = List.map (ppr_val 0) args in
+      parens prec 1 (Printf.sprintf "%s(%s)" fcn (String.concat ", " args))
+  | If {left; oper; right; then_; else_} ->
+      let left = ppr_val 0 left in
+      let oper =
+        match oper with
+        | Eq -> "="
+        | Ne -> "<>"
+        | Lt -> "<"
+        | Le -> "<="
+        | Gt -> ">"
+        | Ge -> ">="
+      in
+      let right = ppr_val 0 right in
+      let then_ = ppr_exp 0 then_ in
+      let else_ = ppr_exp 0 else_ in
+      parens prec 0
+        (Printf.sprintf "if %s %s %s\n  then %s\n  else %s" left oper right
+           then_ else_ )
+  | Halt v -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 2 v))
 
-type relop = EQ | NE | LT | GT | LE | GE
+and ppr_dec : dec -> string = function
+  | ValDec {name; val_} ->
+      let name = Id.unique_name name in
+      let val_ = ppr_val 0 val_ in
+      Printf.sprintf "%s = %s" name val_
+  | PrimDec {name; left; oper; right} ->
+      let name = Id.unique_name name in
+      let left = ppr_val 0 left in
+      let oper =
+        match oper with Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/"
+      in
+      let right = ppr_val 0 right in
+      Printf.sprintf "%s = %s %s %s" name left oper right
+  | ProjDec {name; val_; idx} ->
+      let name = Id.unique_name name in
+      let val_ = ppr_val 0 val_ in
+      Printf.sprintf "%s = %s.%i" name val_ idx
+  | MallocDec {name; len} ->
+      let name = Id.unique_name name in
+      Printf.sprintf "%s = malloc %i" name len
+  | UpdateDec {name; var; idx; val_} ->
+      let name = Id.unique_name name in
+      let var = Id.unique_name var in
+      let val_ = ppr_val 0 val_ in
+      Printf.sprintf "%s = %s.%i <- %s" name var idx val_
 
-type ty = INT | VOID
+let ppr_heap : heap -> string = function
+  | Code {name; vars; body} ->
+      let name = Id.unique_name name in
+      let vars = List.map Id.unique_name vars in
+      let body = ppr_exp 0 body in
+      Printf.sprintf "%s = code(%s) =\n  %s" name (String.concat ", " vars) body
+  | Tuple {name; vals} ->
+      let name = Id.unique_name name in
+      let vals = List.map (ppr_val 0) vals in
+      Printf.sprintf "%s = (%s)" name (String.concat ", " vals)
 
-type exp =
-  | CONST of int
-  | VAR of name
-  | BINOP of binop * exp * exp
-  | CALL of exp * exp list
-  | MALLOC of ty list
-  | UPDATE of exp * int * exp
-  | PROJ of exp * int
-  | ESEQ of stm * exp
-
-and stm =
-  | Let of dec * exp
-  | CJUMP of relop * exp * exp * label * label
-  | ASSIGN of name * exp
-  | EXIT of exp 
-  | LABEL of label
-
-type frag = PROC of {name: name; body: stm}*)
+let ppr_prog (heaps, exp) =
+  let heaps = List.map ppr_heap heaps in
+  let exp = ppr_exp 0 exp in
+  Printf.sprintf "letrec\n  %s\nin\n  %s" (String.concat "\n  " heaps) exp

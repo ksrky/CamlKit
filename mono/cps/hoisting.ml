@@ -51,3 +51,8 @@ and hoist_dec : CC.dec -> dec = function
   | PrimDec {name; left; oper; right} ->
       PrimDec {name; left= hoist_val left; oper; right= hoist_val right}
   | ProjDec {name; val_; idx} -> ProjDec {name; val_= hoist_val val_; idx}
+
+let hoist_prog (prog : CC.exp) : prog =
+  code_list := [];
+  let exp = hoist_exp prog in
+  (!code_list, exp)
