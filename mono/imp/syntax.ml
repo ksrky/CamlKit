@@ -1,6 +1,6 @@
 type id = Id.t
 
-type value = Const of int | Var of id | Tuple of value list
+type value = Const of int | Var of id
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -19,7 +19,9 @@ and arithop = Add | Sub | Mul | Div
 
 and relop = Eq | Ne | Lt | Le | Gt | Ge
 
-type heap = Code of {name: id; vars: id list; body: exp} | Tuple of value list
+type heap =
+  | Code of {name: id; vars: id list; body: exp}
+  | Tuple of {name: id; vals: value list}
 
 type prog = heap list * exp
 
