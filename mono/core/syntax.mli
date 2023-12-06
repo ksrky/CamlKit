@@ -9,7 +9,7 @@ type exp =
   | Var of id
   | App of {fcn: exp; arg: exp}
   | Lam of {var: id; body: exp}
-  | Prim of {oper: oper; args: exp list}
+  | Prim of {left: exp; oper: oper; right: exp}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
 

@@ -15,17 +15,15 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
   | Lam {var; body} ->
       let c_var = Id.from_string "c" in
       K.apps k [K.lams (var :: [c_var]) (c2k_exp body (Var c_var))]
-  | Prim {oper; args} ->
+  | Prim {left; oper; right} ->
       let name = Id.from_string "prim" in
-      let arg_vars =
-        List.mapi (fun i _ -> Id.from_string ("arg" ^ string_of_int i)) args
-      in
+      let larg_var = Id.from_string "arg0" in
+      let rarg_var = Id.from_string "arg1" in
       List.fold_right2
         (fun var arg body -> c2k_exp arg (K.lam var body))
-        arg_vars args
+        [larg_var; rarg_var] [left; right]
         (K.Let
-           { dec=
-               K.PrimDec {name; oper; args= List.map (fun v -> K.Var v) arg_vars}
+           { dec= K.PrimDec {name; left= Var larg_var; oper; right= Var rarg_var}
            ; body= K.app k (K.Var name) } )
   | If {cond; then_; else_} ->
       let cond_var = Id.from_string "cond" in

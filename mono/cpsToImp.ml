@@ -31,7 +31,7 @@ let rec c2i_val : H.value -> I.dec list * I.value = function
       (!decs @ mk_tuple (List.length vals), Var (List.hd (List.rev vars)))
 
 let rec c2i_exp : H.exp -> I.exp = function
-  | Let {dec= PrimDec {name; oper; args= [left; right]}; body}
+  | Let {dec= PrimDec {name; left; oper; right}; body}
     when List.mem oper [Eq; Ne; Lt; Le; Gt; Ge] ->
       let ds1, left' = c2i_val left in
       let ds2, right' = c2i_val right in
@@ -71,15 +71,17 @@ and c2i_dec : H.dec -> I.dec list = function
   | ValDec {name; val_} ->
       let ds, val' = c2i_val val_ in
       ds @ [ValDec {name; val_= val'}]
-  | PrimDec {name; oper; args} ->
-      let dss, args' = List.split (List.map c2i_val args) in
-      List.concat dss
+  | PrimDec {name; left; oper; right} ->
+      let ds1, left' = c2i_val left in
+      let ds2, right' = c2i_val right in
+      ds1 @ ds2
       @ [ PrimDec
             { name
+            ; left= left'
             ; oper=
                 List.assoc oper
                   [(Add, I.Add); (Sub, I.Sub); (Mul, I.Mul); (Div, I.Div)]
-            ; args= args' } ]
+            ; right= right' } ]
   | ProjDec {name; val_; idx} ->
       let ds, val' = c2i_val val_ in
       ds @ [ProjDec {name; val_= val'; idx}]

@@ -23,7 +23,7 @@ let rec l2c_exp : L.exp -> C.exp = function
         | GtOp -> Gt
         | GeOp -> Ge
       in
-      Prim {oper; args= [l2c_exp left; l2c_exp right]}
+      Prim {left= l2c_exp left; oper; right= l2c_exp right}
   | IfExp {cond; then_; else_} ->
       If {cond= l2c_exp cond; then_= l2c_exp then_; else_= l2c_exp else_}
   | LetExp {bnds; body} ->

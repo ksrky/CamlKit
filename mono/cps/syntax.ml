@@ -17,7 +17,7 @@ and exp =
 
 and dec =
   | ValDec of {name: id; val_: value}
-  | PrimDec of {name: id; oper: oper; args: value list}
+  | PrimDec of {name: id; left: value; oper: oper; right: value}
 
 let lam var body = Lam {vars= [var]; body}
 
@@ -68,10 +68,11 @@ and ppr_dec : dec -> string = function
       let name = Id.unique_name name in
       let value = ppr_val 0 val_ in
       Printf.sprintf "%s = %s" name value
-  | PrimDec {name; oper; args} ->
+  | PrimDec {name; left; oper; right} ->
       let name = Id.unique_name name in
       let oper = Core.Syntax.ppr_oper oper in
-      let args = String.concat " " (List.map (ppr_val 0) args) in
-      Printf.sprintf "%s = %s %s" name oper args
+      let left = ppr_val 0 left in
+      let right = ppr_val 0 right in
+      Printf.sprintf "%s = %s %s %s" name left oper right
 
 and ppr_prog exp = ppr_exp 0 exp

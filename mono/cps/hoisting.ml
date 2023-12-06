@@ -11,7 +11,7 @@ and exp =
 
 and dec =
   | ValDec of {name: K.id; val_: value}
-  | PrimDec of {name: K.id; oper: K.oper; args: value list}
+  | PrimDec of {name: K.id; left: value; oper: K.oper; right: value}
   | ProjDec of {name: K.id; val_: value; idx: int}
 
 and escapes = K.id list
@@ -48,6 +48,6 @@ and hoist_exp : CC.exp -> exp = function
 
 and hoist_dec : CC.dec -> dec = function
   | ValDec {name; val_} -> ValDec {name; val_= hoist_val val_}
-  | PrimDec {name; oper; args} ->
-      PrimDec {name; oper; args= List.map hoist_val args}
+  | PrimDec {name; left; oper; right} ->
+      PrimDec {name; left= hoist_val left; oper; right= hoist_val right}
   | ProjDec {name; val_; idx} -> ProjDec {name; val_= hoist_val val_; idx}

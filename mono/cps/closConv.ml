@@ -15,7 +15,7 @@ and exp =
 
 and dec =
   | ValDec of {name: K.id; val_: value}
-  | PrimDec of {name: K.id; oper: K.oper; args: value list}
+  | PrimDec of {name: K.id; left: value; oper: K.oper; right: value}
   | ProjDec of {name: K.id; val_: value; idx: int}
 
 (* no function has zero argument because of cps conversion *)
@@ -117,8 +117,9 @@ and cc_dec (escs : escapes) : K.dec -> dec * escapes = function
       locals := name :: !locals;
       let val', escs' = cc_val escs val_ in
       (ValDec {name; val_= val'}, escs')
-  | PrimDec {name; oper; args} ->
-      let args', escs' = cc_val_seq escs args in
-      (PrimDec {name; oper; args= args'}, escs')
+  | PrimDec {name; left; oper; right} ->
+      let left', escs1 = cc_val escs left in
+      let right', escs2 = cc_val escs1 right in
+      (PrimDec {name; left= left'; oper; right= right'}, escs2)
 
 let cc_prog (exp : K.exp) : exp = cc_exp [] exp |> fst

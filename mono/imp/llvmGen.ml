@@ -55,7 +55,7 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
   | ValDec {name; val_} ->
       let val' = codegen_val llmod val_ in
       Hashtbl.add named_values name val'
-  | PrimDec {name; oper; args= [left; right]} ->
+  | PrimDec {name; left; oper; right} ->
       let left_val = codegen_val llmod left in
       let right_val = codegen_val llmod right in
       let prim_val =
@@ -67,7 +67,6 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
           left_val right_val "primtmp" builder
       in
       Hashtbl.add named_values name prim_val
-  | PrimDec {name; args} -> failwith "unreahcable"
   | ProjDec {name; val_; idx} ->
       let tuple_val = codegen_val llmod val_ in
       let elm_val = build_struct_gep tuple_val (idx - 1) "elmtmp" builder in

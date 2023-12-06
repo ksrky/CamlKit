@@ -10,7 +10,7 @@ and exp =
 
 and dec =
   | ValDec of {name: id; val_: value}
-  | PrimDec of {name: id; oper: arithop; args: value list}
+  | PrimDec of {name: id; left: value; oper: arithop; right: value}
   | ProjDec of {name: id; val_: value; idx: int}
   | MallocDec of {name: id; len: int}
   | UpdateDec of {name: id; var: id; idx: int; val_: value}

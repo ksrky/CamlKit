@@ -77,7 +77,7 @@ let rec cc_exp : CS.exp -> exp = function
       let cvar = Id.from_string "c" in
       let body', env = cc_loc {escs= []; locs= [var]; cvar} body in
       Clos (CAbs {cvar; var; body= body'; env})
-  | Prim {oper; args} -> Prim {oper; args= List.map cc_exp args}
+  | Prim {left; oper; right} -> Prim {oper; args= List.map cc_exp [left; right]}
   | Let {isrec; vars; bnds; body} -> failwith "let is not supported"
   | If {cond; then_; else_} ->
       If {cond= cc_exp cond; then_= cc_exp then_; else_= cc_exp else_}
@@ -97,8 +97,8 @@ and cc_loc ({escs; locs; cvar} as st : state) : CS.exp -> exp * escapes =
       let cvar' = Id.from_string "c" in
       let body', escs' = cc_loc {escs= []; locs= [var]; cvar= cvar'} body in
       (Clos (CAbs {cvar= cvar'; var; body= body'; env= escs'}), escs @ escs')
-  | Prim {oper; args} ->
-      let args', env' = cc_loc_seq st args in
+  | Prim {left; oper; right} ->
+      let args', env' = cc_loc_seq st [left; right] in
       (Prim {oper; args= args'}, env')
   | Let {isrec; vars; bnds; body} ->
       let bnds', escs1 = cc_loc_seq st bnds in

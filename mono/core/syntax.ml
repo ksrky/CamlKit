@@ -9,7 +9,7 @@ type exp =
   | Var of id
   | App of {fcn: exp; arg: exp}
   | Lam of {var: id; body: exp}
-  | Prim of {oper: oper; args: exp list}
+  | Prim of {left: exp; oper: oper; right: exp}
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
 
@@ -21,16 +21,16 @@ let unlam : exp -> id list * exp = function
   | exp -> ([], exp)
 
 let ppr_oper : oper -> string = function
-  | Add -> "add"
-  | Sub -> "sub"
-  | Mul -> "mul"
-  | Div -> "div"
-  | Eq -> "eq"
-  | Ne -> "ne"
-  | Lt -> "lt"
-  | Le -> "le"
-  | Gt -> "gt"
-  | Ge -> "ge"
+  | Add -> "+"
+  | Sub -> "-"
+  | Mul -> "*"
+  | Div -> "/"
+  | Eq -> "="
+  | Ne -> "<>"
+  | Lt -> "<"
+  | Le -> "<="
+  | Gt -> ">"
+  | Ge -> ">="
 
 let ppr_const : const -> string = function
   | Int i -> string_of_int i
@@ -43,8 +43,8 @@ let ppr_exp (pprid : id -> string) (exp : exp) =
     | Const c -> ppr_const c
     | App {fcn; arg} -> parens ctx 1 (pexp 1 fcn ^ "(" ^ pexp 0 arg ^ ")")
     | Lam {var; body} -> parens ctx 0 ("fun " ^ pprid var ^ " -> " ^ pexp 0 body)
-    | Prim {oper; args} ->
-        ppr_oper oper ^ "(" ^ String.concat ", " (List.map (pexp 0) args) ^ ")"
+    | Prim {left; oper; right} ->
+        parens ctx 1 (pexp 1 left ^ " " ^ ppr_oper oper ^ pexp 1 right)
     | If {cond; then_; else_} ->
         parens ctx 0
           ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "

@@ -16,7 +16,8 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Lam {var; body} ->
       let n' = [var] :: n in
       c2s_lambda body n' c
-  | Prim {oper; args} -> c2s_prim args n (List.assoc oper prims :: c)
+  | Prim {left; oper; right} ->
+      c2s_prim [left; right] n (List.assoc oper prims :: c)
   | If {cond; then_; else_} -> c2s_if cond then_ else_ n c
   | Let {isrec= false; vars; bnds; body} ->
       let newn = vars :: n in
