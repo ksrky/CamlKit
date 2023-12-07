@@ -42,11 +42,11 @@ let compile (path : string) : unit =
   let cpssyn = CoreToCps.c2k_prog coresyn in
   (* print_endline (Cps.Syntax.ppr_prog cpssyn); *)
   let cpssyn1 = Cps.ClosConv.cc_prog cpssyn in
-  (* print_endline (Cps.ClosConv.ppr_prog cpssyn1); *)
+  print_endline (Cps.ClosConv.ppr_prog cpssyn1);
   let cpssyn2 = Cps.Hoisting.hoist_prog cpssyn1 in
   (* print_endline (Cps.Hoisting.ppr_prog cpssyn2); *)
   let impsyn = CpsToImp.c2i_prog cpssyn2 in
-  print_endline (Imp.Syntax.ppr_prog impsyn);
+  (* print_endline (Imp.Syntax.ppr_prog impsyn); *)
   let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
   CodeGen.format path llmod
 

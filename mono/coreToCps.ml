@@ -3,8 +3,8 @@ module K = Cps.Syntax
 
 let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
   match exp with
-  | Const c -> K.apps k [K.Const c]
-  | Var id -> K.apps k [K.Var id]
+  | Const c -> K.app k (K.Const c)
+  | Var id -> K.app k (K.Var id)
   | App {fcn; arg} ->
       let fcn_var = Id.from_string "fcn" in
       let arg_var = Id.from_string "arg" in
@@ -14,17 +14,20 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
               (K.lam arg_var (K.apps (Var fcn_var) [K.Var arg_var; k])) ) )
   | Lam {var; body} ->
       let c_var = Id.from_string "c" in
-      K.apps k [K.lams (var :: [c_var]) (c2k_exp body (Var c_var))]
+      K.apps k [K.lams [var; c_var] (c2k_exp body (Var c_var))]
   | Prim {left; oper; right} ->
       let name = Id.from_string "prim" in
-      let larg_var = Id.from_string "arg0" in
-      let rarg_var = Id.from_string "arg1" in
-      List.fold_right2
-        (fun var arg body -> c2k_exp arg (K.lam var body))
-        [larg_var; rarg_var] [left; right]
-        (K.Let
-           { dec= K.PrimDec {name; left= Var larg_var; oper; right= Var rarg_var}
-           ; body= K.app k (K.Var name) } )
+      let larg_var = Id.from_string "a0" in
+      let rarg_var = Id.from_string "a1" in
+      c2k_exp left
+        (K.lam larg_var
+           (c2k_exp right
+              (K.lam rarg_var
+                 (K.Let
+                    { dec=
+                        K.PrimDec
+                          {name; left= Var larg_var; oper; right= Var rarg_var}
+                    ; body= K.app k (K.Var name) } ) ) ) )
   | If {cond; then_; else_} ->
       let cond_var = Id.from_string "cond" in
       c2k_exp cond

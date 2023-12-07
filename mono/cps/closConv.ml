@@ -24,6 +24,8 @@ and fundef = {name: K.id; vars: K.id list; body: exp; env: escapes}
 
 and escapes = K.id list
 
+type locals = K.id list
+
 let mk_vars = List.map (fun x -> Var x)
 
 let proj_decs val_ (names : K.id list) : dec list =
@@ -42,21 +44,19 @@ let lookup_env (escs : escapes) (x : K.id) : int * escapes =
   in
   find_idx 1 escs
 
-let locals : K.id list ref = ref []
-
 let globals : K.id list ref = ref []
 
-let rec cc_val (escs : escapes) : K.value -> value * escapes = function
+let rec cc_val (escs : escapes) (lcls : locals) : K.value -> value * escapes =
+  function
   | Const c -> (Const c, escs)
-  | Var x when List.mem x !locals -> (Var x, escs)
-  | Var x when List.mem x !globals -> (Glb x, escs)
+  | Var x when List.mem x lcls -> (Var x, escs)
+  | Var f when List.mem f !globals -> (Glb f, escs)
   | Var x ->
       let _, escs' = lookup_env escs x in
       (Var x, escs')
   | Lam {vars; body} ->
       let cvar = Id.from_string "clos" in
-      locals := vars;
-      let body', escs' = cc_exp [] body in
+      let body', escs' = cc_exp [] vars body in
       if escs' = [] then
         (Lam {vars; body= mk_let (proj_decs (Var cvar) escs') body'}, escs)
       else
@@ -67,28 +67,28 @@ let rec cc_val (escs : escapes) : K.value -> value * escapes = function
             ; Tuple (mk_vars escs') ]
         , escs @ escs' |> remove_dup )
 
-and cc_val_seq (escs : escapes) (vals : K.value list) : value list * escapes =
+and cc_val_seq (escs : escapes) (lcls : locals) (vals : K.value list) :
+    value list * escapes =
   let loop (acc : value list) (escs : escapes) :
       K.value list -> value list * escapes = function
     | [] -> (List.rev acc, escs)
     | val_ :: vals ->
-        let val', escs' = cc_val escs val_ in
+        let val', escs' = cc_val escs lcls val_ in
         (val' :: acc, escs')
   in
   loop [] escs vals
 
-and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
+and cc_exp (escs : escapes) (lcls : locals) : K.exp -> exp * escapes = function
   | Let {dec; body} ->
-      let dec', escs1 = cc_dec escs dec in
-      let body', escs2 = cc_exp escs1 body in
+      let dec', escs1, name = cc_dec escs lcls dec in
+      let body', escs2 = cc_exp escs1 (name :: lcls) body in
       (Let {dec= dec'; body= body'}, escs2)
   | Letrec {fundefs; body} ->
       let names = List.map (fun {K.name} -> name) fundefs in
       let cc_fundef ({name; vars; body} : K.fundef) : fundef * escapes =
         let cvar = Id.from_string "letrec" in
-        locals := vars;
         globals := names;
-        let body', escs' = cc_exp [] body in
+        let body', escs' = cc_exp [] vars body in
         ( { name
           ; vars= cvar :: vars
           ; body= mk_let (proj_decs (Var cvar) escs') body'
@@ -97,11 +97,11 @@ and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
       in
       let fundefs', escss = List.split (List.map cc_fundef fundefs) in
       let escs' = List.concat (escs :: escss) |> remove_dup in
-      let body', escs'' = cc_exp escs' body in
+      let body', escs'' = cc_exp escs' lcls body in
       (Letrec {fundefs= fundefs'; body= body'}, escs'')
   | App {fcn; args} -> (
-      let fcn', escs1 = cc_val escs fcn in
-      let args', escs2 = cc_val_seq escs1 args in
+      let fcn', escs1 = cc_val escs lcls fcn in
+      let args', escs2 = cc_val_seq escs1 lcls args in
       match fcn' with
       | Lam _ -> (App {fcn= fcn'; args= args'}, escs2)
       | _ ->
@@ -114,25 +114,25 @@ and cc_exp (escs : escapes) : K.exp -> exp * escapes = function
               (App {fcn= Var code_var; args= Var env_var :: args'})
           , escs2 ) )
   | If {cond; then_; else_} ->
-      let cond', escs1 = cc_val escs cond in
-      let then', escs2 = cc_exp escs1 then_ in
-      let else', escs3 = cc_exp escs2 else_ in
+      let cond', escs1 = cc_val escs lcls cond in
+      let then', escs2 = cc_exp escs1 lcls then_ in
+      let else', escs3 = cc_exp escs2 lcls else_ in
       (If {cond= cond'; then_= then'; else_= else'}, escs3)
   | Halt val_ ->
-      let val', escs' = cc_val escs val_ in
+      let val', escs' = cc_val escs lcls val_ in
       (Halt val', escs')
 
-and cc_dec (escs : escapes) : K.dec -> dec * escapes = function
+and cc_dec (escs : escapes) (lcls : locals) : K.dec -> dec * escapes * K.id =
+  function
   | ValDec {name; val_} ->
-      locals := name :: !locals;
-      let val', escs' = cc_val escs val_ in
-      (ValDec {name; val_= val'}, escs')
+      let val', escs' = cc_val escs lcls val_ in
+      (ValDec {name; val_= val'}, escs', name)
   | PrimDec {name; left; oper; right} ->
-      let left', escs1 = cc_val escs left in
-      let right', escs2 = cc_val escs1 right in
-      (PrimDec {name; left= left'; oper; right= right'}, escs2)
+      let left', escs1 = cc_val escs lcls left in
+      let right', escs2 = cc_val escs1 lcls right in
+      (PrimDec {name; left= left'; oper; right= right'}, escs2, name)
 
-let cc_prog (exp : K.exp) : exp = cc_exp [] exp |> fst
+let cc_prog (exp : K.exp) : exp = cc_exp [] [] exp |> fst
 
 let parens (outer : int) (prec : int) s =
   if outer > prec then "(" ^ s ^ ")" else s
