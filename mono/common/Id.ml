@@ -10,6 +10,10 @@ let unique : t -> int = snd
 
 let unique_name (id : t) : string = fst id ^ "_" ^ string_of_int (snd id)
 
+let reassign_unique (id : t) : t =
+  incr uniq;
+  (fst id, !uniq)
+
 let fresh () = from_string "a"
 
 module Table = Map.Make (struct
