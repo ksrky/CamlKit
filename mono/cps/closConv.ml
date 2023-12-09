@@ -37,6 +37,9 @@ let mk_let (decs : dec list) (body : exp) : exp =
 let remove_dup xs =
   List.fold_right (fun x xs -> if List.mem x xs then xs else x :: xs) xs []
 
+let ( // ) init elims : 'a list =
+  List.fold_right (fun x -> List.filter (( <> ) x)) elims init
+
 let lookup_env (escs : escapes) (x : K.id) : int * escapes =
   let rec find_idx i = function
     | [] -> (i, escs @ [x])
@@ -55,17 +58,17 @@ let rec cc_val (escs : escapes) (lcls : locals) : K.value -> value * escapes =
       let _, escs' = lookup_env escs x in
       (Var x, escs')
   | Lam {vars; body} ->
-      let cvar = Id.from_string "clos" in
+      let env_var = Id.from_string "env" in
       let body', escs' = cc_exp [] vars body in
       if escs' = [] then
-        (Lam {vars; body= mk_let (proj_decs (Var cvar) escs') body'}, escs)
+        (Lam {vars; body= mk_let (proj_decs (Var env_var) escs') body'}, escs)
       else
         ( Tuple
             [ Lam
-                { vars= cvar :: vars
-                ; body= mk_let (proj_decs (Var cvar) escs') body' }
+                { vars= env_var :: vars
+                ; body= mk_let (proj_decs (Var env_var) escs') body' }
             ; Tuple (mk_vars escs') ]
-        , escs @ escs' |> remove_dup )
+        , remove_dup (escs @ escs') // lcls )
 
 and cc_val_seq (escs : escapes) (lcls : locals) (vals : K.value list) :
     value list * escapes =
@@ -96,7 +99,7 @@ and cc_exp (escs : escapes) (lcls : locals) : K.exp -> exp * escapes = function
         , escs' )
       in
       let fundefs', escss = List.split (List.map cc_fundef fundefs) in
-      let escs' = List.concat (escs :: escss) |> remove_dup in
+      let escs' = remove_dup (List.concat (escs :: escss)) // lcls in
       let body', escs'' = cc_exp escs' lcls body in
       (Letrec {fundefs= fundefs'; body= body'}, escs'')
   | App {fcn; args} -> (
