@@ -1,36 +1,14 @@
-module K = Syntax
-
-type value =
-  | Const of K.const
-  | Var of K.id
-  | Glb of K.id
-  | Lam of {vars: K.id list; body: exp}
-  | Tuple of value list
-
-and exp =
-  | Let of {dec: dec; body: exp}
-  | Letrec of {fundefs: fundef list; body: exp}
-  | App of {fcn: value; args: value list}
-  | If of {cond: value; then_: exp; else_: exp}
-  | Halt of value
-
-and dec =
-  | ValDec of {name: K.id; val_: value}
-  | PrimDec of {name: K.id; left: value; oper: K.oper; right: value}
-  | ProjDec of {name: K.id; val_: value; idx: int}
-
-(* no function has zero argument because of cps conversion *)
-and fundef = {name: K.id; vars: K.id list; body: exp}
-
-and escapes = K.id list
+open Syntax
 
 type prog = fundef list * exp
 
-type locals = K.id list
+type escapes = id list
+
+type locals = id list
 
 let mk_vars = List.map (fun x -> Var x)
 
-let proj_decs val_ (names : K.id list) : dec list =
+let proj_decs val_ (names : id list) : dec list =
   List.mapi (fun i name -> ProjDec {name; val_; idx= i + 1}) names
 
 let mk_let (decs : dec list) (body : exp) : exp =
@@ -42,7 +20,7 @@ let remove_dup xs =
 let ( // ) init elims : 'a list =
   List.fold_right (fun x -> List.filter (( <> ) x)) elims init
 
-let lookup_env (escs : escapes) (x : K.id) : int * escapes =
+let lookup_env (escs : escapes) (x : id) : int * escapes =
   let rec find_idx i = function
     | [] -> (i, escs @ [x])
     | y :: ys -> if x = y then (i, escs) else find_idx (i + 1) ys
@@ -53,9 +31,9 @@ let fundef_list : fundef list ref = ref []
 
 let append_fundef fundef : unit = fundef_list := fundef :: !fundef_list
 
-let globals : K.id list ref = ref []
+let globals : id list ref = ref []
 
-let rec cc_val (escs : escapes) (lcls : locals) : K.value -> value * escapes =
+let rec cc_val (escs : escapes) (lcls : locals) : value -> value * escapes =
   function
   | Const c -> (Const c, escs)
   | Var x when List.mem x lcls -> (Var x, escs)
@@ -63,6 +41,7 @@ let rec cc_val (escs : escapes) (lcls : locals) : K.value -> value * escapes =
   | Var x ->
       let _, escs' = lookup_env escs x in
       (Var x, escs')
+  | Glb _ -> failwith "unreahcble"
   | Lam {vars; body} ->
       let env_var = Id.from_string "env" in
       let body', escs' = cc_exp [] vars body in
@@ -78,11 +57,12 @@ let rec cc_val (escs : escapes) (lcls : locals) : K.value -> value * escapes =
           ; body= mk_let (proj_decs (Var env_var) escs') body' };
         ( Tuple [Glb name; Tuple (mk_vars escs')]
         , remove_dup (escs @ escs') // lcls ) )
+  | Tuple _ -> failwith "not implemented"
 
-and cc_val_seq (escs : escapes) (lcls : locals) (vals : K.value list) :
+and cc_val_seq (escs : escapes) (lcls : locals) (vals : value list) :
     value list * escapes =
   let loop (acc : value list) (escs : escapes) :
-      K.value list -> value list * escapes = function
+      value list -> value list * escapes = function
     | [] -> (List.rev acc, escs)
     | val_ :: vals ->
         let val', escs' = cc_val escs lcls val_ in
@@ -90,14 +70,14 @@ and cc_val_seq (escs : escapes) (lcls : locals) (vals : K.value list) :
   in
   loop [] escs vals
 
-and cc_exp (escs : escapes) (lcls : locals) : K.exp -> exp * escapes = function
+and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
   | Let {dec; body} ->
       let dec', escs1, name = cc_dec escs lcls dec in
       let body', escs2 = cc_exp escs1 (name :: lcls) body in
       (Let {dec= dec'; body= body'}, escs2)
   | Letrec {fundefs; body} ->
-      let names = List.map (fun {K.name} -> name) fundefs in
-      let cc_fundef ({name; vars; body} : K.fundef) : escapes =
+      let names = List.map (fun {name} -> name) fundefs in
+      let cc_fundef ({name; vars; body} : fundef) : escapes =
         let env_var = Id.from_string "env" in
         globals := names;
         let body', escs' = cc_exp [] vars body in
@@ -135,7 +115,7 @@ and cc_exp (escs : escapes) (lcls : locals) : K.exp -> exp * escapes = function
       let val', escs' = cc_val escs lcls val_ in
       (Halt val', escs')
 
-and cc_dec (escs : escapes) (lcls : locals) : K.dec -> dec * escapes * K.id =
+and cc_dec (escs : escapes) (lcls : locals) : dec -> dec * escapes * id =
   function
   | ValDec {name; val_} ->
       let val', escs' = cc_val escs lcls val_ in
@@ -144,67 +124,12 @@ and cc_dec (escs : escapes) (lcls : locals) : K.dec -> dec * escapes * K.id =
       let left', escs1 = cc_val escs lcls left in
       let right', escs2 = cc_val escs1 lcls right in
       (PrimDec {name; left= left'; oper; right= right'}, escs2, name)
+  | ProjDec _ -> failwith "not implemented"
 
-let cc_prog (exp : K.exp) : fundef list * exp =
+let cc_prog (exp : exp) : fundef list * exp =
   fundef_list := [];
   let exp = cc_exp [] [] exp |> fst in
   (!fundef_list, exp)
-
-let parens (outer : int) (prec : int) s =
-  if outer > prec then "(" ^ s ^ ")" else s
-
-let rec ppr_val prec : value -> string = function
-  | Const c -> Core.Syntax.ppr_const c
-  | Var x -> Id.unique_name x
-  | Glb x -> Id.unique_name x
-  | Lam {vars; body} ->
-      let vars = String.concat " " (List.map Id.unique_name vars) in
-      let body = ppr_exp 0 body in
-      parens prec 0 (Printf.sprintf "fun %s -> %s" vars body)
-  | Tuple vals ->
-      let vals = String.concat ", " (List.map (ppr_val 0) vals) in
-      parens prec 0 (Printf.sprintf "(%s)" vals)
-
-and ppr_fundef {name; vars; body} =
-  let vars = String.concat " " (List.map Id.unique_name vars) in
-  let body = ppr_exp 0 body in
-  if vars = "" then Printf.sprintf "%s = %s" (Id.unique_name name) body
-  else Printf.sprintf "%s %s = %s" (Id.unique_name name) vars body
-
-and ppr_exp prec : exp -> string = function
-  | Let {dec; body} ->
-      let dec = ppr_dec dec in
-      let body = ppr_exp 0 body in
-      parens prec 0 (Printf.sprintf "let %s in %s" dec body)
-  | Letrec {fundefs; body} ->
-      let fundefs = String.concat " and " (List.map ppr_fundef fundefs) in
-      parens prec 0 (Printf.sprintf "let rec %s" fundefs)
-  | App {fcn; args} ->
-      let fcn = ppr_val 1 fcn in
-      let args = String.concat " " (List.map (ppr_val 2) args) in
-      parens prec 1 (Printf.sprintf "%s %s" fcn args)
-  | If {cond; then_; else_} ->
-      let cond = ppr_val 0 cond in
-      let then_ = ppr_exp 0 then_ in
-      let else_ = ppr_exp 0 else_ in
-      parens prec 0 (Printf.sprintf "if %s then %s else %s" cond then_ else_)
-  | Halt val_ -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 val_))
-
-and ppr_dec : dec -> string = function
-  | ValDec {name; val_} ->
-      let name = Id.unique_name name in
-      let value = ppr_val 0 val_ in
-      Printf.sprintf "%s = %s" name value
-  | PrimDec {name; left; oper; right} ->
-      let name = Id.unique_name name in
-      let oper = Core.Syntax.ppr_oper oper in
-      let left = ppr_val 0 left in
-      let right = ppr_val 0 right in
-      Printf.sprintf "%s = %s %s %s" name left oper right
-  | ProjDec {name; val_; idx} ->
-      let name = Id.unique_name name in
-      let val_ = ppr_val 0 val_ in
-      Printf.sprintf "%s = #%d %s" name idx val_
 
 and ppr_prog (heaps, exp) =
   let heaps = String.concat "\n" (List.map ppr_fundef heaps) in

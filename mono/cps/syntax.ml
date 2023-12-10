@@ -4,7 +4,12 @@ type oper = Core.Syntax.oper
 
 type const = Core.Syntax.const
 
-type value = Const of const | Var of id | Lam of {vars: id list; body: exp}
+type value =
+  | Const of const
+  | Var of id
+  | Glb of id
+  | Lam of {vars: id list; body: exp}
+  | Tuple of value list
 
 and fundef = {name: id; vars: id list; body: exp}
 
@@ -18,6 +23,7 @@ and exp =
 and dec =
   | ValDec of {name: id; val_: value}
   | PrimDec of {name: id; left: value; oper: oper; right: value}
+  | ProjDec of {name: id; val_: value; idx: int}
 
 let lam var body = Lam {vars= [var]; body}
 
@@ -33,10 +39,14 @@ let parens (outer : int) (prec : int) s =
 let rec ppr_val prec : value -> string = function
   | Const c -> Core.Syntax.ppr_const c
   | Var x -> Id.unique_name x
+  | Glb x -> Id.unique_name x
   | Lam {vars; body} ->
       let vars = String.concat " " (List.map Id.unique_name vars) in
       let body = ppr_exp 0 body in
       parens prec 0 (Printf.sprintf "fun %s -> %s" vars body)
+  | Tuple vals ->
+      let vals = String.concat ", " (List.map (ppr_val 0) vals) in
+      parens prec 0 (Printf.sprintf "(%s)" vals)
 
 and ppr_fundef {name; vars; body} =
   let vars = String.concat " " (List.map Id.unique_name vars) in
@@ -74,5 +84,9 @@ and ppr_dec : dec -> string = function
       let left = ppr_val 0 left in
       let right = ppr_val 0 right in
       Printf.sprintf "%s = %s %s %s" name left oper right
+  | ProjDec {name; val_; idx} ->
+      let name = Id.unique_name name in
+      let val_ = ppr_val 0 val_ in
+      Printf.sprintf "%s = #%d %s" name idx val_
 
 and ppr_prog exp = ppr_exp 0 exp
