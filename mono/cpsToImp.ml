@@ -39,7 +39,7 @@ let rec c2i_exp : K.exp -> I.exp = function
       let ds1, left' = c2i_val left in
       let ds2, right' = c2i_val right in
       let body' = c2i_exp body in
-      I.let_decs (ds1 @ ds2)
+      I.mk_let (ds1 @ ds2)
         (I.If
            { oper=
                List.assoc oper
@@ -50,17 +50,17 @@ let rec c2i_exp : K.exp -> I.exp = function
            ; then_= I.Let {dec= ValDec {name; val_= I.Const 1}; body= body'}
            ; else_= I.Let {dec= ValDec {name; val_= I.Const 0}; body= body'} }
         )
-  | Let {dec; body} -> I.let_decs (c2i_dec dec) (c2i_exp body)
+  | Let {dec; body} -> I.mk_let (c2i_dec dec) (c2i_exp body)
   | Letrec _ -> failwith "unreachable"
   | App {fcn; args} ->
       let ds, fcn' = c2i_val fcn in
       let dss, args' = List.split (List.map c2i_val args) in
-      I.let_decs (ds @ List.concat dss) (App {fcn= fcn'; args= args'})
+      I.mk_let (ds @ List.concat dss) (App {fcn= fcn'; args= args'})
   | If {cond; then_; else_} ->
       let ds, cond' = c2i_val cond in
       let then' = c2i_exp then_ in
       let else' = c2i_exp else_ in
-      I.let_decs ds
+      I.mk_let ds
         (I.If
            { oper= I.Ne
            ; left= cond'
@@ -69,7 +69,7 @@ let rec c2i_exp : K.exp -> I.exp = function
            ; else_= then' } )
   | Halt val_ ->
       let ds, val' = c2i_val val_ in
-      I.let_decs ds (Halt val')
+      I.mk_let ds (Halt val')
 
 and c2i_dec : K.dec -> I.dec list = function
   | ValDec {name; val_} ->

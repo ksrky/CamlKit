@@ -40,9 +40,9 @@ let compile (path : string) : unit =
   let coresyn = LangToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
-  Cps.Syntax.print_prog cpssyn;
+  (* Cps.Syntax.print_prog cpssyn; *)
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in
-  (* print_endline (Cps.ClosConv.ppr_prog cpssyn'); *)
+  (* Cps.ClosConv.print_prog cpssyn'; *)
   let impsyn = CpsToImp.c2i_prog cpssyn' in
   (* Imp.Syntax.print_prog impsyn; *)
   let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in

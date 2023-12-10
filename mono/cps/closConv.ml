@@ -122,3 +122,13 @@ let cc_prog (exp : exp) : fundef list * exp =
   fundef_list := [];
   let exp = cc_exp [] [] exp |> fst in
   (!fundef_list, exp)
+
+open Format
+
+let pp_print_prog ppf (fundefs, exp) =
+  fprintf ppf "letrec@;<1 2>@[<v 0>%a@]@.in@;<1 2>@[<v 0>%a@]@."
+    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@ and ") pp_print_fundef)
+    fundefs pp_print_exp exp;
+  print_newline ()
+
+let print_prog = pp_print_prog std_formatter

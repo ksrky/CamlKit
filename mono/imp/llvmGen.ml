@@ -145,5 +145,5 @@ let codegen (modid : string) ((heaps, exp) : prog) : llmodule =
   codegen_main llmod exp;
   llmod
 
-let format (path : string) (llmod : llmodule) : unit =
+  let format (path : string) (llmod : llmodule) : unit =
   Llvm.print_module (Filename.remove_extension path ^ ".ll") llmod

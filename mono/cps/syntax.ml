@@ -77,7 +77,9 @@ and pp_print_exp ppf = function
       fprintf ppf "@[<2>let@ %a@]@ in@ %a" pp_print_dec dec pp_print_exp body
   | Letrec {fundefs; body} ->
       fprintf ppf "let rec@ %a@ in@ %a"
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@ and ") ppr_fundef)
+        (pp_print_list
+           ~pp_sep:(fun ppf () -> fprintf ppf "@ and ")
+           pp_print_fundef )
         fundefs pp_print_exp body
   | App {fcn; args} ->
       fprintf ppf "@[<2>%a@ %a@]" (pp_print_val true) fcn
@@ -90,7 +92,7 @@ and pp_print_exp ppf = function
         pp_print_exp then_ pp_print_exp else_
   | Halt val_ -> fprintf ppf "halt %a" (pp_print_val true) val_
 
-and ppr_fundef ppf {name; vars; body} =
+and pp_print_fundef ppf {name; vars; body} =
   fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id name
     (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_id)
     vars pp_print_exp body

@@ -25,7 +25,7 @@ type heap =
 
 type prog = heap list * exp
 
-let let_decs decs body =
+let mk_let decs body =
   List.fold_right (fun dec body -> Let {dec; body}) decs body
 
 open Format
