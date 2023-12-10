@@ -34,7 +34,7 @@ let parens (outer : int) (prec : int) s =
 let rec ppr_val prec : value -> string = function
   | Const i -> Printf.sprintf "%i" i
   | Var x -> Id.unique_name x
-  | Glb x -> Id.unique_name x
+  | Glb x -> "$" ^ Id.unique_name x
 
 and ppr_exp prec : exp -> string = function
   | Let {dec; body} ->

@@ -33,7 +33,7 @@ let rec hoist_val : CC.value -> value = function
   | Var x -> Var x
   | Glb x -> Glb x
   | Lam {vars; body} ->
-      let name = Id.from_string "lamtmp" in
+      let name = Id.from_string "func" in
       append_code {name; vars; body= hoist_exp body};
       Glb name
   | Tuple vals -> Tuple (List.map hoist_val vals)

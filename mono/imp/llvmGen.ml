@@ -5,7 +5,7 @@ let context : llcontext = global_context ()
 
 let builder : llbuilder = builder context
 
-let int_type : lltype = i64_type context
+let int_type : lltype = i32_type context
 
 let named_values : (id, llvalue) Hashtbl.t = Hashtbl.create 100
 
@@ -80,8 +80,9 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
       let elm_val = build_load elm_ptr "elmtmp" builder in
       Hashtbl.add named_values name elm_val
   | MallocDec {name; len} ->
-      let tys = Array.make len int_type in
-      let tuple_val = build_alloca (struct_type context tys) "envtmp" builder in
+      let tuple_val =
+        build_array_alloca int_type (const_int int_type len) "envtmp" builder
+      in
       Hashtbl.add named_values name tuple_val
   | UpdateDec {name; var; idx; val_} ->
       let tuple_val = Hashtbl.find named_values var in
