@@ -2,11 +2,6 @@ open Syntax
 
 type prog = fundef list * exp
 
-let ppr_prog (heaps, exp) =
-  let heaps = String.concat "\n" (List.map ppr_fundef heaps) in
-  let exp = ppr_exp 0 exp in
-  Printf.sprintf "%s\n%s" heaps exp
-
 type escapes = id list
 
 type locals = id list

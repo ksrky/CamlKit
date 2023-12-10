@@ -1,8 +1,10 @@
+module C = Core.Syntax
+
 type id = Id.t
 
-type oper = Core.Syntax.oper
+type oper = C.oper
 
-type const = Core.Syntax.const
+type const = C.const
 
 type value =
   | Const of const
@@ -46,57 +48,66 @@ let mk_projs val_ (names : id list) : dec list =
 let parens (outer : int) (prec : int) s =
   if outer > prec then "(" ^ s ^ ")" else s
 
-let rec ppr_val prec : value -> string = function
-  | Const c -> Core.Syntax.ppr_const c
-  | Var x -> Id.unique_name x
-  | Glb x -> Id.unique_name x
+open Format
+
+let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
+
+let pp_print_const ppf = function
+  | Core.Syntax.Int i -> fprintf ppf "%d" i
+  | Core.Syntax.Nil -> fprintf ppf "nil"
+
+let rec pp_print_val paren ppf = function
+  | Const c -> pp_print_const ppf c
+  | Var x -> pp_print_id ppf x
+  | Glb x -> fprintf ppf "$%s" (Id.unique_name x)
   | Lam {vars; body} ->
-      let vars = String.concat " " (List.map Id.unique_name vars) in
-      let body = ppr_exp 0 body in
-      parens prec 0 (Printf.sprintf "fun %s -> %s" vars body)
+      fprintf ppf
+        (if paren then "(@[<1>fun %a ->@ %a@])" else "@[<1>fun %a ->@ %a@]")
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_id)
+        vars pp_print_exp body
   | Tuple vals ->
-      let vals = String.concat ", " (List.map (ppr_val 0) vals) in
-      parens prec 0 (Printf.sprintf "(%s)" vals)
+      fprintf ppf "(%a)"
+        (pp_print_list
+           ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
+           (pp_print_val false) )
+        vals
 
-and ppr_fundef {name; vars; body} =
-  let vars = String.concat " " (List.map Id.unique_name vars) in
-  let body = ppr_exp 0 body in
-  if vars = "" then Printf.sprintf "%s = %s" (Id.unique_name name) body
-  else Printf.sprintf "%s %s = %s" (Id.unique_name name) vars body
-
-and ppr_exp prec : exp -> string = function
+and pp_print_exp ppf = function
   | Let {dec; body} ->
-      let dec = ppr_dec dec in
-      let body = ppr_exp 0 body in
-      parens prec 0 (Printf.sprintf "let %s in %s" dec body)
+      fprintf ppf "@[<2>let@ %a@]@ in@ %a" pp_print_dec dec pp_print_exp body
   | Letrec {fundefs; body} ->
-      let fundefs = String.concat " and " (List.map ppr_fundef fundefs) in
-      parens prec 0 (Printf.sprintf "let rec %s" fundefs)
+      fprintf ppf "let rec@ %a@ in@ %a"
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@ and ") ppr_fundef)
+        fundefs pp_print_exp body
   | App {fcn; args} ->
-      let fcn = ppr_val 1 fcn in
-      let args = String.concat " " (List.map (ppr_val 2) args) in
-      parens prec 1 (Printf.sprintf "%s %s" fcn args)
+      fprintf ppf "@[<2>%a@ %a@]" (pp_print_val true) fcn
+        (pp_print_list
+           ~pp_sep:(fun ppf () -> fprintf ppf " ")
+           (pp_print_val true) )
+        args
   | If {cond; then_; else_} ->
-      let cond = ppr_val 0 cond in
-      let then_ = ppr_exp 0 then_ in
-      let else_ = ppr_exp 0 else_ in
-      parens prec 0 (Printf.sprintf "if %s then %s else %s" cond then_ else_)
-  | Halt val_ -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 0 val_))
+      fprintf ppf "if %a then@ %a@]@;@[<v 2>else@ %a@]" (pp_print_val true) cond
+        pp_print_exp then_ pp_print_exp else_
+  | Halt val_ -> fprintf ppf "halt %a" (pp_print_val true) val_
 
-and ppr_dec : dec -> string = function
+and ppr_fundef ppf {name; vars; body} =
+  fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id name
+    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_id)
+    vars pp_print_exp body
+
+and pp_print_dec ppf : dec -> unit = function
   | ValDec {name; val_} ->
-      let name = Id.unique_name name in
-      let value = ppr_val 0 val_ in
-      Printf.sprintf "%s = %s" name value
+      fprintf ppf "%a =@ %a" pp_print_id name (pp_print_val false) val_
   | PrimDec {name; left; oper; right} ->
-      let name = Id.unique_name name in
-      let oper = Core.Syntax.ppr_oper oper in
-      let left = ppr_val 0 left in
-      let right = ppr_val 0 right in
-      Printf.sprintf "%s = %s %s %s" name left oper right
+      fprintf ppf "%a =@ %a %s %a" pp_print_id name (pp_print_val true) left
+        (List.assoc oper
+           [ (C.Add, "+"); (C.Sub, "-"); (C.Mul, "*"); (C.Div, "/"); (C.Eq, "=")
+           ; (C.Ne, "<>"); (C.Lt, "<"); (C.Le, "<="); (C.Gt, ">"); (C.Ge, ">=")
+           ] )
+        (pp_print_val true) right
   | ProjDec {name; val_; idx} ->
-      let name = Id.unique_name name in
-      let val_ = ppr_val 0 val_ in
-      Printf.sprintf "%s = #%d %s" name idx val_
+      fprintf ppf "%a =@ %a.%i" pp_print_id name (pp_print_val true) val_ idx
 
-and ppr_prog exp = ppr_exp 0 exp
+let pp_print_prog ppf exp = pp_print_exp ppf exp; print_newline ()
+
+let print_prog exp = pp_print_prog std_formatter exp

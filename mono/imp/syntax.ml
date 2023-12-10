@@ -55,7 +55,7 @@ and pp_print_exp ppf : exp -> unit = function
         | Gt -> ">"
         | Ge -> ">=" )
         pp_print_val right pp_print_exp then_ pp_print_exp else_
-  | Halt v -> fprintf ppf "halt %a" pp_print_val v
+  | Halt val_ -> fprintf ppf "halt %a" pp_print_val val_
 
 and pp_print_dec ppf : dec -> unit = function
   | ValDec {name; val_} ->
