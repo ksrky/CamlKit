@@ -25,13 +25,23 @@ and dec =
   | PrimDec of {name: id; left: value; oper: oper; right: value}
   | ProjDec of {name: id; val_: value; idx: int}
 
-let lam var body = Lam {vars= [var]; body}
+type prog = exp
 
-let lams vars body = Lam {vars; body}
+let mk_vars xs = List.map (fun x -> Var x) xs
 
-let app fcn arg = App {fcn; args= [arg]}
+let mk_lam var body = Lam {vars= [var]; body}
 
-let apps fcn args = App {fcn; args}
+let mk_lams vars body = Lam {vars; body}
+
+let mk_app fcn arg = App {fcn; args= [arg]}
+
+let mk_apps fcn args = App {fcn; args}
+
+let mk_let (decs : dec list) (body : exp) : exp =
+  List.fold_right (fun d e -> Let {dec= d; body= e}) decs body
+
+let mk_projs val_ (names : id list) : dec list =
+  List.mapi (fun i name -> ProjDec {name; val_; idx= i + 1}) names
 
 let parens (outer : int) (prec : int) s =
   if outer > prec then "(" ^ s ^ ")" else s

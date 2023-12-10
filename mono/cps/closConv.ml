@@ -2,17 +2,14 @@ open Syntax
 
 type prog = fundef list * exp
 
+let ppr_prog (heaps, exp) =
+  let heaps = String.concat "\n" (List.map ppr_fundef heaps) in
+  let exp = ppr_exp 0 exp in
+  Printf.sprintf "%s\n%s" heaps exp
+
 type escapes = id list
 
 type locals = id list
-
-let mk_vars = List.map (fun x -> Var x)
-
-let proj_decs val_ (names : id list) : dec list =
-  List.mapi (fun i name -> ProjDec {name; val_; idx= i + 1}) names
-
-let mk_let (decs : dec list) (body : exp) : exp =
-  List.fold_right (fun d e -> Let {dec= d; body= e}) decs body
 
 let remove_dup xs =
   List.fold_right (fun x xs -> if List.mem x xs then xs else x :: xs) xs []
@@ -48,13 +45,13 @@ let rec cc_val (escs : escapes) (lcls : locals) : value -> value * escapes =
       let name = Id.from_string "func" in
       if escs' = [] then (
         append_fundef
-          {name; vars; body= mk_let (proj_decs (Var env_var) escs') body'};
+          {name; vars; body= mk_let (mk_projs (Var env_var) escs') body'};
         (Glb name, escs) )
       else (
         append_fundef
           { name
           ; vars= env_var :: vars
-          ; body= mk_let (proj_decs (Var env_var) escs') body' };
+          ; body= mk_let (mk_projs (Var env_var) escs') body' };
         ( Tuple [Glb name; Tuple (mk_vars escs')]
         , remove_dup (escs @ escs') // lcls ) )
   | Tuple _ -> failwith "not implemented"
@@ -84,7 +81,7 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
         append_fundef
           { name
           ; vars= env_var :: vars
-          ; body= mk_let (proj_decs (Var env_var) escs') body' };
+          ; body= mk_let (mk_projs (Var env_var) escs') body' };
         escs'
       in
       let escs' = List.concat (List.map cc_fundef fundefs) in
@@ -102,7 +99,7 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
           let env_var = Id.from_string "env" in
           ( mk_let
               ( ValDec {name= clos_var; val_= fcn'}
-              :: proj_decs (Var clos_var) [code_var; env_var] )
+              :: mk_projs (Var clos_var) [code_var; env_var] )
               (App {fcn= Var code_var; args= Var env_var :: args'})
           , escs2 )
       | _ -> (App {fcn= fcn'; args= args'}, escs2) )
@@ -130,8 +127,3 @@ let cc_prog (exp : exp) : fundef list * exp =
   fundef_list := [];
   let exp = cc_exp [] [] exp |> fst in
   (!fundef_list, exp)
-
-and ppr_prog (heaps, exp) =
-  let heaps = String.concat "\n" (List.map ppr_fundef heaps) in
-  let exp = ppr_exp 0 exp in
-  Printf.sprintf "%s\n%s" heaps exp
