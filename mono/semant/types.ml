@@ -1,4 +1,4 @@
-open Language.Syntax
+open Abstract.Syntax
 
 let ( --> ) : ty list -> ty -> ty =
   List.fold_right (fun ty1 ty2 -> FunTy (ty1, ty2))

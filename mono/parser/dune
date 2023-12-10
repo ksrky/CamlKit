@@ -1,6 +1,6 @@
 (library
  (name parser)
- (libraries common language)
+ (libraries common abstract)
  (flags -open Common))
 
 (env

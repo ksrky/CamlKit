@@ -1,7 +1,7 @@
-module L = Language.Syntax
+module A = Abstract.Syntax
 module C = Core.Syntax
 
-let rec l2c_exp : L.aexp -> C.exp = function
+let rec l2c_exp : A.aexp -> C.exp = function
   | VarAExp x -> Var x
   | NilAExp -> Const Nil
   | BoolAExp true -> Const (Int 1)
@@ -31,7 +31,7 @@ let rec l2c_exp : L.aexp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun (L.ABind {name; params; body= body, _}) ->
+             (fun (A.ABind {name; params; body= body, _}) ->
                (name, C.lams (List.map fst params) (l2c_exp body)) )
              bnds )
       in
@@ -40,7 +40,7 @@ let rec l2c_exp : L.aexp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun (L.ABind {name; params; body= body, _}) ->
+             (fun (A.ABind {name; params; body= body, _}) ->
                (name, C.lams (List.map fst params) (l2c_exp body)) )
              bnds )
       in

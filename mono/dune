@@ -2,7 +2,7 @@
  (name mono)
  (libraries
   common
-  language
+  abstract
   parser
   semant
   core

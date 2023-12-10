@@ -1,5 +1,5 @@
 open Mono
-open Language.Syntax
+open Abstract.Syntax
 
 let%test _ = Parse.parse_line "42" = IntExp 42
 
@@ -15,7 +15,7 @@ let%test _ =
 let%test _ =
   ppr_exp (Parse.parse_line "let f x y = y in f 1") = "let f x y = y in f 1"
 
-let%test _ = Language.Syntax.ppr_exp (Parse.parse_line "- f x") = "0 - f x"
+let%test _ = ppr_exp (Parse.parse_line "- f x") = "0 - f x"
 
 let%test _ =
   ppr_exp (Parse.parse_line "let rec o x = e (x-1) and e x = o (x-1) in o 11")

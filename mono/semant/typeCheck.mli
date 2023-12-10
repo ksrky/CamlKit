@@ -1,1 +1,1 @@
-val check_prog : Env.env -> Language.Syntax.exp -> Language.Syntax.aexp
+val check_prog : Env.env -> Abstract.Syntax.exp -> Abstract.Syntax.aexp

@@ -1,4 +1,4 @@
-type binding = ValBind of Language.Syntax.ty
+type binding = ValBind of Abstract.Syntax.ty
 
 type env
 
@@ -10,8 +10,8 @@ val extend : Id.t -> binding -> env -> env
 
 val extend_list : (Id.t * binding) list -> env -> env
 
-val extend_vals : Id.t list -> Language.Syntax.ty list -> env -> env
+val extend_vals : Id.t list -> Abstract.Syntax.ty list -> env -> env
 
 val lookup : Id.t -> env -> binding
 
-val lookup_type : Id.t -> env -> Language.Syntax.ty
+val lookup_type : Id.t -> env -> Abstract.Syntax.ty

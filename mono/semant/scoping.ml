@@ -1,4 +1,4 @@
-module L = Language.Syntax
+module A = Abstract.Syntax
 
 type scope = (string * Id.t) list
 
@@ -15,8 +15,8 @@ let scoping id sc =
       Error.error ("Not in scope " ^ Id.name id);
       id
 
-let rec scoping_exp (sc : scope) : L.exp -> L.exp =
-  let rec scexp : L.exp -> L.exp = function
+let rec scoping_exp (sc : scope) : A.exp -> A.exp =
+  let rec scexp : A.exp -> A.exp = function
     | VarExp id -> VarExp (scoping id sc)
     | NilExp -> NilExp
     | BoolExp b -> BoolExp b
@@ -29,16 +29,16 @@ let rec scoping_exp (sc : scope) : L.exp -> L.exp =
     | IfExp {cond; then_; else_} ->
         IfExp {cond= scexp cond; then_= scexp then_; else_= scexp else_}
     | LetExp {bnds; body} ->
-        let sc' = extend_list (List.map (fun (L.Bind d) -> d.name) bnds) sc in
+        let sc' = extend_list (List.map (fun (A.Bind d) -> d.name) bnds) sc in
         LetExp {bnds= scoping_bnds sc bnds; body= scoping_exp sc' body}
     | LetrecExp {bnds; body} ->
-        let sc' = extend_list (List.map (fun (L.Bind d) -> d.name) bnds) sc in
+        let sc' = extend_list (List.map (fun (A.Bind d) -> d.name) bnds) sc in
         LetrecExp {bnds= scoping_bnds sc' bnds; body= scoping_exp sc' body}
   in
   scexp
 
-and scoping_bnds (sc : scope) (bnds : L.bnd list) : L.bnd list =
-  let scbnd (Bind {name; params; body} : L.bnd) : L.bnd =
+and scoping_bnds (sc : scope) (bnds : A.bnd list) : A.bnd list =
+  let scbnd (Bind {name; params; body} : A.bnd) : A.bnd =
     let sc' = extend_list params sc in
     Bind {name; params; body= scoping_exp sc' body}
   in

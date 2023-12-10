@@ -1,5 +1,5 @@
-module L = Language.Syntax
+module A = Abstract.Syntax
 
-val unify : L.ty -> L.ty -> unit
+val unify : A.ty -> A.ty -> unit
 
-val unify_funs : 'a list -> L.ty -> L.ty list * L.ty
+val unify_funs : 'a list -> A.ty -> A.ty list * A.ty

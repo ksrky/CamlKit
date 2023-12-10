@@ -1,6 +1,6 @@
 (library
  (name core)
- (libraries common language)
+ (libraries common abstract)
  (flags -open Common))
 
 (env

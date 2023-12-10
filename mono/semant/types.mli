@@ -1,4 +1,4 @@
-open Language.Syntax
+open Abstract.Syntax
 
 val ( --> ) : ty list -> ty -> ty
 

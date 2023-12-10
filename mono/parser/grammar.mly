@@ -1,5 +1,5 @@
 %{
-open Language.Syntax
+open Abstract.Syntax
 %}
 
 %token EOF

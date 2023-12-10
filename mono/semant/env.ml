@@ -1,4 +1,4 @@
-type binding = ValBind of Language.Syntax.ty
+type binding = ValBind of Abstract.Syntax.ty
 
 type env = binding Id.Table.t
 
@@ -17,5 +17,5 @@ let lookup (id : Id.t) (env : env) : binding =
   | Some bind -> bind
   | None -> raise (Out_of_scope id)
 
-let lookup_type id env : Language.Syntax.ty =
+let lookup_type id env : Abstract.Syntax.ty =
   match lookup id env with ValBind ty -> ty

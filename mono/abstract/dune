@@ -1,5 +1,5 @@
 (library
- (name language)
+ (name abstract)
  (libraries common)
  (flags -open Common))
 

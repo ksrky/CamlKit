@@ -1,9 +1,9 @@
-let semant (abssyn : Language.Syntax.exp) : Language.Syntax.aexp =
-  (* print_endline (Language.Syntax.ppr_exp abssyn); *)
+let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aexp =
+  (* print_endline (Abstract.Syntax.ppr_exp abssyn); *)
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.empty abssyn in
-  (* print_endline (Language.Syntax.ppr_exp abssyn'); *)
+  (* print_endline (Abstract.Syntax.ppr_exp abssyn'); *)
   let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  (* print_endline (Language.Syntax.ppr_aexp 0 _aabssyn); *)
+  (* print_endline (Abstract.Syntax.ppr_aexp 0 _aabssyn); *)
   aabssyn
 
 let run_secd instrs =
@@ -15,9 +15,9 @@ let run_secd instrs =
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =
   let abssyn = Parse.parse path in
-  let abssyn' = semant abssyn in
+  let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = LangToCore.l2c_exp abssyn' in
+  let coresyn = AbsToCore.l2c_exp aabssyn in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
@@ -25,9 +25,9 @@ let run (path : string) =
 (** [eval inp] evaluates string [inp] on the virtual machine. *)
 let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
-  let abssyn' = semant abssyn in
+  let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = LangToCore.l2c_exp abssyn' in
+  let coresyn = AbsToCore.l2c_exp aabssyn in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
@@ -37,7 +37,7 @@ let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = LangToCore.l2c_exp abssyn' in
+  let coresyn = AbsToCore.l2c_exp abssyn' in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
   (* Cps.Syntax.print_prog cpssyn; *)
