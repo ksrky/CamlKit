@@ -28,80 +28,73 @@ type prog = heap list * exp
 let let_decs decs body =
   List.fold_right (fun dec body -> Let {dec; body}) decs body
 
-let parens (outer : int) (prec : int) s =
-  if outer > prec then "(" ^ s ^ ")" else s
+open Format
 
-let rec ppr_val prec : value -> string = function
-  | Const i -> Printf.sprintf "%i" i
-  | Var x -> Id.unique_name x
-  | Glb x -> "$" ^ Id.unique_name x
+let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
 
-and ppr_exp prec : exp -> string = function
+let rec pp_print_val ppf : value -> unit = function
+  | Const i -> fprintf ppf "%i" i
+  | Var x -> pp_print_id ppf x
+  | Glb x -> fprintf ppf "$%s" (Id.unique_name x)
+
+and pp_print_exp ppf : exp -> unit = function
   | Let {dec; body} ->
-      let dec = ppr_dec dec in
-      let body = ppr_exp 0 body in
-      parens prec 0 (Printf.sprintf "let %s in\n%s" dec body)
+      fprintf ppf "let %a in@ %a" pp_print_dec dec pp_print_exp body
   | App {fcn; args} ->
-      let fcn = ppr_val 1 fcn in
-      let args = List.map (ppr_val 0) args in
-      parens prec 1 (Printf.sprintf "%s(%s)" fcn (String.concat ", " args))
+      fprintf ppf "%a(%a)" pp_print_val fcn
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_val)
+        args
   | If {left; oper; right; then_; else_} ->
-      let left = ppr_val 0 left in
-      let oper =
-        match oper with
+      fprintf ppf "@[<v 2>if %a %s %a then@ %a@]@;@[<v 2>else@ %a@]"
+        pp_print_val left
+        ( match oper with
         | Eq -> "="
         | Ne -> "<>"
         | Lt -> "<"
         | Le -> "<="
         | Gt -> ">"
-        | Ge -> ">="
-      in
-      let right = ppr_val 0 right in
-      let then_ = ppr_exp 0 then_ in
-      let else_ = ppr_exp 0 else_ in
-      parens prec 0
-        (Printf.sprintf "if %s %s %s\n  then %s\n  else %s" left oper right
-           then_ else_ )
-  | Halt v -> parens prec 0 (Printf.sprintf "halt %s" (ppr_val 2 v))
+        | Ge -> ">=" )
+        pp_print_val right pp_print_exp then_ pp_print_exp else_
+  | Halt v -> fprintf ppf "halt %a" pp_print_val v
 
-and ppr_dec : dec -> string = function
+and pp_print_dec ppf : dec -> unit = function
   | ValDec {name; val_} ->
-      let name = Id.unique_name name in
-      let val_ = ppr_val 0 val_ in
-      Printf.sprintf "%s = %s" name val_
+      fprintf ppf "%a = %a" pp_print_id name pp_print_val val_
   | PrimDec {name; left; oper; right} ->
-      let name = Id.unique_name name in
-      let left = ppr_val 0 left in
-      let oper =
-        match oper with Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/"
-      in
-      let right = ppr_val 0 right in
-      Printf.sprintf "%s = %s %s %s" name left oper right
+      fprintf ppf "%a = %a %s %a" pp_print_id name pp_print_val left
+        (match oper with Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/")
+        pp_print_val right
   | ProjDec {name; val_; idx} ->
-      let name = Id.unique_name name in
-      let val_ = ppr_val 0 val_ in
-      Printf.sprintf "%s = %s.%i" name val_ idx
-  | MallocDec {name; len} ->
-      let name = Id.unique_name name in
-      Printf.sprintf "%s = malloc %i" name len
+      fprintf ppf "%a = %a.%i" pp_print_id name pp_print_val val_ idx
+  | MallocDec {name; len} -> fprintf ppf "%a = malloc(%i)" pp_print_id name len
   | UpdateDec {name; var; idx; val_} ->
-      let name = Id.unique_name name in
-      let var = Id.unique_name var in
-      let val_ = ppr_val 0 val_ in
-      Printf.sprintf "%s = %s.%i <- %s" name var idx val_
+      fprintf ppf "%a = %a.%i <- %a" pp_print_id name pp_print_id var idx
+        pp_print_val val_
 
-let ppr_heap : heap -> string = function
+let pp_print_heap ppf : heap -> unit = function
   | Code {name; vars; body} ->
-      let name = Id.unique_name name in
-      let vars = List.map Id.unique_name vars in
-      let body = ppr_exp 0 body in
-      Printf.sprintf "%s = code(%s).\n  %s" name (String.concat ", " vars) body
+      fprintf ppf "%a = " pp_print_id name;
+      open_box 0;
+      fprintf ppf "code(%a).@;<1 2>"
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_id)
+        vars;
+      fprintf ppf "@[<v 0>%a@]" pp_print_exp body;
+      close_box ()
   | Tuple {name; vals} ->
-      let name = Id.unique_name name in
-      let vals = List.map (ppr_val 0) vals in
-      Printf.sprintf "%s = (%s)" name (String.concat ", " vals)
+      fprintf ppf "%a = " pp_print_id name;
+      open_box 0;
+      fprintf ppf "tuple(%a)"
+        (pp_print_list
+           ~pp_sep:(fun ppf () -> fprintf ppf ",@;<1 1>")
+           pp_print_val )
+        vals;
+      close_box ()
 
-let ppr_prog (heaps, exp) =
-  let heaps = List.map ppr_heap heaps in
-  let exp = ppr_exp 0 exp in
-  Printf.sprintf "letrec\n  %s\nin\n  %s" (String.concat "\n  " heaps) exp
+let pp_print_heaps : formatter -> heap list -> unit =
+  pp_print_list pp_print_heap
+
+let pp_print_prog ppf (heaps, exp) : unit =
+  fprintf ppf "letrec@;<1 2>@[<v 0>%a@]@.in@;<1 2>@[<v 0>%a@]@." pp_print_heaps
+    heaps pp_print_exp exp
+
+let print_prog = pp_print_prog std_formatter

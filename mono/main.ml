@@ -46,24 +46,6 @@ let compile (path : string) : unit =
   let cpssyn2 = Cps.Hoisting.hoist_prog cpssyn1 in
   (* print_endline (Cps.Hoisting.ppr_prog cpssyn2); *)
   let impsyn = CpsToImp.c2i_prog cpssyn2 in
-  (* print_endline (Imp.Syntax.ppr_prog impsyn); *)
+  (* Imp.Syntax.print_prog impsyn; *)
   let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
-  CodeGen.format path llmod
-
-(* let cgcodes = CoreToCg.c2cg_exp coresyn' in
-    (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
-    let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
-    CodeGen.format path llmod *)
-
-(* let compile (path : string) : unit =
-     let abssyn = Parse.parse path in
-     let abssyn' = semant abssyn in
-     if !Semant.Error.has_error then exit 1;
-     let coresyn = LangToCore.l2c_exp abssyn' in
-     (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
-     let coresyn' = Core.ClosConv.cc_prog coresyn in
-     (* print_endline (Core.ClosConv.ppr_exp coresyn') *)
-     let cgcodes = CoreToCg.c2cg_exp coresyn' in
-     (* print_endline (CodeGen.Syntax.ppr_codes cgcodes); *)
-     let llmod = CodeGen.codegen (Filename.basename path) cgcodes in
-     CodeGen.format path llmod *)
+  Imp.LlvmGen.format path llmod
