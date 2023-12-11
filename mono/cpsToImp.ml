@@ -2,12 +2,12 @@ module K = Cps.Syntax
 module CC = Cps.ClosConv
 module I = Imp.Syntax
 
-let c2i_const : K.const -> int = function Int i -> i | Nil -> 0
+let c2i_const : K.const -> I.const = function Int i -> I32 i | Nil -> I32 0
 
 let rec c2i_val : K.value -> I.dec list * I.value = function
   | Const c -> ([], Const (c2i_const c))
   | Var x -> ([], Var x)
-  | Glb x -> ([], Glb x)
+  | Glb f -> ([], Glb f)
   | Lam _ -> failwith "unreachable"
   | Tuple vals ->
       let var0 = Id.from_string "y0" in
@@ -19,7 +19,7 @@ let rec c2i_val : K.value -> I.dec list * I.value = function
       in
       let decs = ref [] in
       let rec mk_tuple : int -> I.dec list = function
-        | 0 -> [MallocDec {name= var0; len= List.length vals}]
+        | 0 -> [MallocDec {name= var0; tys= failwith "tmp"}]
         | i ->
             let di, vi = c2i_val (List.nth vals (i - 1)) in
             decs := di @ !decs;
@@ -47,8 +47,8 @@ let rec c2i_exp : K.exp -> I.exp = function
                  ; (Ge, I.Ge) ]
            ; left= left'
            ; right= right'
-           ; then_= I.Let {dec= ValDec {name; val_= I.Const 1}; body= body'}
-           ; else_= I.Let {dec= ValDec {name; val_= I.Const 0}; body= body'} }
+           ; then_= Let {dec= ValDec {name; val_= Const (I1 1)}; body= body'}
+           ; else_= Let {dec= ValDec {name; val_= Const (I1 0)}; body= body'} }
         )
   | Let {dec; body} -> I.mk_let (c2i_dec dec) (c2i_exp body)
   | Letrec _ -> failwith "unreachable"
@@ -64,7 +64,7 @@ let rec c2i_exp : K.exp -> I.exp = function
         (I.If
            { oper= I.Ne
            ; left= cond'
-           ; right= I.Const 0
+           ; right= I.Const (I.I1 0)
            ; then_= else'
            ; else_= then' } )
   | Halt val_ ->
@@ -88,10 +88,12 @@ and c2i_dec : K.dec -> I.dec list = function
             ; right= right' } ]
   | ProjDec {name; val_; idx} ->
       let ds, val' = c2i_val val_ in
-      ds @ [ProjDec {name; val_= val'; idx}]
+      ds @ [SubscrDec {name; val_= val'; idx}]
 
 let c2i_heap ({name; vars; body} : K.fundef) : I.heap =
-  I.Code {name; vars; body= c2i_exp body}
+  let params = failwith "tmp" in
+  let ret_ty = failwith "tmp" in
+  I.Code {name; params; ret_ty; body= c2i_exp body}
 
 let c2i_prog ((heaps, exp) : CC.prog) : I.prog =
   (List.map c2i_heap heaps, c2i_exp exp)

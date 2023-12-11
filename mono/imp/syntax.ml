@@ -1,6 +1,15 @@
 type id = Id.t
 
-type value = Const of int | Var of id | Glb of id
+type ty =
+  | I1Ty
+  | I32Ty
+  | PtrTy of ty
+  | FunTy of ty * ty list
+  | StrctTy of ty list
+
+type const = I1 of int | I32 of int
+
+type value = Const of const | Var of id | Glb of id
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -11,8 +20,8 @@ and exp =
 and dec =
   | ValDec of {name: id; val_: value}
   | PrimDec of {name: id; left: value; oper: arithop; right: value}
-  | ProjDec of {name: id; val_: value; idx: int}
-  | MallocDec of {name: id; len: int}
+  | SubscrDec of {name: id; val_: value; idx: int}
+  | MallocDec of {name: id; tys: ty list}
   | UpdateDec of {name: id; var: id; idx: int; val_: value}
 
 and arithop = Add | Sub | Mul | Div
@@ -20,7 +29,7 @@ and arithop = Add | Sub | Mul | Div
 and relop = Eq | Ne | Lt | Le | Gt | Ge
 
 type heap =
-  | Code of {name: id; vars: id list; body: exp}
+  | Code of {name: id; params: (id * ty) list; ret_ty: ty; body: exp}
   | Tuple of {name: id; vals: value list}
 
 type prog = heap list * exp
@@ -32,8 +41,31 @@ open Format
 
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
 
+let pp_print_ty ppf : ty -> unit =
+  let rec pp_print_ty ppf : ty -> unit = function
+    | I1Ty -> fprintf ppf "i1"
+    | I32Ty -> fprintf ppf "i32"
+    | PtrTy ty -> fprintf ppf "%a*" pp_print_ty ty
+    | FunTy (res_ty, arg_tys) ->
+        fprintf ppf "%a(%a)" pp_print_ty res_ty
+          (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
+          arg_tys
+    | StrctTy tys ->
+        fprintf ppf "{%a}"
+          (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
+          tys
+  in
+  pp_print_ty ppf
+
+let pp_print_param ppf (id, ty) =
+  fprintf ppf "%a: %a" pp_print_id id pp_print_ty ty
+
+let pp_print_const ppf : const -> unit = function
+  | I1 i -> fprintf ppf "%i" i
+  | I32 i -> fprintf ppf "%i" i
+
 let rec pp_print_val ppf : value -> unit = function
-  | Const i -> fprintf ppf "%i" i
+  | Const c -> fprintf ppf "%a" pp_print_const c
   | Var x -> pp_print_id ppf x
   | Glb x -> fprintf ppf "$%s" (Id.unique_name x)
 
@@ -64,20 +96,21 @@ and pp_print_dec ppf : dec -> unit = function
       fprintf ppf "%a = %a %s %a" pp_print_id name pp_print_val left
         (match oper with Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/")
         pp_print_val right
-  | ProjDec {name; val_; idx} ->
-      fprintf ppf "%a = %a.%i" pp_print_id name pp_print_val val_ idx
-  | MallocDec {name; len} -> fprintf ppf "%a = malloc(%i)" pp_print_id name len
+  | SubscrDec {name; val_; idx} ->
+      fprintf ppf "%a = %a[%i]" pp_print_id name pp_print_val val_ idx
+  | MallocDec {name; tys} ->
+      fprintf ppf "%a = malloc(%a)" pp_print_id name pp_print_ty (StrctTy tys)
   | UpdateDec {name; var; idx; val_} ->
-      fprintf ppf "%a = %a.%i <- %a" pp_print_id name pp_print_id var idx
+      fprintf ppf "%a = %a[%i] <- %a" pp_print_id name pp_print_id var idx
         pp_print_val val_
 
 let pp_print_heap ppf : heap -> unit = function
-  | Code {name; vars; body} ->
+  | Code {name; params; ret_ty; body} ->
       fprintf ppf "%a = " pp_print_id name;
       open_box 0;
-      fprintf ppf "code(%a).@;<1 2>"
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_id)
-        vars;
+      fprintf ppf "code(%a): %a.@;<1 2>"
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_param)
+        params pp_print_ty ret_ty;
       fprintf ppf "@[<v 0>%a@]" pp_print_exp body;
       close_box ()
   | Tuple {name; vals} ->

@@ -7,10 +7,23 @@ let builder : llbuilder = builder context
 
 let int_type : lltype = i32_type context
 
+let rec llvm_type : ty -> lltype = function
+  | I1Ty -> i1_type context
+  | I32Ty -> i32_type context
+  | PtrTy ty -> pointer_type (llvm_type ty)
+  | FunTy (ret_ty, arg_tys) ->
+      function_type (llvm_type ret_ty)
+        (Array.of_list (List.map llvm_type arg_tys))
+  | StrctTy tys -> struct_type context (Array.of_list (List.map llvm_type tys))
+
 let named_values : (id, llvalue) Hashtbl.t = Hashtbl.create 100
 
+let codegen_const : const -> llvalue = function
+  | I1 i -> const_int (i1_type context) i
+  | I32 i -> const_int (i32_type context) i
+
 let codegen_val (llmod : llmodule) : value -> llvalue = function
-  | Const i -> const_int int_type i
+  | Const c -> codegen_const c
   | Var x -> (
     try Hashtbl.find named_values x
     with _ -> failwith ("no such variable " ^ Id.unique_name x) )
@@ -74,16 +87,17 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
           left_val right_val "primtmp" builder
       in
       Hashtbl.add named_values name prim_val
-  | ProjDec {name; val_; idx} ->
+  | SubscrDec {name; val_; idx} ->
       let tuple_val = codegen_val llmod val_ in
       let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
       let elm_val = build_load elm_ptr "elmtmp" builder in
       Hashtbl.add named_values name elm_val
-  | MallocDec {name; len} ->
-      let tuple_val =
-        build_array_alloca int_type (const_int int_type len) "envtmp" builder
+  | MallocDec {name; tys} ->
+      let strct_val =
+        build_alloca (llvm_type (StrctTy tys)) "envtmp"
+          builder (* TODO: GEP instructions may have extra index 0 *)
       in
-      Hashtbl.add named_values name tuple_val
+      Hashtbl.add named_values name strct_val
   | UpdateDec {name; var; idx; val_} ->
       let tuple_val = Hashtbl.find named_values var in
       let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
@@ -98,23 +112,26 @@ let set_params (func : llvalue) (params : id list) : unit =
       Hashtbl.add named_values id v )
     (Llvm.params func)
 
-let codegen_proto (llmod : llmodule) (name : id) (params : id list) : unit =
+let codegen_proto (llmod : llmodule) (name : id) (params : (id * ty) list)
+    (ret_ty : ty) : unit =
   let name = Id.unique_name name in
-  let param_tys = Array.of_list (List.map (fun _ -> int_type) params) in
-  let func_ty = function_type int_type param_tys in
+  let param_tys =
+    Array.of_list (List.map (fun (_, ty) -> llvm_type ty) params)
+  in
+  let func_ty = function_type (llvm_type ret_ty) param_tys in
   let func =
     match lookup_function name llmod with
     | None -> declare_function name func_ty llmod
     | Some _ -> failwith "redefinition of function"
   in
-  set_params func params
+  set_params func (List.map fst params)
 
 let codegen_func (llmod : llmodule) : heap -> unit = function
-  | Code {name; vars; body} -> (
+  | Code {name; params; body} -> (
       let name = Id.unique_name name in
       Hashtbl.clear named_values;
       let func = Option.get (lookup_function name llmod) in
-      set_params func vars;
+      set_params func (List.map fst params);
       let bb = append_block context name func in
       position_at_end bb builder;
       try
@@ -124,7 +141,8 @@ let codegen_func (llmod : llmodule) : heap -> unit = function
   | Tuple _ -> failwith "not implemented"
 
 let codegen_main (llmod : llmodule) (exp : exp) : unit =
-  let func_ty = function_type int_type [||] in
+  let func_ty = function_type (i32_type context) [||] in
+  (* tmp: ret_ty *)
   let func = declare_function "main" func_ty llmod in
   set_params func [];
   Hashtbl.clear named_values;
@@ -139,11 +157,12 @@ let codegen (modid : string) ((heaps, exp) : prog) : llmodule =
   let llmod = create_module context modid in
   List.iter
     (function
-      | Code {name; vars; _} -> codegen_proto llmod name vars | Tuple _ -> () )
+      | Code {name; params; ret_ty; _} -> codegen_proto llmod name params ret_ty
+      | Tuple _ -> () )
     heaps;
   List.iter (codegen_func llmod) heaps;
   codegen_main llmod exp;
   llmod
 
-  let format (path : string) (llmod : llmodule) : unit =
+let format (path : string) (llmod : llmodule) : unit =
   Llvm.print_module (Filename.remove_extension path ^ ".ll") llmod
