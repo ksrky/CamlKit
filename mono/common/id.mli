@@ -25,3 +25,5 @@ module Table : sig
 
   val find_opt : key -> 'a t -> 'a option
 end
+
+val pp_print_id : Format.formatter -> t -> unit

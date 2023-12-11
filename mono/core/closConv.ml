@@ -18,44 +18,44 @@ and escapes = CS.id list
 
 type state = {escs: escapes; locs: CS.id list; cvar: CS.id}
 
-let ppr_const : CS.const -> string = function
-  | Int i -> string_of_int i
-  | Bool b -> string_of_bool b
+(*let ppr_const : CS.const -> string = function
+    | Int i -> string_of_int i
+    | Bool b -> string_of_bool b
 
-let rec ppr_exp (exp : exp) =
-  let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
-  let rec pexp ctx = function
-    | Var var -> Id.unique_name var
-    | Const c -> ppr_const c
-    | App {fcn; arg} -> parens ctx 1 (pexp 1 fcn ^ "(" ^ pexp 0 arg ^ ")")
-    | Prim {oper; args} ->
-        CS.ppr_oper oper ^ "("
-        ^ String.concat ", " (List.map (pexp 0) args)
-        ^ ")"
-    | If {cond; then_; else_} ->
-        parens ctx 0
-          ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "
-          ^ pexp 0 else_ )
-    | Let {isrec; vars; bnds; body} ->
-        parens ctx 0
-          ( "let "
-          ^ (if isrec then "rec " else "")
-          ^ String.concat "; "
-              (List.map2
-                 (fun v e -> Id.unique_name v ^ " = " ^ pexp 0 e)
-                 vars bnds )
-          ^ " in " ^ pexp 0 body )
-    | Clos clos -> ppr_clos clos
-    | Select {clos; idx} -> ppr_clos clos ^ "#" ^ string_of_int idx
-  in
-  pexp 0 exp
+  let rec ppr_exp (exp : exp) =
+    let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
+    let rec pexp ctx = function
+      | Var var -> Id.unique_name var
+      | Const c -> ppr_const c
+      | App {fcn; arg} -> parens ctx 1 (pexp 1 fcn ^ "(" ^ pexp 0 arg ^ ")")
+      | Prim {oper; args} ->
+          CS.ppr_oper oper ^ "("
+          ^ String.concat ", " (List.map (pexp 0) args)
+          ^ ")"
+      | If {cond; then_; else_} ->
+          parens ctx 0
+            ( "if " ^ pexp 0 cond ^ " then " ^ pexp 0 then_ ^ " else "
+            ^ pexp 0 else_ )
+      | Let {isrec; vars; bnds; body} ->
+          parens ctx 0
+            ( "let "
+            ^ (if isrec then "rec " else "")
+            ^ String.concat "; "
+                (List.map2
+                   (fun v e -> Id.unique_name v ^ " = " ^ pexp 0 e)
+                   vars bnds )
+            ^ " in " ^ pexp 0 body )
+      | Clos clos -> ppr_clos clos
+      | Select {clos; idx} -> ppr_clos clos ^ "#" ^ string_of_int idx
+    in
+    pexp 0 exp
 
-and ppr_clos : clos -> string = function
-  | CVar var -> Id.unique_name var
-  | CAbs {cvar; var; body; env} ->
-      "[fun " ^ Id.unique_name var ^ " -> " ^ ppr_exp body
-      ^ String.concat ", " (List.map Id.unique_name env)
-      ^ "]"
+  and ppr_clos : clos -> string = function
+    | CVar var -> Id.unique_name var
+    | CAbs {cvar; var; body; env} ->
+        "[fun " ^ Id.unique_name var ^ " -> " ^ ppr_exp body
+        ^ String.concat ", " (List.map Id.unique_name env)
+        ^ "]"*)
 
 let ( // ) xs ys = List.filter (fun y -> not (List.mem y ys)) xs
 

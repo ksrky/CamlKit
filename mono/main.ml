@@ -38,7 +38,7 @@ let compile (path : string) : unit =
   let abssyn' = semant abssyn in
   if !Semant.Error.has_error then exit 1;
   let coresyn = AbsToCore.l2c_exp abssyn' in
-  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
+  (* Core.Syntax.print_prog coresyn; *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
   (* Cps.Syntax.print_prog cpssyn; *)
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in

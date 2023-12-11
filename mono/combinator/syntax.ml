@@ -17,6 +17,7 @@ type frag = {name: string; params: id list; body: exp}
 
 type frags = frag list
 
+(*
 let ppr_oper = Core.Syntax.ppr_oper
 
 let ppr_const = Core.Syntax.ppr_const
@@ -52,4 +53,4 @@ let ppr_frag {name; params; body} =
   ^ ") = "
   ^ ppr_exp Id.unique_name body
 
-let ppr_frags frags = String.concat "\n" (List.map ppr_frag frags)
+let ppr_frags frags = String.concat "\n" (List.map ppr_frag frags) *)

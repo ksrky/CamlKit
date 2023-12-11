@@ -19,7 +19,7 @@ and dec =
 type code = {name: string; params: id list; body: exp}
 
 type codes = code list
-
+(*
 let ppr_oper = Core.Syntax.ppr_oper
 
 let ppr_const = Core.Syntax.ppr_const
@@ -61,3 +61,4 @@ let ppr_code {name; params; body} =
   ^ ppr_exp Id.unique_name body
 
 let ppr_codes (codes : codes) = String.concat "\n" (List.map ppr_code codes)
+*)

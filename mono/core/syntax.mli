@@ -13,12 +13,10 @@ type exp =
   | If of {cond: exp; then_: exp; else_: exp}
   | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
 
+type prog = exp
+
 val lams : id list -> exp -> exp
 
 val unlam : exp -> id list * exp
 
-val ppr_const : const -> string
-
-val ppr_oper : oper -> string
-
-val ppr_exp : (id -> string) -> exp -> string
+val print_prog : prog -> unit

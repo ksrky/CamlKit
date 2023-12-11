@@ -88,7 +88,7 @@ and pp_print_exp ppf = function
            (pp_print_val true) )
         args
   | If {cond; then_; else_} ->
-      fprintf ppf "if %a then@ %a@]@;@[<v 2>else@ %a@]" (pp_print_val true) cond
+      fprintf ppf "@[<v 2>if %a then@ %a@]@;@[<v 2>else@ %a@]" (pp_print_val true) cond
         pp_print_exp then_ pp_print_exp else_
   | Halt val_ -> fprintf ppf "halt %a" (pp_print_val true) val_
 

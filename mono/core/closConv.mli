@@ -14,6 +14,4 @@ and clos =
 
 and escapes = Syntax.id list
 
-val ppr_exp : exp -> string
-
 val cc_prog : Syntax.exp -> exp
