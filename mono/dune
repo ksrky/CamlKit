@@ -6,13 +6,9 @@
   parser
   semant
   core
-  combinator
   cps
   secd
-  zinc
-  gmachine
-  imp
-  codeGen)
+  imp)
  (flags -open Common))
 
 (env
