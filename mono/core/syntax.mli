@@ -4,6 +4,8 @@ type oper = Add | Sub | Mul | Div | Eq | Ne | Lt | Le | Gt | Ge
 
 type const = Int of int | Bool of bool
 
+type ty = IntTy | BoolTy | FunTy of ty * ty
+
 type exp =
   | Const of const
   | Var of id

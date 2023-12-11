@@ -17,7 +17,7 @@ let run (path : string) =
   let abssyn = Parse.parse path in
   let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = AbsToCore.l2c_exp aabssyn in
+  let coresyn = AbsToCore.a2c_exp aabssyn in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
@@ -27,7 +27,7 @@ let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = AbsToCore.l2c_exp aabssyn in
+  let coresyn = AbsToCore.a2c_exp aabssyn in
   (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
   let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
@@ -37,7 +37,7 @@ let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let abssyn' = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = AbsToCore.l2c_exp abssyn' in
+  let coresyn = AbsToCore.a2c_exp abssyn' in
   (* Core.Syntax.print_prog coresyn; *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
   (* Cps.Syntax.print_prog cpssyn; *)

@@ -1,47 +1,46 @@
 module A = Abstract.Syntax
 module C = Core.Syntax
 
-let rec l2c_exp : A.aexp -> C.exp = function
+let rec a2c_ty : A.ty -> C.ty = function
+  | A.NilTy -> failwith "nil is not supported in core"
+  | A.BoolTy -> C.BoolTy
+  | A.IntTy -> C.IntTy
+  | A.FunTy (t1, t2) -> C.FunTy (a2c_ty t1, a2c_ty t2)
+  | A.MetaTy _ -> failwith "unreachable"
+
+let rec a2c_exp : A.aexp -> C.exp = function
   | VarAExp x -> Var x
   | NilAExp -> failwith "nil is not supported in core"
-  | BoolAExp true -> Const (Bool true)
-  | BoolAExp false -> Const (Bool false)
-  | IntAExp n -> Const (Int n)
+  | BoolAExp b -> Const (Bool b)
+  | IntAExp i -> Const (Int i)
   | AppAExp {fcn= fcn, _; arg= arg, _} ->
-      App {fcn= l2c_exp fcn; arg= l2c_exp arg}
-  | LamAExp {vars; body= body, _} -> C.lams vars (l2c_exp body)
+      App {fcn= a2c_exp fcn; arg= a2c_exp arg}
+  | LamAExp {vars; body= body, _} -> C.lams vars (a2c_exp body)
   | OpAExp {left= left, _; op; right= right, _} ->
-      let oper : C.oper =
-        match op with
-        | PlusOp -> Add
-        | MinusOp -> Sub
-        | TimesOp -> Mul
-        | DivideOp -> Div
-        | EqOp -> Eq
-        | NeqOp -> Ne
-        | LtOp -> Lt
-        | LeOp -> Le
-        | GtOp -> Gt
-        | GeOp -> Ge
+      let oper =
+        List.assoc op
+          [ (PlusOp, C.Add); (MinusOp, C.Sub); (TimesOp, C.Mul)
+          ; (DivideOp, C.Div); (EqOp, C.Eq); (LtOp, C.Lt); (LeOp, C.Le)
+          ; (GtOp, C.Gt); (GeOp, C.Ge) ]
       in
-      Prim {left= l2c_exp left; oper; right= l2c_exp right}
+      Prim {left= a2c_exp left; oper; right= a2c_exp right}
   | IfAExp {cond= cond, _; then_= then_, _; else_= else_, _} ->
-      If {cond= l2c_exp cond; then_= l2c_exp then_; else_= l2c_exp else_}
+      If {cond= a2c_exp cond; then_= a2c_exp then_; else_= a2c_exp else_}
   | LetAExp {bnds; body= body, _} ->
       let vars, bnds =
         List.split
           (List.map
              (fun (A.ABind {name; params; body= body, _}) ->
-               (name, C.lams (List.map fst params) (l2c_exp body)) )
+               (name, C.lams (List.map fst params) (a2c_exp body)) )
              bnds )
       in
-      Let {isrec= false; vars; bnds; body= l2c_exp body}
+      Let {isrec= false; vars; bnds; body= a2c_exp body}
   | LetrecAExp {bnds; body= body, _} ->
       let vars, bnds =
         List.split
           (List.map
              (fun (A.ABind {name; params; body= body, _}) ->
-               (name, C.lams (List.map fst params) (l2c_exp body)) )
+               (name, C.lams (List.map fst params) (a2c_exp body)) )
              bnds )
       in
-      Let {isrec= true; vars; bnds; body= l2c_exp body}
+      Let {isrec= true; vars; bnds; body= a2c_exp body}
