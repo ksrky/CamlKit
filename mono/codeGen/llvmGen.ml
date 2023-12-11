@@ -22,7 +22,7 @@ let find_func_or_val (id : Id.t) (llmod : llmodule) : llvalue =
       failwith ("no such function or value: " ^ Id.unique_name id) )
 
 let rec codegen_exp (llmod : llmodule) : exp -> llvalue = function
-  | Const Nil -> const_null int_type
+  | Const (Bool b) -> failwith "not implemented"
   | Const (Int i) -> const_int int_type i
   | Var id -> find_func_or_val id llmod
   | App {fcn; args} ->

@@ -6,7 +6,7 @@ let rec find_idx x = function
   | h :: t -> if x = h then 0 else 1 + find_idx x t
 
 let rec c2z_exp (env : Id.t list) : C.exp -> Z.t = function
-  | Const Nil -> [Z.PushInt 0]
+  | Const (Bool b) -> [Z.PushInt (Bool.to_int b)] (* tmp *)
   | Const (Int i) -> [Z.PushInt i]
   | Var x -> [Z.Access (find_idx x env)]
   | App {fcn; arg} ->

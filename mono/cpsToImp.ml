@@ -2,7 +2,9 @@ module K = Cps.Syntax
 module CC = Cps.ClosConv
 module I = Imp.Syntax
 
-let c2i_const : K.const -> I.const = function Int i -> I32 i | Nil -> I32 0
+let c2i_const : K.const -> I.const = function
+  | Int i -> I32 i
+  | Bool b -> I1 (Bool.to_int b)
 
 let rec c2i_val : K.value -> I.dec list * I.value = function
   | Const c -> ([], Const (c2i_const c))

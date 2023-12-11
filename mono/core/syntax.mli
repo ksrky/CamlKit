@@ -2,7 +2,7 @@ type id = Id.t
 
 type oper = Add | Sub | Mul | Div | Eq | Ne | Lt | Le | Gt | Ge
 
-type const = Int of int | Nil
+type const = Int of int | Bool of bool
 
 type exp =
   | Const of const

@@ -2,7 +2,7 @@ type id = Id.t
 
 type oper = Add | Sub | Mul | Div | Eq | Ne | Lt | Le | Gt | Ge
 
-type const = Int of int | Nil
+type const = Int of int | Bool of bool
 
 type exp =
   | Const of const
@@ -34,7 +34,7 @@ let ppr_oper : oper -> string = function
 
 let ppr_const : const -> string = function
   | Int i -> string_of_int i
-  | Nil -> "nil"
+  | Bool b -> string_of_bool b
 
 let ppr_exp (pprid : id -> string) (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in

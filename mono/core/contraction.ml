@@ -11,9 +11,9 @@ let thresh_ratio : float = 0.95 (* tmp *)
 let nred = ref 1
 
 type varinfo =
-  {mutable usecount: int; mutable repres: C.exp; mutable is_simple: bool}
+  {mutable usecount: int; mutable repres: C.exp option; mutable is_simple: bool}
 
-let default_info () = {usecount= 0; repres= C.Const Nil; is_simple= false}
+let default_info () = {usecount= 0; repres= None; is_simple= false}
 
 let hashtbl : (int, varinfo) Hashtbl.t = Hashtbl.create ~random:true 4096
 
@@ -38,14 +38,16 @@ let update_repres id exp =
   let info = hashtbl_find id in
   info.repres <- exp;
   match exp with
-  | Const _ | Var _ -> info.is_simple <- true
+  | Some (Const _) | Some (Var _) -> info.is_simple <- true
   | _ -> info.is_simple <- false
 
 let find_repres (var : C.id) : C.exp =
   match Hashtbl.find_opt hashtbl (Id.unique var) with
   | Some info ->
       (* inlining *)
-      incr nred; decr_usecount var; info.repres
+      incr nred;
+      decr_usecount var;
+      Option.value info.repres ~default:(Var var)
   | None -> Var var
 
 let is_deadvar (id : Id.t) =

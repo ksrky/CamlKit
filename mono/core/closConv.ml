@@ -20,7 +20,7 @@ type state = {escs: escapes; locs: CS.id list; cvar: CS.id}
 
 let ppr_const : CS.const -> string = function
   | Int i -> string_of_int i
-  | Nil -> "nil"
+  | Bool b -> string_of_bool b
 
 let rec ppr_exp (exp : exp) =
   let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in

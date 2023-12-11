@@ -7,7 +7,7 @@ let prims : (C.oper * S.t) list =
 
 let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
-  | Const Nil -> NIL :: c
+  | Const (Bool b) -> LDC (Bool.to_int b) :: c
   | Const (Int x) -> LDC x :: c
   | Var x ->
       let i, j = index x n in

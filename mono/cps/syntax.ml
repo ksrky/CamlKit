@@ -53,8 +53,8 @@ open Format
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
 
 let pp_print_const ppf = function
-  | Core.Syntax.Int i -> fprintf ppf "%d" i
-  | Core.Syntax.Nil -> fprintf ppf "nil"
+  | Core.Syntax.Int i -> fprintf ppf "%i" i
+  | Core.Syntax.Bool b -> fprintf ppf "%b" b
 
 let rec pp_print_val paren ppf = function
   | Const c -> pp_print_const ppf c

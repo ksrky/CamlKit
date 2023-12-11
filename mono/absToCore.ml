@@ -3,9 +3,9 @@ module C = Core.Syntax
 
 let rec l2c_exp : A.aexp -> C.exp = function
   | VarAExp x -> Var x
-  | NilAExp -> Const Nil
-  | BoolAExp true -> Const (Int 1)
-  | BoolAExp false -> Const (Int 0)
+  | NilAExp -> failwith "nil is not supported in core"
+  | BoolAExp true -> Const (Bool true)
+  | BoolAExp false -> Const (Bool false)
   | IntAExp n -> Const (Int n)
   | AppAExp {fcn= fcn, _; arg= arg, _} ->
       App {fcn= l2c_exp fcn; arg= l2c_exp arg}

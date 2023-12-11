@@ -7,7 +7,7 @@ let rec find_idx x = function
 
 let rec c2g_exp (stack : Id.t list) (fsize : int) : C.exp -> G.t = function
   | Const (Int i) -> [G.PushInt i]
-  | Const Nil -> [G.Alloc 1]
+  | Const (Bool b) -> [G.PushInt (Bool.to_int b)] (* tmp *)
   | Var x -> [G.Push (fsize - find_idx x stack)]
   | App {fcn; args} ->
       List.concat_map (c2g_exp stack fsize) args
