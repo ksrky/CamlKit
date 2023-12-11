@@ -1,9 +1,0 @@
-(library
- (name sequent)
- (libraries common core)
- (flags -open Common))
-
-(env
- (dev
-  (flags
-   (:standard -w "-8-30-39"))))

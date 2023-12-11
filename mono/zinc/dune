@@ -1,7 +1,0 @@
-(library
- (name zinc))
-
-(env
- (dev
-  (flags
-   (:standard -w "-8-30-39"))))
