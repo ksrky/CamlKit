@@ -19,7 +19,8 @@ let rec check (env : E.env) (exp : A.exp) (exp_ty : A.ty) : A.expty =
   | LamExp {vars; body} ->
       let var_tys, body_ty = U.unify_funs vars exp_ty in
       let env' = E.extend_vals vars var_tys env in
-      check env' body body_ty
+      let body' = check env' body body_ty in
+      (LamAExp {params= List.combine vars var_tys; body= body'}, exp_ty)
   | OpExp {left; op= (PlusOp | MinusOp | TimesOp | DivideOp) as op; right} ->
       let left' = check env left A.IntTy and right' = check env right A.IntTy in
       U.unify A.IntTy exp_ty;

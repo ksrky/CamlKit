@@ -17,8 +17,12 @@ type exp =
 
 type prog = exp
 
+type tyctx = (id * ty) list
+
 val lams : id list -> exp -> exp
 
 val unlam : exp -> id list * exp
+
+val fun_tys : ty list -> ty -> ty
 
 val print_prog : prog -> unit

@@ -1,6 +1,8 @@
 module A = Abstract.Syntax
 module C = Core.Syntax
 
+let tyctx : C.tyctx ref = ref []
+
 let rec a2c_ty : A.ty -> C.ty = function
   | A.NilTy -> failwith "nil is not supported in core"
   | A.BoolTy -> C.BoolTy
@@ -15,7 +17,8 @@ let rec a2c_exp : A.aexp -> C.exp = function
   | IntAExp i -> Const (Int i)
   | AppAExp {fcn= fcn, _; arg= arg, _} ->
       App {fcn= a2c_exp fcn; arg= a2c_exp arg}
-  | LamAExp {vars; body= body, _} -> C.lams vars (a2c_exp body)
+  | LamAExp {params; body= body, _} ->
+      C.lams (List.map fst params) (a2c_exp body)
   | OpAExp {left= left, _; op; right= right, _} ->
       let oper =
         List.assoc op
@@ -30,7 +33,9 @@ let rec a2c_exp : A.aexp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body= body, _}) ->
+             (fun (A.ABind {name; params; body= body, body_ty}) ->
+               let param_tys = List.map (fun (_, ty) -> a2c_ty ty) params in
+               tyctx := (name, C.fun_tys param_tys (a2c_ty body_ty)) :: !tyctx;
                (name, C.lams (List.map fst params) (a2c_exp body)) )
              bnds )
       in
@@ -39,7 +44,9 @@ let rec a2c_exp : A.aexp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body= body, _}) ->
+             (fun (A.ABind {name; params; body= body, body_ty}) ->
+               let param_tys = List.map (fun (_, ty) -> a2c_ty ty) params in
+               tyctx := (name, C.fun_tys param_tys (a2c_ty body_ty)) :: !tyctx;
                (name, C.lams (List.map fst params) (a2c_exp body)) )
              bnds )
       in

@@ -19,12 +19,17 @@ type aexp = exp * ty
 
 type prog = exp
 
+type tyctx = (id * ty) list
+
 let lams (ids : id list) (exp : exp) : exp =
   List.fold_right (fun id exp -> Lam {var= id; body= exp}) ids exp
 
 let unlam : exp -> id list * exp = function
   | Lam {var; body} -> ([var], body)
   | exp -> ([], exp)
+
+let fun_tys (tys : ty list) (ty : ty) : ty =
+  List.fold_right (fun ty1 ty2 -> FunTy (ty1, ty2)) tys ty
 
 open Format
 

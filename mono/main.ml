@@ -18,7 +18,7 @@ let run (path : string) =
   let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
   let coresyn = AbsToCore.a2c_exp aabssyn in
-  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
+  (* Core.Syntax.print_prog coresyn; *)
   let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
 
@@ -28,7 +28,7 @@ let eval (inp : string) =
   let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
   let coresyn = AbsToCore.a2c_exp aabssyn in
-  (* print_endline (Core.Syntax.ppr_exp Id.name coresyn); *)
+  (* Core.Syntax.print_prog coresyn; *)
   let instrs = CoreToSecd.c2s_prog coresyn in
   run_secd instrs
 
@@ -44,6 +44,6 @@ let compile (path : string) : unit =
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in
   (* Cps.ClosConv.print_prog cpssyn'; *)
   let impsyn = CpsToImp.c2i_prog cpssyn' in
-  Imp.Syntax.print_prog impsyn;
+  (* Imp.Syntax.print_prog impsyn; *)
   let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
   Imp.LlvmGen.format path llmod

@@ -25,8 +25,8 @@ let rec zonk_aexp : aexp -> aexp = function
       AppAExp
         { fcn= (zonk_aexp fcn, zonk_ty fcn_ty)
         ; arg= (zonk_aexp arg, zonk_ty arg_ty) }
-  | LamAExp {vars; body= body, body_ty} ->
-      LamAExp {vars; body= (zonk_aexp body, zonk_ty body_ty)}
+  | LamAExp {params; body= body, body_ty} ->
+      LamAExp {params; body= (zonk_aexp body, zonk_ty body_ty)}
   | OpAExp {left= left, left_ty; op; right= right, right_ty} ->
       OpAExp
         { left= (zonk_aexp left, zonk_ty left_ty)
