@@ -19,8 +19,6 @@ type aexp = exp * ty
 
 type prog = exp
 
-type tyctx = (id * ty) list
-
 let lams (ids : id list) (exp : exp) : exp =
   List.fold_right (fun id exp -> Lam {var= id; body= exp}) ids exp
 

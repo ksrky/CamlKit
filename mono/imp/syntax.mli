@@ -1,11 +1,6 @@
 type id = Id.t
 
-type ty =
-  | I1Ty
-  | I32Ty
-  | PtrTy of ty
-  | FunTy of ty * ty list
-  | StrctTy of ty list
+type ty = I1Ty | I32Ty | PtrTy | FunTy of ty * ty list | StrctTy of ty list
 
 type const = I1 of int | I32 of int
 
@@ -21,7 +16,7 @@ and dec =
   | ValDec of {name: id; val_: value}
   | PrimDec of {name: id; left: value; oper: arithop; right: value}
   | SubscrDec of {name: id; val_: value; idx: int}
-  | MallocDec of {name: id; tys: ty list}
+  | MallocDec of {name: id; len: int}
   | UpdateDec of {name: id; var: id; idx: int; val_: value}
 
 and arithop = Add | Sub | Mul | Div

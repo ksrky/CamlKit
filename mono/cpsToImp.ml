@@ -21,7 +21,7 @@ let rec c2i_val : K.value -> I.dec list * I.value = function
       in
       let decs = ref [] in
       let rec mk_tuple : int -> I.dec list = function
-        | 0 -> [MallocDec {name= var0; tys= failwith "tmp"}]
+        | 0 -> [MallocDec {name= var0; len= List.length vals}]
         | i ->
             let di, vi = c2i_val (List.nth vals (i - 1)) in
             decs := di @ !decs;

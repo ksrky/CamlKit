@@ -1,11 +1,6 @@
 type id = Id.t
 
-type ty =
-  | I1Ty
-  | I32Ty
-  | PtrTy of ty
-  | FunTy of ty * ty list
-  | StrctTy of ty list
+type ty = I1Ty | I32Ty | PtrTy | FunTy of ty * ty list | StrctTy of ty list
 
 type const = I1 of int | I32 of int
 
@@ -21,7 +16,7 @@ and dec =
   | ValDec of {name: id; val_: value}
   | PrimDec of {name: id; left: value; oper: arithop; right: value}
   | SubscrDec of {name: id; val_: value; idx: int}
-  | MallocDec of {name: id; tys: ty list}
+  | MallocDec of {name: id; len: int}
   | UpdateDec of {name: id; var: id; idx: int; val_: value}
 
 and arithop = Add | Sub | Mul | Div
@@ -45,7 +40,7 @@ let pp_print_ty ppf : ty -> unit =
   let rec pp_print_ty ppf : ty -> unit = function
     | I1Ty -> fprintf ppf "i1"
     | I32Ty -> fprintf ppf "i32"
-    | PtrTy ty -> fprintf ppf "%a*" pp_print_ty ty
+    | PtrTy -> fprintf ppf "()*"
     | FunTy (res_ty, arg_tys) ->
         fprintf ppf "%a(%a)" pp_print_ty res_ty
           (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
@@ -98,8 +93,7 @@ and pp_print_dec ppf : dec -> unit = function
         pp_print_val right
   | SubscrDec {name; val_; idx} ->
       fprintf ppf "%a = %a[%i]" pp_print_id name pp_print_val val_ idx
-  | MallocDec {name; tys} ->
-      fprintf ppf "%a = malloc(%a)" pp_print_id name pp_print_ty (StrctTy tys)
+  | MallocDec {name; len} -> fprintf ppf "%a = malloc(%i)" pp_print_id name len
   | UpdateDec {name; var; idx; val_} ->
       fprintf ppf "%a = %a[%i] <- %a" pp_print_id name pp_print_id var idx
         pp_print_val val_

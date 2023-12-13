@@ -5,12 +5,14 @@ let context : llcontext = global_context ()
 
 let builder : llbuilder = builder context
 
+let pointer_t = pointer_type
+
 let int_type : lltype = i32_type context
 
 let rec llvm_type : ty -> lltype = function
   | I1Ty -> i1_type context
   | I32Ty -> i32_type context
-  | PtrTy ty -> pointer_type (llvm_type ty)
+  | PtrTy -> pointer_type (i8_type context) (* see the comment of Malloc *)
   | FunTy (ret_ty, arg_tys) ->
       function_type (llvm_type ret_ty)
         (Array.of_list (List.map llvm_type arg_tys))
@@ -92,9 +94,11 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
       let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
       let elm_val = build_load elm_ptr "elmtmp" builder in
       Hashtbl.add named_values name elm_val
-  | MallocDec {name; tys} ->
+  | MallocDec {name; len} ->
       let strct_val =
-        build_alloca (llvm_type (StrctTy tys)) "envtmp"
+        (** Malloc: build_malloc creates malloc prototype of type i8*
+            https://llvm.org/doxygen/IRBuilder_8cpp_source.html#l00301 *)
+        build_malloc (i32_type context) "envtmp"
           builder (* TODO: GEP instructions may have extra index 0 *)
       in
       Hashtbl.add named_values name strct_val

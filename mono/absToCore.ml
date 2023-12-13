@@ -1,8 +1,6 @@
 module A = Abstract.Syntax
 module C = Core.Syntax
 
-let tyctx : C.tyctx ref = ref []
-
 let rec a2c_ty : A.ty -> C.ty = function
   | A.NilTy -> failwith "nil is not supported in core"
   | A.BoolTy -> C.BoolTy
@@ -34,8 +32,6 @@ let rec a2c_exp : A.aexp -> C.exp = function
         List.split
           (List.map
              (fun (A.ABind {name; params; body= body, body_ty}) ->
-               let param_tys = List.map (fun (_, ty) -> a2c_ty ty) params in
-               tyctx := (name, C.fun_tys param_tys (a2c_ty body_ty)) :: !tyctx;
                (name, C.lams (List.map fst params) (a2c_exp body)) )
              bnds )
       in
@@ -45,8 +41,6 @@ let rec a2c_exp : A.aexp -> C.exp = function
         List.split
           (List.map
              (fun (A.ABind {name; params; body= body, body_ty}) ->
-               let param_tys = List.map (fun (_, ty) -> a2c_ty ty) params in
-               tyctx := (name, C.fun_tys param_tys (a2c_ty body_ty)) :: !tyctx;
                (name, C.lams (List.map fst params) (a2c_exp body)) )
              bnds )
       in
