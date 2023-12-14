@@ -99,7 +99,7 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
         (** Malloc: build_malloc creates malloc prototype of type i8*
             https://llvm.org/doxygen/IRBuilder_8cpp_source.html#l00301 *)
         build_malloc (i32_type context) "envtmp"
-          builder (* TODO: GEP instructions may have extra index 0 *)
+          builder
       in
       Hashtbl.add named_values name strct_val
   | UpdateDec {name; var; idx; val_} ->

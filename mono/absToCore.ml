@@ -8,40 +8,51 @@ let rec a2c_ty : A.ty -> C.ty = function
   | A.FunTy (t1, t2) -> C.FunTy (a2c_ty t1, a2c_ty t2)
   | A.MetaTy _ -> failwith "unreachable"
 
+let a2c_param ((id, ty) : A.param) : C.var = (id, a2c_ty ty)
+
 let rec a2c_exp : A.aexp -> C.exp = function
   | VarAExp x -> Var x
   | NilAExp -> failwith "nil is not supported in core"
   | BoolAExp b -> Const (Bool b)
   | IntAExp i -> Const (Int i)
-  | AppAExp {fcn= fcn, _; arg= arg, _} ->
-      App {fcn= a2c_exp fcn; arg= a2c_exp arg}
-  | LamAExp {params; body= body, _} ->
-      C.lams (List.map fst params) (a2c_exp body)
-  | OpAExp {left= left, _; op; right= right, _} ->
+  | AppAExp {fcn; arg} -> App {fcn= a2c_expty fcn; arg= a2c_expty arg}
+  | LamAExp {params; body} ->
+      C.lams (List.map a2c_param params) (a2c_expty body) |> fst
+  | OpAExp {left; op; right} ->
       let oper =
         List.assoc op
           [ (PlusOp, C.Add); (MinusOp, C.Sub); (TimesOp, C.Mul)
           ; (DivideOp, C.Div); (EqOp, C.Eq); (LtOp, C.Lt); (LeOp, C.Le)
           ; (GtOp, C.Gt); (GeOp, C.Ge) ]
       in
-      Prim {left= a2c_exp left; oper; right= a2c_exp right}
-  | IfAExp {cond= cond, _; then_= then_, _; else_= else_, _} ->
-      If {cond= a2c_exp cond; then_= a2c_exp then_; else_= a2c_exp else_}
-  | LetAExp {bnds; body= body, _} ->
+      Prim {left= a2c_expty left; oper; right= a2c_expty right}
+  | IfAExp {cond; then_; else_} ->
+      If {cond= a2c_expty cond; then_= a2c_expty then_; else_= a2c_expty else_}
+  | LetAExp {bnds; body} ->
       let vars, bnds =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body= body, body_ty}) ->
-               (name, C.lams (List.map fst params) (a2c_exp body)) )
+             (fun (A.ABind {name; params; body= _, body_ty}) ->
+               ( ( name
+                 , C.fun_tys
+                     (List.map (fun (_, ty) -> a2c_ty ty) params)
+                     (a2c_ty body_ty) )
+               , C.lams (List.map a2c_param params) (a2c_expty body) ) )
              bnds )
       in
-      Let {isrec= false; vars; bnds; body= a2c_exp body}
-  | LetrecAExp {bnds; body= body, _} ->
+      Let {isrec= false; vars; bnds; body= a2c_expty body}
+  | LetrecAExp {bnds; body} ->
       let vars, bnds =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body= body, body_ty}) ->
-               (name, C.lams (List.map fst params) (a2c_exp body)) )
+             (fun (A.ABind {name; params; body= _, body_ty}) ->
+               ( ( name
+                 , C.fun_tys
+                     (List.map (fun (_, ty) -> a2c_ty ty) params)
+                     (a2c_ty body_ty) )
+               , C.lams (List.map a2c_param params) (a2c_expty body) ) )
              bnds )
       in
-      Let {isrec= true; vars; bnds; body= a2c_exp body}
+      Let {isrec= true; vars; bnds; body= a2c_expty body}
+
+and a2c_expty ((exp, ty) : A.expty) : C.expty = (a2c_exp exp, a2c_ty ty)

@@ -6,23 +6,27 @@ type const = Int of int | Bool of bool
 
 type ty = IntTy | BoolTy | FunTy of ty * ty
 
+type var = id * ty
+
 type exp =
   | Const of const
   | Var of id
-  | App of {fcn: exp; arg: exp}
-  | Lam of {var: id; body: exp}
-  | Prim of {left: exp; oper: oper; right: exp}
-  | If of {cond: exp; then_: exp; else_: exp}
-  | Let of {isrec: bool; vars: id list; bnds: exp list; body: exp}
+  | App of {fcn: expty; arg: expty}
+  | Lam of {var: var; body: expty}
+  | Prim of {left: expty; oper: oper; right: expty}
+  | If of {cond: expty; then_: expty; else_: expty}
+  | Let of {isrec: bool; vars: var list; bnds: expty list; body: expty}
+
+and expty = exp * ty
 
 type prog = exp
 
-type tyctx = (id * ty) list
-
-val lams : id list -> exp -> exp
-
-val unlam : exp -> id list * exp
+val fun_ty : ty -> ty -> ty
 
 val fun_tys : ty list -> ty -> ty
+
+val lams : var list -> expty -> expty
+
+val unlam : expty -> var option * expty
 
 val print_prog : prog -> unit

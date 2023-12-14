@@ -16,7 +16,7 @@ runtime.ll:
 	$(CLANG) -S -emit-llvm mono/runtime.c
 
 .PHONY: compile
-compile: dune-build runtime.ll
+compile: runtime.ll
 	$(DUNE) exec camlkitopt $(f)
 	$(CLANG) runtime.ll $(f:.mlkit=.ll) -o "main"
 
