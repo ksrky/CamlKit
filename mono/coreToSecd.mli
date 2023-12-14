@@ -1,1 +1,1 @@
-val c2s_prog : Core.Syntax.exp -> Secd.Operation.t list
+val c2s_prog : Core.Syntax.prog -> Secd.Operation.t list

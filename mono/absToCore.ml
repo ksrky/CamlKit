@@ -54,4 +54,4 @@ let rec a2c_exp : A.aexp -> C.exp = function
 
 and a2c_expty ((exp, ty) : A.expty) : C.expty = (a2c_exp exp, a2c_ty ty)
 
-let a2c_prog : A.aexp -> C.prog = a2c_exp
+let a2c_prog : A.aprog -> C.prog = a2c_expty

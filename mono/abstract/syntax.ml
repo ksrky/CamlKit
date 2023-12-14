@@ -50,6 +50,8 @@ and expty = aexp * ty
 
 and abnd = ABind of {name: id; params: param list; body: expty}
 
+type aprog = expty
+
 let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s
 
 let ppr_ty (ty : ty) : string =

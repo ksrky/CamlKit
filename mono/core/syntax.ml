@@ -19,7 +19,7 @@ type exp =
 
 and expty = exp * ty
 
-type prog = exp
+type prog = expty
 
 let fun_ty ty1 ty2 = FunTy (ty1, ty2)
 
@@ -100,6 +100,6 @@ and pp_print_expty outer ppf (exp, ty) = pp_print_exp outer ppf exp
 and pp_print_bnd ppf (var, bnd) =
   fprintf ppf "%a =@;<1 2>%a" pp_print_var var (pp_print_expty 0) bnd
 
-let print_prog exp =
+let print_prog (exp, _) =
   pp_print_exp 0 std_formatter exp;
   print_newline ()

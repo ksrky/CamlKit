@@ -79,5 +79,6 @@ and check_bnds (env : E.env) (bnds : A.bnd list) (exp_tys : A.ty list) :
         ; body= check env' body body_ty } )
     bnds exp_tys
 
-let check_prog (env : E.env) (prog : A.exp) : A.aexp =
-  check env prog (T.new_tyvar ()) |> fst |> Types.zonk_aexp
+let check_prog (env : E.env) (prog : A.exp) : A.aprog =
+  let exp, ty = check env prog (T.new_tyvar ()) in
+  (Types.zonk_aexp exp, Types.zonk_ty ty)

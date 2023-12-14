@@ -19,7 +19,7 @@ type exp =
 
 and expty = exp * ty
 
-type prog = exp
+type prog = expty
 
 val fun_ty : ty -> ty -> ty
 

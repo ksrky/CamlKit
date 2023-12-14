@@ -2,7 +2,7 @@ open Syntax
 
 type prog = fundef list * exp
 
-type escapes = id list
+type escapes = var list
 
 type locals = id list
 
@@ -35,12 +35,14 @@ let rec cc_val (escs : escapes) (lcls : locals) : value -> value * escapes =
       (Var x, escs')
   | Glb _ -> failwith "unreahcble"
   | Lam {vars; body} ->
-      let env_var = Id.from_string "env" in
       let body', escs' = cc_exp [] vars body in
-      let name = Id.from_string "func" in
+      let env_var = Id.from_string "env" in
+      let env_ty = failwith "not implemented" in
       if escs' = [] then (
         append_fundef
-          {name; vars; body= mk_let (mk_projs (Var env_var) escs') body'};
+          { var= Id.from_string "func"
+          ; params= vars
+          ; body= mk_let (mk_projs (Var env_var, env_ty) escs') body' };
         (Glb name, escs) )
       else (
         append_fundef

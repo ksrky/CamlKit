@@ -1,4 +1,4 @@
-let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aexp =
+let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aprog =
   (* print_endline (Abstract.Syntax.ppr_exp abssyn); *)
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.empty abssyn in
   (* print_endline (Abstract.Syntax.ppr_exp abssyn'); *)

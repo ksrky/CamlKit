@@ -50,4 +50,6 @@ and expty = aexp * ty
 
 and abnd = ABind of {name: id; params: param list; body: expty}
 
+type aprog = expty
+
 val ppr_ty : ty -> string
