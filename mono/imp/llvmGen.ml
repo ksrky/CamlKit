@@ -12,7 +12,7 @@ let int_type : lltype = i32_type context
 let rec llvm_type : ty -> lltype = function
   | I1Ty -> i1_type context
   | I32Ty -> i32_type context
-  | PtrTy -> pointer_type (i8_type context) (* see the comment of Malloc *)
+  | PtrTy ty -> pointer_type (llvm_type ty) 
   | FunTy (ret_ty, arg_tys) ->
       function_type (llvm_type ret_ty)
         (Array.of_list (List.map llvm_type arg_tys))
@@ -26,13 +26,13 @@ let codegen_const : const -> llvalue = function
 
 let codegen_val (llmod : llmodule) : value -> llvalue = function
   | Const c -> codegen_const c
-  | Var x -> (
+  | Var x-> (
     try Hashtbl.find named_values x
     with _ -> failwith ("no such variable " ^ Id.unique_name x) )
-  | Glb x -> (
-    match lookup_function (Id.unique_name x) llmod with
+  | Glb f -> (
+    match lookup_function (Id.unique_name f) llmod with
     | Some func -> func
-    | None -> failwith ("no such function " ^ Id.unique_name x) )
+    | None -> failwith ("no such function " ^ Id.unique_name f) )
 
 let rec codegen_exp (llmod : llmodule) : exp -> unit = function
   | Let {dec; body} -> codegen_dec llmod dec; codegen_exp llmod body
@@ -146,7 +146,6 @@ let codegen_func (llmod : llmodule) : heap -> unit = function
 
 let codegen_main (llmod : llmodule) (exp : exp) : unit =
   let func_ty = function_type (i32_type context) [||] in
-  (* tmp: ret_ty *)
   let func = declare_function "main" func_ty llmod in
   set_params func [];
   Hashtbl.clear named_values;

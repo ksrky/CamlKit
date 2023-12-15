@@ -6,10 +6,18 @@ let c2i_const : K.const -> I.const = function
   | Int i -> I32 i
   | Bool b -> I1 (Bool.to_int b)
 
+let rec c2i_ty : K.ty -> I.ty = function
+  | IntTy -> I32Ty
+  | BoolTy -> I1Ty
+  | ContTy tys -> PtrTy (FunTy (I32Ty, List.map c2i_ty tys))
+  | TupleTy tys -> PtrTy (StrctTy (List.map c2i_ty tys))
+
+let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
+
 let rec c2i_val : K.value -> I.dec list * I.value = function
   | Const c -> ([], Const (c2i_const c))
-  | Var x -> ([], Var x)
-  | Glb f -> ([], Glb f)
+  | Var (x, _) -> ([], Var x)
+  | Glb (f, _) -> ([], Glb f)
   | Lam _ -> failwith "unreachable"
   | Tuple vals ->
       let var0 = Id.from_string "y0" in
@@ -36,7 +44,7 @@ let rec c2i_val : K.value -> I.dec list * I.value = function
       , Var (List.hd (List.rev vars)) )
 
 let rec c2i_exp : K.exp -> I.exp = function
-  | Let {dec= PrimDec {name; left; oper; right}; body}
+  | Let {dec= PrimDec {var; left; oper; right}; body}
     when List.mem oper [Eq; Ne; Lt; Le; Gt; Ge] ->
       let ds1, left' = c2i_val left in
       let ds2, right' = c2i_val right in
@@ -49,9 +57,11 @@ let rec c2i_exp : K.exp -> I.exp = function
                  ; (Ge, I.Ge) ]
            ; left= left'
            ; right= right'
-           ; then_= Let {dec= ValDec {name; val_= Const (I1 1)}; body= body'}
-           ; else_= Let {dec= ValDec {name; val_= Const (I1 0)}; body= body'} }
-        )
+           ; then_=
+               Let {dec= ValDec {name= fst var; val_= Const (I1 1)}; body= body'}
+           ; else_=
+               Let {dec= ValDec {name= fst var; val_= Const (I1 0)}; body= body'}
+           } )
   | Let {dec; body} -> I.mk_let (c2i_dec dec) (c2i_exp body)
   | Letrec _ -> failwith "unreachable"
   | App {fcn; args} ->
@@ -74,28 +84,28 @@ let rec c2i_exp : K.exp -> I.exp = function
       I.mk_let ds (Halt val')
 
 and c2i_dec : K.dec -> I.dec list = function
-  | ValDec {name; val_} ->
+  | ValDec {var; val_} ->
       let ds, val' = c2i_val val_ in
-      ds @ [ValDec {name; val_= val'}]
-  | PrimDec {name; left; oper; right} ->
+      ds @ [ValDec {name= fst var; val_= val'}]
+  | PrimDec {var; left; oper; right} ->
       let ds1, left' = c2i_val left in
       let ds2, right' = c2i_val right in
       ds1 @ ds2
       @ [ PrimDec
-            { name
+            { name= fst var
             ; left= left'
             ; oper=
                 List.assoc oper
                   [(Add, I.Add); (Sub, I.Sub); (Mul, I.Mul); (Div, I.Div)]
             ; right= right' } ]
-  | ProjDec {name; val_; idx} ->
+  | ProjDec {var; val_; idx} ->
       let ds, val' = c2i_val val_ in
-      ds @ [SubscrDec {name; val_= val'; idx}]
+      ds @ [SubscrDec {name= fst var; val_= val'; idx}]
 
-let c2i_heap ({name; vars; body} : K.fundef) : I.heap =
+let c2i_heap ({var; params; body} : K.fundef) : I.heap =
   let params = failwith "tmp" in
   let ret_ty = failwith "tmp" in
-  I.Code {name; params; ret_ty; body= c2i_exp body}
+  I.Code {name= fst var; params; ret_ty; body= c2i_exp body}
 
 let c2i_prog ((heaps, exp) : CC.prog) : I.prog =
   (List.map c2i_heap heaps, c2i_exp exp)

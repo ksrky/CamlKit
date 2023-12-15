@@ -1,8 +1,15 @@
 type id = Id.t
 
-type ty = I1Ty | I32Ty | PtrTy | FunTy of ty * ty list | StrctTy of ty list
+type ty =
+  | I1Ty
+  | I32Ty
+  | PtrTy of ty
+  | FunTy of ty * ty list
+  | StrctTy of ty list
 
 type const = I1 of int | I32 of int
+
+type var = id * ty
 
 type value = Const of const | Var of id | Glb of id
 
@@ -24,13 +31,17 @@ and arithop = Add | Sub | Mul | Div
 and relop = Eq | Ne | Lt | Le | Gt | Ge
 
 type heap =
-  | Code of {name: id; params: (id * ty) list; ret_ty: ty; body: exp}
+  | Code of {name: id; params: var list; ret_ty: ty; body: exp}
   | Tuple of {name: id; vals: value list}
 
 type prog = heap list * exp
 
 let mk_let decs body =
   List.fold_right (fun dec body -> Let {dec; body}) decs body
+
+let return_ty : ty -> ty = function
+  | FunTy (ty, _) -> ty
+  | _ -> failwith "not a function type"
 
 open Format
 
@@ -40,7 +51,7 @@ let pp_print_ty ppf : ty -> unit =
   let rec pp_print_ty ppf : ty -> unit = function
     | I1Ty -> fprintf ppf "i1"
     | I32Ty -> fprintf ppf "i32"
-    | PtrTy -> fprintf ppf "()*"
+    | PtrTy ty -> fprintf ppf "%a*" pp_print_ty ty
     | FunTy (res_ty, arg_tys) ->
         fprintf ppf "%a(%a)" pp_print_ty res_ty
           (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
@@ -52,7 +63,7 @@ let pp_print_ty ppf : ty -> unit =
   in
   pp_print_ty ppf
 
-let pp_print_param ppf (id, ty) =
+let pp_print_var ppf (id, ty) =
   fprintf ppf "%a: %a" pp_print_id id pp_print_ty ty
 
 let pp_print_const ppf : const -> unit = function
@@ -103,7 +114,7 @@ let pp_print_heap ppf : heap -> unit = function
       fprintf ppf "%a = " pp_print_id name;
       open_box 0;
       fprintf ppf "code(%a): %a.@;<1 2>"
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_param)
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_var)
         params pp_print_ty ret_ty;
       fprintf ppf "@[<v 0>%a@]" pp_print_exp body;
       close_box ()
