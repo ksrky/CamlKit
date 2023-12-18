@@ -15,13 +15,13 @@ type value = Const of const | Var of var | Glb of var
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | App of {fcn: value; args: value list}
   | If of {oper: relop; left: value; right: value; then_: exp; else_: exp}
-  | Halt of value
+  | Return of value
 
 and dec =
   | ValDec of {var: var; val_: value}
   | PrimDec of {var: var; left: value; oper: arithop; right: value}
+  | CallDec of {var: var; fcn: value; args: value list}
   | SubscrDec of {var: var; val_: value; idx: int}
   | MallocDec of {var: var; len: int}
   | UpdateDec of {var: var; strct: value; idx: int; val_: value}
@@ -35,13 +35,6 @@ type heap =
   | Tuple of {name: id; vals: value list}
 
 type prog = heap list * exp
-
-let mk_let decs body =
-  List.fold_right (fun dec body -> Let {dec; body}) decs body
-
-let return_ty : ty -> ty = function
-  | FunTy (ty, _) -> ty
-  | _ -> failwith "not a function type"
 
 open Format
 
@@ -78,10 +71,6 @@ let rec pp_print_val ppf : value -> unit = function
 and pp_print_exp ppf : exp -> unit = function
   | Let {dec; body} ->
       fprintf ppf "let %a in@ %a" pp_print_dec dec pp_print_exp body
-  | App {fcn; args} ->
-      fprintf ppf "%a(%a)" pp_print_val fcn
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_val)
-        args
   | If {left; oper; right; then_; else_} ->
       fprintf ppf "@[<v 2>if %a %s %a then@ %a@]@;@[<v 2>else@ %a@]"
         pp_print_val left
@@ -93,7 +82,7 @@ and pp_print_exp ppf : exp -> unit = function
         | Gt -> ">"
         | Ge -> ">=" )
         pp_print_val right pp_print_exp then_ pp_print_exp else_
-  | Halt val_ -> fprintf ppf "halt %a" pp_print_val val_
+  | Return val_ -> fprintf ppf "halt %a" pp_print_val val_
 
 and pp_print_dec ppf : dec -> unit = function
   | ValDec {var; val_} ->
@@ -102,6 +91,10 @@ and pp_print_dec ppf : dec -> unit = function
       fprintf ppf "%a = %a %s %a" pp_print_var var pp_print_val left
         (match oper with Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/")
         pp_print_val right
+  | CallDec {var; fcn; args} ->
+      fprintf ppf "%a = %a(%a)" pp_print_var var pp_print_val fcn
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_val)
+        args
   | SubscrDec {var; val_; idx} ->
       fprintf ppf "%a = %a[%i]" pp_print_var var pp_print_val val_ idx
   | MallocDec {var; len} -> fprintf ppf "%a = malloc(%i)" pp_print_var var len
@@ -111,11 +104,11 @@ and pp_print_dec ppf : dec -> unit = function
 
 let pp_print_heap ppf : heap -> unit = function
   | Code {var; params; body} ->
-      fprintf ppf "%a = " pp_print_id (fst var);
+      fprintf ppf "%a = " pp_print_var var;
       open_box 0;
-      fprintf ppf "code(%a): %a.@;<1 2>"
+      fprintf ppf "code(%a).@;<1 2>"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_var)
-        params pp_print_ty (snd var);
+        params;
       fprintf ppf "@[<v 0>%a@]" pp_print_exp body;
       close_box ()
   | Tuple {name; vals} ->
@@ -136,3 +129,12 @@ let pp_print_prog ppf (heaps, exp) : unit =
     heaps pp_print_exp exp
 
 let print_prog = pp_print_prog std_formatter
+
+let mk_let decs body =
+  List.fold_right (fun dec body -> Let {dec; body}) decs body
+
+let return_type : ty -> ty = function
+  | FunTy (ty, _) -> ty
+  | ty ->
+      fprintf err_formatter "return_type: %a" pp_print_ty ty;
+      failwith "bug"

@@ -15,13 +15,13 @@ type value = Const of const | Var of var | Glb of var
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | App of {fcn: value; args: value list}
   | If of {oper: relop; left: value; right: value; then_: exp; else_: exp}
-  | Halt of value
+  | Return of value
 
 and dec =
   | ValDec of {var: var; val_: value}
   | PrimDec of {var: var; left: value; oper: arithop; right: value}
+  | CallDec of {var: var; fcn: value; args: value list}
   | SubscrDec of {var: var; val_: value; idx: int}
   | MallocDec of {var: var; len: int}
   | UpdateDec of {var: var; strct: value; idx: int; val_: value}
@@ -36,6 +36,8 @@ type heap =
 
 type prog = heap list * exp
 
+val print_prog : prog -> unit
+
 val mk_let : dec list -> exp -> exp
 
-val print_prog : prog -> unit
+val return_type : ty -> ty

@@ -9,7 +9,7 @@ let c2i_const : K.const -> I.const = function
 let rec c2i_ty : K.ty -> I.ty = function
   | IntTy -> I32Ty
   | BoolTy -> I1Ty
-  | ContTy tys -> PtrTy (FunTy (I32Ty, List.map c2i_ty tys))
+  | ContTy tys -> FunTy (I32Ty, List.map c2i_ty tys)
   | TupleTy tys -> PtrTy (StrctTy (List.map c2i_ty tys))
 
 let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
@@ -79,21 +79,24 @@ let rec c2i_exp : K.exp -> I.exp = function
   | App {fcn; args} ->
       let ds, fcn' = c2i_val fcn in
       let dss, args' = List.split (List.map c2i_val args) in
-      I.mk_let (ds @ List.concat dss) (App {fcn= fcn'; args= args'})
+      let var = (Id.from_string "apptmp", I.return_type (typeof fcn)) in
+      I.mk_let
+        (ds @ List.concat dss @ [CallDec {var; fcn= fcn'; args= args'}])
+        (I.Return (I.Var var))
   | If {cond; then_; else_} ->
       let ds, cond' = c2i_val cond in
       let then' = c2i_exp then_ in
       let else' = c2i_exp else_ in
       I.mk_let ds
         (I.If
-           { oper= I.Ne
+           { oper= Ne
            ; left= cond'
-           ; right= I.Const (I.I1 0)
+           ; right= Const (I1 0)
            ; then_= else'
            ; else_= then' } )
   | Halt val_ ->
       let ds, val' = c2i_val val_ in
-      I.mk_let ds (Halt val')
+      I.mk_let ds (Return val')
 
 and c2i_dec : K.dec -> I.dec list = function
   | ValDec {var; val_} ->
@@ -116,7 +119,7 @@ and c2i_dec : K.dec -> I.dec list = function
 
 let c2i_heap ({var; params; body} : K.fundef) : I.heap =
   let params' = List.map (fun (x, ty) -> (x, c2i_ty ty)) params in
-  I.Code {var= c2i_var var; params= params'; body= c2i_exp body}
+  Code {var= c2i_var var; params= params'; body= c2i_exp body}
 
 let c2i_prog ((heaps, exp) : CC.prog) : I.prog =
   (List.map c2i_heap heaps, c2i_exp exp)
