@@ -14,28 +14,37 @@ let rec c2i_ty : K.ty -> I.ty = function
 
 let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
 
+let rec typeof : K.value -> I.ty = function
+  | Const (Int _) -> I32Ty
+  | Const (Bool _) -> I1Ty
+  | Var (_, ty) -> c2i_ty ty
+  | Glb (_, ty) -> c2i_ty ty
+  | Lam _ -> failwith "unreachable"
+  | Tuple vals -> PtrTy (StrctTy (List.map typeof vals))
+
 let rec c2i_val : K.value -> I.dec list * I.value = function
   | Const c -> ([], Const (c2i_const c))
-  | Var (x, _) -> ([], Var x)
-  | Glb (f, _) -> ([], Glb f)
+  | Var x -> ([], Var (c2i_var x))
+  | Glb f -> ([], Glb (c2i_var f))
   | Lam _ -> failwith "unreachable"
   | Tuple vals ->
-      let var0 = Id.from_string "y0" in
+      let tys = List.map typeof vals in
+      let var0 = (Id.from_string "y0", I.PtrTy (StrctTy tys)) in
       let vars =
         var0
         :: List.mapi
-             (fun i _ -> Id.from_string ("y" ^ string_of_int (i + 1)))
-             vals
+             (fun i ty -> (Id.from_string ("y" ^ string_of_int (i + 1)), ty))
+             tys
       in
       let decs = ref [] in
       let rec mk_tuple : int -> I.dec list = function
-        | 0 -> [MallocDec {name= var0; len= List.length vals}]
+        | 0 -> [MallocDec {var= var0; len= List.length vals}]
         | i ->
             let di, vi = c2i_val (List.nth vals (i - 1)) in
             decs := di @ !decs;
             UpdateDec
-              { name= List.nth vars i
-              ; var= List.nth vars (i - 1)
+              { var= List.nth vars i
+              ; strct= Var (List.nth vars (i - 1))
               ; idx= i
               ; val_= vi }
             :: mk_tuple (i - 1)
@@ -58,10 +67,13 @@ let rec c2i_exp : K.exp -> I.exp = function
            ; left= left'
            ; right= right'
            ; then_=
-               Let {dec= ValDec {name= fst var; val_= Const (I1 1)}; body= body'}
+               Let
+                 { dec= ValDec {var= c2i_var var; val_= Const (I1 1)}
+                 ; body= body' }
            ; else_=
-               Let {dec= ValDec {name= fst var; val_= Const (I1 0)}; body= body'}
-           } )
+               Let
+                 { dec= ValDec {var= c2i_var var; val_= Const (I1 0)}
+                 ; body= body' } } )
   | Let {dec; body} -> I.mk_let (c2i_dec dec) (c2i_exp body)
   | Letrec _ -> failwith "unreachable"
   | App {fcn; args} ->
@@ -86,13 +98,13 @@ let rec c2i_exp : K.exp -> I.exp = function
 and c2i_dec : K.dec -> I.dec list = function
   | ValDec {var; val_} ->
       let ds, val' = c2i_val val_ in
-      ds @ [ValDec {name= fst var; val_= val'}]
+      ds @ [ValDec {var= c2i_var var; val_= val'}]
   | PrimDec {var; left; oper; right} ->
       let ds1, left' = c2i_val left in
       let ds2, right' = c2i_val right in
       ds1 @ ds2
       @ [ PrimDec
-            { name= fst var
+            { var= c2i_var var
             ; left= left'
             ; oper=
                 List.assoc oper
@@ -100,12 +112,11 @@ and c2i_dec : K.dec -> I.dec list = function
             ; right= right' } ]
   | ProjDec {var; val_; idx} ->
       let ds, val' = c2i_val val_ in
-      ds @ [SubscrDec {name= fst var; val_= val'; idx}]
+      ds @ [SubscrDec {var= c2i_var var; val_= val'; idx}]
 
 let c2i_heap ({var; params; body} : K.fundef) : I.heap =
-  let params = failwith "tmp" in
-  let ret_ty = failwith "tmp" in
-  I.Code {name= fst var; params; ret_ty; body= c2i_exp body}
+  let params' = List.map (fun (x, ty) -> (x, c2i_ty ty)) params in
+  I.Code {var= c2i_var var; params= params'; body= c2i_exp body}
 
 let c2i_prog ((heaps, exp) : CC.prog) : I.prog =
   (List.map c2i_heap heaps, c2i_exp exp)

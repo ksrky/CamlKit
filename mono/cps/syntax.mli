@@ -31,8 +31,6 @@ and dec =
 
 type prog = exp
 
-val mk_vars : var list -> value list
-
 val mk_lam : var -> exp -> value
 
 val mk_lams : var list -> exp -> value

@@ -50,10 +50,10 @@ let rec cc_val (escs : escapes) (lcls : locals) : value -> value * escapes =
           { var
           ; params= env_var :: vars
           ; body= mk_let (mk_projs (Var env_var) escs') body' };
-        ( Tuple [Glb var; Tuple (mk_vars escs')]
+        ( Tuple [Glb var; Tuple (List.map (fun var -> Var var) escs')]
         , remove_dup (escs @ escs') // lcls )
-  | Tuple vals ->
-      let vals', escs' = cc_val_seq escs lcls vals in
+  | Tuple vtys ->
+      let vals', escs' = cc_val_seq escs lcls vtys in
       (Tuple vals', escs')
 
 and cc_val_seq (escs : escapes) (lcls : locals) (vals : value list) :

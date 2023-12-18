@@ -33,8 +33,6 @@ and dec =
 
 type prog = exp
 
-let mk_vars xs = List.map (fun x -> Var x) xs
-
 let mk_lam var body = Lam {vars= [var]; body}
 
 let mk_lams vars body = Lam {vars; body}

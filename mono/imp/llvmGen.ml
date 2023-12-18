@@ -5,14 +5,10 @@ let context : llcontext = global_context ()
 
 let builder : llbuilder = builder context
 
-let pointer_t = pointer_type
-
-let int_type : lltype = i32_type context
-
 let rec llvm_type : ty -> lltype = function
   | I1Ty -> i1_type context
   | I32Ty -> i32_type context
-  | PtrTy ty -> pointer_type (llvm_type ty) 
+  | PtrTy _ -> pointer_type context
   | FunTy (ret_ty, arg_tys) ->
       function_type (llvm_type ret_ty)
         (Array.of_list (List.map llvm_type arg_tys))
@@ -26,10 +22,10 @@ let codegen_const : const -> llvalue = function
 
 let codegen_val (llmod : llmodule) : value -> llvalue = function
   | Const c -> codegen_const c
-  | Var x-> (
+  | Var (x, _) -> (
     try Hashtbl.find named_values x
     with _ -> failwith ("no such variable " ^ Id.unique_name x) )
-  | Glb f -> (
+  | Glb (f, _) -> (
     match lookup_function (Id.unique_name f) llmod with
     | Some func -> func
     | None -> failwith ("no such function " ^ Id.unique_name f) )
@@ -37,9 +33,10 @@ let codegen_val (llmod : llmodule) : value -> llvalue = function
 let rec codegen_exp (llmod : llmodule) : exp -> unit = function
   | Let {dec; body} -> codegen_dec llmod dec; codegen_exp llmod body
   | App {fcn; args} ->
-      let fcn' = codegen_val llmod fcn in
-      let args' = Array.of_list (List.map (codegen_val llmod) args) in
-      let call_val = build_call fcn' args' "calltmp" builder in
+      let fcn_val = codegen_val llmod fcn in
+      let arg_vals = Array.of_list (List.map (codegen_val llmod) args) in
+      let ret_ty = return_type (type_of fcn_val) in
+      let call_val = build_call ret_ty fcn_val arg_vals "calltmp" builder in
       build_ret call_val builder |> ignore
   | If {oper; left; right; then_; else_} ->
       let left_val = codegen_val llmod left in
@@ -74,10 +71,10 @@ let rec codegen_exp (llmod : llmodule) : exp -> unit = function
   | Halt val_ -> build_ret (codegen_val llmod val_) builder |> ignore
 
 and codegen_dec (llmod : llmodule) : dec -> unit = function
-  | ValDec {name; val_} ->
+  | ValDec {var= id, ty; val_} ->
       let val' = codegen_val llmod val_ in
-      Hashtbl.add named_values name val'
-  | PrimDec {name; left; oper; right} ->
+      Hashtbl.add named_values id val'
+  | PrimDec {var= id, _; left; oper; right} ->
       let left_val = codegen_val llmod left in
       let right_val = codegen_val llmod right in
       let prim_val =
@@ -88,25 +85,26 @@ and codegen_dec (llmod : llmodule) : dec -> unit = function
         | Div -> build_sdiv )
           left_val right_val "primtmp" builder
       in
-      Hashtbl.add named_values name prim_val
-  | SubscrDec {name; val_; idx} ->
-      let tuple_val = codegen_val llmod val_ in
-      let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
-      let elm_val = build_load elm_ptr "elmtmp" builder in
-      Hashtbl.add named_values name elm_val
-  | MallocDec {name; len} ->
-      let strct_val =
-        (** Malloc: build_malloc creates malloc prototype of type i8*
-            https://llvm.org/doxygen/IRBuilder_8cpp_source.html#l00301 *)
-        build_malloc (i32_type context) "envtmp"
+      Hashtbl.add named_values id prim_val
+  | SubscrDec {var= name, ty; val_; idx} ->
+      let strct_val = codegen_val llmod val_ in
+      let elm_ptr =
+        build_struct_gep (type_of strct_val) strct_val (idx - 1) "elmptr"
           builder
       in
-      Hashtbl.add named_values name strct_val
-  | UpdateDec {name; var; idx; val_} ->
-      let tuple_val = Hashtbl.find named_values var in
-      let elm_ptr = build_struct_gep tuple_val (idx - 1) "elmptr" builder in
+      let elm_val = build_load (llvm_type ty) elm_ptr "elmtmp" builder in
+      Hashtbl.add named_values name elm_val
+  | MallocDec {var= id, _; len} ->
+      let strct_val = build_malloc (i32_type context) "envtmp" builder in
+      Hashtbl.add named_values id strct_val
+  | UpdateDec {var= id, ty; strct; idx; val_} ->
+      let strct_val = codegen_val llmod strct in
+      let elm_ptr =
+        build_struct_gep (type_of strct_val) strct_val (idx - 1) "elmptr"
+          builder
+      in
       build_store (codegen_val llmod val_) elm_ptr builder |> ignore;
-      Hashtbl.add named_values name tuple_val
+      Hashtbl.add named_values id strct_val
 
 let set_params (func : llvalue) (params : id list) : unit =
   Array.iteri
@@ -116,9 +114,9 @@ let set_params (func : llvalue) (params : id list) : unit =
       Hashtbl.add named_values id v )
     (Llvm.params func)
 
-let codegen_proto (llmod : llmodule) (name : id) (params : (id * ty) list)
-    (ret_ty : ty) : unit =
-  let name = Id.unique_name name in
+let codegen_proto (llmod : llmodule) ((id, ret_ty) : var)
+    (params : (id * ty) list) : unit =
+  let name = Id.unique_name id in
   let param_tys =
     Array.of_list (List.map (fun (_, ty) -> llvm_type ty) params)
   in
@@ -131,8 +129,8 @@ let codegen_proto (llmod : llmodule) (name : id) (params : (id * ty) list)
   set_params func (List.map fst params)
 
 let codegen_func (llmod : llmodule) : heap -> unit = function
-  | Code {name; params; body} -> (
-      let name = Id.unique_name name in
+  | Code {var; params; body} -> (
+      let name = Id.unique_name (fst var) in
       Hashtbl.clear named_values;
       let func = Option.get (lookup_function name llmod) in
       set_params func (List.map fst params);
@@ -160,8 +158,8 @@ let codegen (modid : string) ((heaps, exp) : prog) : llmodule =
   let llmod = create_module context modid in
   List.iter
     (function
-      | Code {name; params; ret_ty; _} -> codegen_proto llmod name params ret_ty
-      | Tuple _ -> () )
+      | Code {var; params; _} -> codegen_proto llmod var params | Tuple _ -> ()
+      )
     heaps;
   List.iter (codegen_func llmod) heaps;
   codegen_main llmod exp;

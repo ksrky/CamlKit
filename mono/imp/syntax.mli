@@ -11,7 +11,7 @@ type const = I1 of int | I32 of int
 
 type var = id * ty
 
-type value = Const of const | Var of id | Glb of id
+type value = Const of const | Var of var | Glb of var
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -20,18 +20,18 @@ and exp =
   | Halt of value
 
 and dec =
-  | ValDec of {name: id; val_: value}
-  | PrimDec of {name: id; left: value; oper: arithop; right: value}
-  | SubscrDec of {name: id; val_: value; idx: int}
-  | MallocDec of {name: id; len: int}
-  | UpdateDec of {name: id; var: id; idx: int; val_: value}
+  | ValDec of {var: var; val_: value}
+  | PrimDec of {var: var; left: value; oper: arithop; right: value}
+  | SubscrDec of {var: var; val_: value; idx: int}
+  | MallocDec of {var: var; len: int}
+  | UpdateDec of {var: var; strct: value; idx: int; val_: value}
 
 and arithop = Add | Sub | Mul | Div
 
 and relop = Eq | Ne | Lt | Le | Gt | Ge
 
 type heap =
-  | Code of {name: id; params: (id * ty) list; ret_ty: ty; body: exp}
+  | Code of {var: var; params: var list; body: exp}
   | Tuple of {name: id; vals: value list}
 
 type prog = heap list * exp

@@ -11,7 +11,7 @@ type const = I1 of int | I32 of int
 
 type var = id * ty
 
-type value = Const of const | Var of id | Glb of id
+type value = Const of const | Var of var | Glb of var
 
 and exp =
   | Let of {dec: dec; body: exp}
@@ -20,18 +20,18 @@ and exp =
   | Halt of value
 
 and dec =
-  | ValDec of {name: id; val_: value}
-  | PrimDec of {name: id; left: value; oper: arithop; right: value}
-  | SubscrDec of {name: id; val_: value; idx: int}
-  | MallocDec of {name: id; len: int}
-  | UpdateDec of {name: id; var: id; idx: int; val_: value}
+  | ValDec of {var: var; val_: value}
+  | PrimDec of {var: var; left: value; oper: arithop; right: value}
+  | SubscrDec of {var: var; val_: value; idx: int}
+  | MallocDec of {var: var; len: int}
+  | UpdateDec of {var: var; strct: value; idx: int; val_: value}
 
 and arithop = Add | Sub | Mul | Div
 
 and relop = Eq | Ne | Lt | Le | Gt | Ge
 
 type heap =
-  | Code of {name: id; params: var list; ret_ty: ty; body: exp}
+  | Code of {var: var; params: var list; body: exp}
   | Tuple of {name: id; vals: value list}
 
 type prog = heap list * exp
@@ -72,8 +72,8 @@ let pp_print_const ppf : const -> unit = function
 
 let rec pp_print_val ppf : value -> unit = function
   | Const c -> fprintf ppf "%a" pp_print_const c
-  | Var x -> pp_print_id ppf x
-  | Glb x -> fprintf ppf "$%s" (Id.unique_name x)
+  | Var (x, _) -> pp_print_id ppf x
+  | Glb (x, _) -> fprintf ppf "$%s" (Id.unique_name x)
 
 and pp_print_exp ppf : exp -> unit = function
   | Let {dec; body} ->
@@ -96,26 +96,26 @@ and pp_print_exp ppf : exp -> unit = function
   | Halt val_ -> fprintf ppf "halt %a" pp_print_val val_
 
 and pp_print_dec ppf : dec -> unit = function
-  | ValDec {name; val_} ->
-      fprintf ppf "%a = %a" pp_print_id name pp_print_val val_
-  | PrimDec {name; left; oper; right} ->
-      fprintf ppf "%a = %a %s %a" pp_print_id name pp_print_val left
+  | ValDec {var; val_} ->
+      fprintf ppf "%a = %a" pp_print_var var pp_print_val val_
+  | PrimDec {var; left; oper; right} ->
+      fprintf ppf "%a = %a %s %a" pp_print_var var pp_print_val left
         (match oper with Add -> "+" | Sub -> "-" | Mul -> "*" | Div -> "/")
         pp_print_val right
-  | SubscrDec {name; val_; idx} ->
-      fprintf ppf "%a = %a[%i]" pp_print_id name pp_print_val val_ idx
-  | MallocDec {name; len} -> fprintf ppf "%a = malloc(%i)" pp_print_id name len
-  | UpdateDec {name; var; idx; val_} ->
-      fprintf ppf "%a = %a[%i] <- %a" pp_print_id name pp_print_id var idx
+  | SubscrDec {var; val_; idx} ->
+      fprintf ppf "%a = %a[%i]" pp_print_var var pp_print_val val_ idx
+  | MallocDec {var; len} -> fprintf ppf "%a = malloc(%i)" pp_print_var var len
+  | UpdateDec {var; strct; idx; val_} ->
+      fprintf ppf "%a = %a[%i] <- %a" pp_print_var var pp_print_val strct idx
         pp_print_val val_
 
 let pp_print_heap ppf : heap -> unit = function
-  | Code {name; params; ret_ty; body} ->
-      fprintf ppf "%a = " pp_print_id name;
+  | Code {var; params; body} ->
+      fprintf ppf "%a = " pp_print_id (fst var);
       open_box 0;
       fprintf ppf "code(%a): %a.@;<1 2>"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_var)
-        params pp_print_ty ret_ty;
+        params pp_print_ty (snd var);
       fprintf ppf "@[<v 0>%a@]" pp_print_exp body;
       close_box ()
   | Tuple {name; vals} ->
