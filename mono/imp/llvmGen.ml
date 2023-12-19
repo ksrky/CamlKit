@@ -5,30 +5,33 @@ let context : llcontext = global_context ()
 
 let builder : llbuilder = builder context
 
-let rec llvm_type : S.ty -> lltype = function
+let rec to_lltype : S.ty -> lltype = function
   | I1Ty -> i1_type context
   | I32Ty -> i32_type context
   | PtrTy _ -> pointer_type context
   | FunTy (ret_ty, arg_tys) ->
-      function_type (llvm_type ret_ty)
-        (Array.of_list (List.map llvm_type arg_tys))
-  | StrctTy tys -> struct_type context (Array.of_list (List.map llvm_type tys))
+      function_type (to_lltype ret_ty)
+        (Array.of_list (List.map to_lltype arg_tys))
+  | StrctTy tys -> struct_type context (Array.of_list (List.map to_lltype tys))
 
 let named_values : (S.id, llvalue) Hashtbl.t = Hashtbl.create 100
 
-let codegen_const : S.const -> llvalue = function
-  | I1 i -> const_int (i1_type context) i
-  | I32 i -> const_int (i32_type context) i
+let codegen_const : S.const -> llvalue * lltype = function
+  | I1 i -> (const_int (i1_type context) i, to_lltype I1Ty)
+  | I32 i -> (const_int (i32_type context) i, to_lltype I32Ty)
 
-let codegen_val (llmod : llmodule) : S.value -> llvalue = function
+let codegen_valty (llmod : llmodule) : S.value -> llvalue * lltype = function
   | Const c -> codegen_const c
-  | Var (x, _) -> (
-    try Hashtbl.find named_values x
+  | Var (x, ty) -> (
+    try (Hashtbl.find named_values x, to_lltype ty)
     with _ -> failwith ("no such variable " ^ Id.unique_name x) )
-  | Glb (f, _) -> (
+  | Glb (f, ty) -> (
     match lookup_function (Id.unique_name f) llmod with
-    | Some func -> func
+    | Some func -> (func, to_lltype ty)
     | None -> failwith ("no such function " ^ Id.unique_name f) )
+
+let codegen_val (llmod : llmodule) (val_ : S.value) : llvalue =
+  fst (codegen_valty llmod val_)
 
 let rec codegen_exp (llmod : llmodule) : S.exp -> unit = function
   | Let {dec; body} -> codegen_dec llmod dec; codegen_exp llmod body
@@ -81,25 +84,23 @@ and codegen_dec (llmod : llmodule) : S.dec -> unit = function
       in
       Hashtbl.add named_values id prim_val
   | CallDec {var= id, ty; fcn; args} ->
-      let fcn_val = codegen_val llmod fcn in
+      let fcn_val, fcn_ty = codegen_valty llmod fcn in
       let arg_vals = Array.of_list (List.map (codegen_val llmod) args) in
-      let call_val =
-        build_call (llvm_type ty) fcn_val arg_vals "calltmp" builder
-      in
-      build_ret call_val builder |> ignore;
+      let call_val = build_call fcn_ty fcn_val arg_vals "calltmp" builder in
+      print_newline ();
       Hashtbl.add named_values id call_val
-  | SubscrDec {var= name, ty; val_; idx} ->
+  | SubscrDec {var= id, ty; val_; idx} ->
       let strct_val = codegen_val llmod val_ in
       let elm_ptr =
         build_struct_gep (type_of strct_val) strct_val (idx - 1) "elmptr"
           builder
       in
-      let elm_val = build_load (llvm_type ty) elm_ptr "elmtmp" builder in
-      Hashtbl.add named_values name elm_val
+      let elm_val = build_load (to_lltype ty) elm_ptr "elmtmp" builder in
+      Hashtbl.add named_values id elm_val
   | MallocDec {var= id, _; len} ->
       let strct_val = build_malloc (i32_type context) "envtmp" builder in
       Hashtbl.add named_values id strct_val
-  | UpdateDec {var= id, ty; strct; idx; val_} ->
+  | UpdateDec {var= id, _; strct; idx; val_} ->
       let strct_val = codegen_val llmod strct in
       let elm_ptr =
         build_struct_gep (type_of strct_val) strct_val (idx - 1) "elmptr"
@@ -119,9 +120,9 @@ let set_params (func : llvalue) (params : S.id list) : unit =
 let codegen_proto (llmod : llmodule) ((id, ty) : S.var) (params : S.var list) =
   let name = Id.unique_name id in
   let param_tys =
-    Array.of_list (List.map (fun (_, ty) -> llvm_type ty) params)
+    Array.of_list (List.map (fun (_, ty) -> to_lltype ty) params)
   in
-  let ret_ty = llvm_type (S.return_type ty) in
+  let ret_ty = to_lltype (S.return_type ty) in
   let func_ty = function_type ret_ty param_tys in
   let func =
     match lookup_function name llmod with

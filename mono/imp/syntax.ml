@@ -57,7 +57,7 @@ let pp_print_ty ppf : ty -> unit =
   pp_print_ty ppf
 
 let pp_print_var ppf (id, ty) =
-  fprintf ppf "%a: %a" pp_print_id id pp_print_ty ty
+  fprintf ppf "%a : %a" pp_print_id id pp_print_ty ty
 
 let pp_print_const ppf : const -> unit = function
   | I1 i -> fprintf ppf "%i" i
@@ -82,7 +82,7 @@ and pp_print_exp ppf : exp -> unit = function
         | Gt -> ">"
         | Ge -> ">=" )
         pp_print_val right pp_print_exp then_ pp_print_exp else_
-  | Return val_ -> fprintf ppf "halt %a" pp_print_val val_
+  | Return val_ -> fprintf ppf "ret %a" pp_print_val val_
 
 and pp_print_dec ppf : dec -> unit = function
   | ValDec {var; val_} ->

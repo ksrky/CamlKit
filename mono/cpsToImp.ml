@@ -28,13 +28,14 @@ let rec c2i_val : K.value -> I.dec list * I.value = function
   | Glb f -> ([], Glb (c2i_var f))
   | Lam _ -> failwith "unreachable"
   | Tuple vals ->
-      let tys = List.map typeof vals in
-      let var0 = (Id.from_string "y0", I.PtrTy (StrctTy tys)) in
+      let tuple_ty = I.PtrTy (StrctTy (List.map typeof vals)) in
+      let var0 = (Id.from_string "y0", tuple_ty) in
       let vars =
         var0
         :: List.mapi
-             (fun i ty -> (Id.from_string ("y" ^ string_of_int (i + 1)), ty))
-             tys
+             (fun i _ ->
+               (Id.from_string ("y" ^ string_of_int (i + 1)), tuple_ty) )
+             vals
       in
       let decs = ref [] in
       let rec mk_tuple : int -> I.dec list = function
@@ -82,7 +83,7 @@ let rec c2i_exp : K.exp -> I.exp = function
       let var = (Id.from_string "apptmp", I.return_type (typeof fcn)) in
       I.mk_let
         (ds @ List.concat dss @ [CallDec {var; fcn= fcn'; args= args'}])
-        (I.Return (I.Var var))
+        (Return (Var var))
   | If {cond; then_; else_} ->
       let ds, cond' = c2i_val cond in
       let then' = c2i_exp then_ in
