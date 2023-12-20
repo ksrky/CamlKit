@@ -1,3 +1,11 @@
+(library
+ (name test)
+ (libraries mono)
+ (flags -open Mono)
+ (inline_tests)
+ (preprocess
+  (pps ppx_inline_test ppx_expect)))
+
 (cram
  (deps
   (source_tree ../ex)))
