@@ -96,11 +96,9 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let args', escs2 = cc_val_seq escs1 lcls args in
       match fcn' with
       (* tmp: closures are always tuple *)
-      | Tuple _, _ ->
+      | Tuple _, TupleTy [code_ty; env_ty] ->
           let env_id = Id.from_string "env" in
-          let env_ty = TupleTy (List.map snd escs2) in
           let code_id = Id.from_string "code" in
-          let code_ty = ContTy (env_ty :: List.map snd args') in
           let clos_id = Id.from_string "clos" in
           let clos_ty = TupleTy [code_ty; env_ty] in
           ( mk_let

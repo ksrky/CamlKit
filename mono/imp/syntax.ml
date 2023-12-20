@@ -36,6 +36,13 @@ type heap =
 
 type prog = heap list * exp
 
+let mk_let decs body =
+  List.fold_right (fun dec body -> Let {dec; body}) decs body
+
+let return_type = I32Ty
+
+let deref_type = function PtrTy ty -> ty | _ -> failwith "not a pointer"
+
 open Format
 
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
@@ -129,12 +136,3 @@ let pp_print_prog ppf (heaps, exp) : unit =
     heaps pp_print_exp exp
 
 let print_prog = pp_print_prog std_formatter
-
-let mk_let decs body =
-  List.fold_right (fun dec body -> Let {dec; body}) decs body
-
-let return_type : ty -> ty = function
-  | FunTy (ty, _) -> ty
-  | ty ->
-      fprintf err_formatter "return_type: %a" pp_print_ty ty;
-      failwith "bug"

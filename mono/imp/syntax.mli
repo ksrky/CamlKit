@@ -36,8 +36,10 @@ type heap =
 
 type prog = heap list * exp
 
-val print_prog : prog -> unit
-
 val mk_let : dec list -> exp -> exp
 
-val return_type : ty -> ty
+val return_type : ty
+
+val deref_type : ty -> ty
+
+val print_prog : prog -> unit

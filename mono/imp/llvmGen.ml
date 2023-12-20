@@ -16,18 +16,18 @@ let rec to_lltype : S.ty -> lltype = function
 
 let named_values : (S.id, llvalue) Hashtbl.t = Hashtbl.create 100
 
-let codegen_const : S.const -> llvalue * lltype = function
-  | I1 i -> (const_int (i1_type context) i, to_lltype I1Ty)
-  | I32 i -> (const_int (i32_type context) i, to_lltype I32Ty)
+let codegen_const : S.const -> llvalue * S.ty = function
+  | I1 i -> (const_int (i1_type context) i, I1Ty)
+  | I32 i -> (const_int (i32_type context) i, I32Ty)
 
-let codegen_valty (llmod : llmodule) : S.value -> llvalue * lltype = function
+let codegen_valty (llmod : llmodule) : S.value -> llvalue * S.ty = function
   | Const c -> codegen_const c
   | Var (x, ty) -> (
-    try (Hashtbl.find named_values x, to_lltype ty)
+    try (Hashtbl.find named_values x, ty)
     with _ -> failwith ("no such variable " ^ Id.unique_name x) )
   | Glb (f, ty) -> (
     match lookup_function (Id.unique_name f) llmod with
-    | Some func -> (func, to_lltype ty)
+    | Some func -> (func, ty)
     | None -> failwith ("no such function " ^ Id.unique_name f) )
 
 let codegen_val (llmod : llmodule) (val_ : S.value) : llvalue =
@@ -84,16 +84,17 @@ and codegen_dec (llmod : llmodule) : S.dec -> unit = function
       in
       Hashtbl.add named_values id prim_val
   | CallDec {var= id, ty; fcn; args} ->
-      let fcn_val, fcn_ty = codegen_valty llmod fcn in
+      let fcn_val, fcn_ptrty = codegen_valty llmod fcn in
+      let fcn_ty = to_lltype (S.deref_type fcn_ptrty) in
       let arg_vals = Array.of_list (List.map (codegen_val llmod) args) in
       let call_val = build_call fcn_ty fcn_val arg_vals "calltmp" builder in
-      print_newline ();
       Hashtbl.add named_values id call_val
   | SubscrDec {var= id, ty; val_; idx} ->
       let strct_val = codegen_val llmod val_ in
       let elm_ptr =
-        build_struct_gep (type_of strct_val) strct_val (idx - 1) "elmptr"
-          builder
+        build_gep (type_of strct_val) strct_val
+          [|const_int (i32_type context) (idx - 1)|]
+          "elmptr" builder
       in
       let elm_val = build_load (to_lltype ty) elm_ptr "elmtmp" builder in
       Hashtbl.add named_values id elm_val
@@ -103,8 +104,9 @@ and codegen_dec (llmod : llmodule) : S.dec -> unit = function
   | UpdateDec {var= id, _; strct; idx; val_} ->
       let strct_val = codegen_val llmod strct in
       let elm_ptr =
-        build_struct_gep (type_of strct_val) strct_val (idx - 1) "elmptr"
-          builder
+        build_gep (type_of strct_val) strct_val
+          [|const_int (i32_type context) (idx - 1)|]
+          "elmptr" builder
       in
       build_store (codegen_val llmod val_) elm_ptr builder |> ignore;
       Hashtbl.add named_values id strct_val
@@ -122,7 +124,7 @@ let codegen_proto (llmod : llmodule) ((id, ty) : S.var) (params : S.var list) =
   let param_tys =
     Array.of_list (List.map (fun (_, ty) -> to_lltype ty) params)
   in
-  let ret_ty = to_lltype (S.return_type ty) in
+  let ret_ty = to_lltype S.return_type in
   let func_ty = function_type ret_ty param_tys in
   let func =
     match lookup_function name llmod with

@@ -9,7 +9,7 @@ let c2i_const : K.const -> I.const = function
 let rec c2i_ty : K.ty -> I.ty = function
   | IntTy -> I32Ty
   | BoolTy -> I1Ty
-  | ContTy tys -> FunTy (I32Ty, List.map c2i_ty tys)
+  | ContTy tys -> PtrTy (FunTy (I.return_type, List.map c2i_ty tys))
   | TupleTy tys -> PtrTy (StrctTy (List.map c2i_ty tys))
 
 let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
@@ -74,7 +74,7 @@ let rec c2i_exp : K.exp -> I.exp = function
   | App {fcn; args} ->
       let ds, fcn' = c2i_val fcn in
       let dss, args' = List.split (List.map c2i_val args) in
-      let var = (Id.from_string "apptmp", I.return_type (c2i_ty (snd fcn))) in
+      let var = (Id.from_string "apptmp", I.return_type) in
       I.mk_let
         (ds @ List.concat dss @ [CallDec {var; fcn= fcn'; args= args'}])
         (Return (Var var))
