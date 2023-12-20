@@ -20,11 +20,7 @@
  (synopsis
   "CamlKit is the name of OCaml's subset language and its compiler.")
  (description "A longer description")
- (depends
-  ocaml
-  dune
-  (llvm
-   (<= : "14.0.6")))
+ (depends ocaml dune)
  (tags
   ("compiler" "programming language" "ocaml" "secd machine")))
 

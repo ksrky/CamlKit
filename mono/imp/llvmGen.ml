@@ -5,6 +5,8 @@ let context : llcontext = global_context ()
 
 let builder : llbuilder = builder context
 
+let index_int = const_int (i32_type context)
+
 let rec to_lltype : S.ty -> lltype = function
   | I1Ty -> i1_type context
   | I32Ty -> i32_type context
@@ -93,7 +95,7 @@ and codegen_dec (llmod : llmodule) : S.dec -> unit = function
       let strct_val = codegen_val llmod val_ in
       let elm_ptr =
         build_gep (type_of strct_val) strct_val
-          [|const_int (i32_type context) (idx - 1)|]
+          [|index_int (idx - 1)|]
           "elmptr" builder
       in
       let elm_val = build_load (to_lltype ty) elm_ptr "elmtmp" builder in
@@ -105,7 +107,7 @@ and codegen_dec (llmod : llmodule) : S.dec -> unit = function
       let strct_val = codegen_val llmod strct in
       let elm_ptr =
         build_gep (type_of strct_val) strct_val
-          [|const_int (i32_type context) (idx - 1)|]
+          [|index_int (idx - 1)|]
           "elmptr" builder
       in
       build_store (codegen_val llmod val_) elm_ptr builder |> ignore;

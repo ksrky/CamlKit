@@ -12,14 +12,11 @@ dune-build:
 dune-test:
 	$(DUNE) test
 
-runtime.ll:
-	$(CLANG) -S -emit-llvm mono/runtime.c
-
-.PHONY: compile
-compile: runtime.ll
+.PHONY: compile-mono
+compile:
 	$(DUNE) exec camlkitopt $(f)
-	$(CLANG) runtime.ll $(f:.mlkit=.ll) -o "main"
+	$(CLANG) $(f:.mlkit=.ll) -o "main"
 
 .PHONY: clean
 clean:
-	rm main runtime.ll
+	rm main
