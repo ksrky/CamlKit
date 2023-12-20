@@ -1,6 +1,0 @@
-{
-  "ocaml.sandbox": {
-    "kind": "global"
-  },
-  "editor.formatOnSave": true
-}
