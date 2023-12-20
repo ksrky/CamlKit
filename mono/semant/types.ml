@@ -17,7 +17,7 @@ let rec zonk_ty : ty -> ty = function
         ty' )
 
 let rec zonk_aexp : aexp -> aexp = function
-  | VarAExp x -> VarAExp x
+  | VarAExp (x, ty) -> VarAExp (x, zonk_ty ty)
   | IntAExp i -> IntAExp i
   | BoolAExp b -> BoolAExp b
   | NilAExp -> NilAExp

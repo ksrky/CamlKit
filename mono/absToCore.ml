@@ -32,15 +32,15 @@ let rec a2c_exp : A.aexp -> C.exp = function
   | IfAExp {cond; then_; else_} ->
       If {cond= a2c_expty cond; then_= a2c_expty then_; else_= a2c_expty else_}
   | LetAExp {bnds; body} ->
-      let vars, bnds =
+      let vars, bnds' =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body= _, body_ty}) ->
-               ( (name, lambda_ty params body_ty)
+             (fun (A.ABind {name; params; body}) ->
+               ( (name, lambda_ty params (snd body))
                , C.lams (List.map a2c_var params) (a2c_expty body) ) )
              bnds )
       in
-      Let {isrec= false; vars; bnds; body= a2c_expty body}
+      Let {isrec= false; vars; bnds= bnds'; body= a2c_expty body}
   | LetrecAExp {bnds; body} ->
       let vars, bnds =
         List.split
