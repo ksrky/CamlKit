@@ -72,6 +72,8 @@ let rec pp_print_ty ppf = function
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ",@ ") pp_print_ty)
         tys
 
+let with_paren ppr ppf = fprintf ppf "(%a)" ppr (* TODO: move to Common *)
+
 let pp_print_var ppf (id, ty) =
   fprintf ppf "%a : %a" pp_print_id id pp_print_ty ty
 
@@ -115,8 +117,10 @@ and pp_print_exp ppf = function
   | Halt val_ -> fprintf ppf "halt %a" (pp_print_valty true) val_
 
 and pp_print_fundef ppf {var; params; body} =
-  fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_var var
-    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
+  fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id (fst var)
+    (pp_print_list
+       ~pp_sep:(fun ppf () -> fprintf ppf " ")
+       (with_paren pp_print_var) )
     (* tmp: fprintf with paren *)
     params pp_print_exp body
 
