@@ -12,24 +12,26 @@ type var = id * ty
 
 type value =
   | Const of const
-  | Var of var
-  | Glb of var
+  | Var of id
+  | Glb of id
   | Lam of {vars: var list; body: exp}
-  | Tuple of value list
+  | Tuple of valty list
+
+and valty = value * ty
 
 and exp =
   | Let of {dec: dec; body: exp}
   | Letrec of {fundefs: fundef list; body: exp}
-  | App of {fcn: value; args: value list}
-  | If of {cond: value; then_: exp; else_: exp}
-  | Halt of value
+  | App of {fcn: valty; args: valty list}
+  | If of {cond: valty; then_: exp; else_: exp}
+  | Halt of valty
 
 and fundef = {var: var; params: var list; body: exp}
 
 and dec =
-  | ValDec of {var: var; val_: value}
-  | PrimDec of {var: var; left: value; oper: oper; right: value}
-  | ProjDec of {var: var; val_: value; idx: int}
+  | ValDec of {var: var; val_: valty}
+  | PrimDec of {var: var; left: valty; oper: oper; right: valty}
+  | ProjDec of {var: var; val_: valty; idx: int}
 
 type prog = exp
 
@@ -75,8 +77,8 @@ let pp_print_var ppf (id, ty) =
 
 let rec pp_print_val paren ppf = function
   | Const c -> pp_print_const ppf c
-  | Var x -> pp_print_var ppf x
-  | Glb x -> fprintf ppf "$%s" (Id.unique_name (fst x))
+  | Var x -> pp_print_id ppf x
+  | Glb f -> fprintf ppf "$%s" (Id.unique_name f)
   | Lam {vars; body} ->
       fprintf ppf
         (if paren then "(@[<1>fun %a ->@ %a@])" else "@[<1>fun %a ->@ %a@]")
@@ -86,8 +88,11 @@ let rec pp_print_val paren ppf = function
       fprintf ppf "(%a)"
         (pp_print_list
            ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
-           (pp_print_val false) )
+           (pp_print_valty false) )
         vals
+
+and pp_print_valty paren ppf (val_, _) =
+  fprintf ppf "%a" (pp_print_val paren) val_
 
 and pp_print_exp ppf = function
   | Let {dec; body} ->
@@ -99,15 +104,15 @@ and pp_print_exp ppf = function
            pp_print_fundef )
         fundefs pp_print_exp body
   | App {fcn; args} ->
-      fprintf ppf "@[<2>%a@ %a@]" (pp_print_val true) fcn
+      fprintf ppf "@[<2>%a@ %a@]" (pp_print_valty true) fcn
         (pp_print_list
            ~pp_sep:(fun ppf () -> fprintf ppf " ")
-           (pp_print_val true) )
+           (pp_print_valty true) )
         args
   | If {cond; then_; else_} ->
       fprintf ppf "@[<v 2>if %a then@ %a@]@;@[<v 2>else@ %a@]"
-        (pp_print_val true) cond pp_print_exp then_ pp_print_exp else_
-  | Halt val_ -> fprintf ppf "halt %a" (pp_print_val true) val_
+        (pp_print_valty true) cond pp_print_exp then_ pp_print_exp else_
+  | Halt val_ -> fprintf ppf "halt %a" (pp_print_valty true) val_
 
 and pp_print_fundef ppf {var; params; body} =
   fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_var var
@@ -117,16 +122,16 @@ and pp_print_fundef ppf {var; params; body} =
 
 and pp_print_dec ppf : dec -> unit = function
   | ValDec {var; val_} ->
-      fprintf ppf "%a =@ %a" pp_print_var var (pp_print_val false) val_
+      fprintf ppf "%a =@ %a" pp_print_var var (pp_print_valty false) val_
   | PrimDec {var; left; oper; right} ->
-      fprintf ppf "%a =@ %a %s %a" pp_print_var var (pp_print_val true) left
+      fprintf ppf "%a =@ %a %s %a" pp_print_var var (pp_print_valty true) left
         (List.assoc oper
            [ (C.Add, "+"); (C.Sub, "-"); (C.Mul, "*"); (C.Div, "/"); (C.Eq, "=")
            ; (C.Ne, "<>"); (C.Lt, "<"); (C.Le, "<="); (C.Gt, ">"); (C.Ge, ">=")
            ] )
-        (pp_print_val true) right
+        (pp_print_valty true) right
   | ProjDec {var; val_; idx} ->
-      fprintf ppf "%a =@ %a.%i" pp_print_var var (pp_print_val true) val_ idx
+      fprintf ppf "%a =@ %a.%i" pp_print_var var (pp_print_valty true) val_ idx
 
 let pp_print_prog ppf exp = pp_print_exp ppf exp; print_newline ()
 

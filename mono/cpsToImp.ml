@@ -14,21 +14,23 @@ let rec c2i_ty : K.ty -> I.ty = function
 
 let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
 
-let rec typeof : K.value -> I.ty = function
+(*let rec typeof : K.valty -> I.ty = function
   | Const (Int _) -> I32Ty
   | Const (Bool _) -> I1Ty
   | Var (_, ty) -> c2i_ty ty
   | Glb (_, ty) -> c2i_ty ty
   | Lam _ -> failwith "unreachable"
-  | Tuple vals -> PtrTy (StrctTy (List.map typeof vals))
+  | Tuple vals -> PtrTy (StrctTy (List.map typeof vals))*)
 
-let rec c2i_val : K.value -> I.dec list * I.value = function
-  | Const c -> ([], Const (c2i_const c))
-  | Var x -> ([], Var (c2i_var x))
-  | Glb f -> ([], Glb (c2i_var f))
-  | Lam _ -> failwith "unreachable"
-  | Tuple vals ->
-      let tuple_ty = I.PtrTy (StrctTy (List.map typeof vals)) in
+let rec c2i_val : K.valty -> I.dec list * I.value = function
+  | Const c, _ -> ([], Const (c2i_const c))
+  | Var x, ty -> ([], Var (c2i_var (x, ty)))
+  | Glb f, ty -> ([], Glb (c2i_var (f, ty)))
+  | Lam _, _ -> failwith "unreachable"
+  | Tuple vals, _ ->
+      let tuple_ty =
+        I.PtrTy (StrctTy (List.map (fun v -> c2i_ty (snd v)) vals))
+      in
       let var0 = (Id.from_string "y0", tuple_ty) in
       let vars =
         var0
@@ -80,7 +82,7 @@ let rec c2i_exp : K.exp -> I.exp = function
   | App {fcn; args} ->
       let ds, fcn' = c2i_val fcn in
       let dss, args' = List.split (List.map c2i_val args) in
-      let var = (Id.from_string "apptmp", I.return_type (typeof fcn)) in
+      let var = (Id.from_string "apptmp", I.return_type (c2i_ty (snd fcn))) in
       I.mk_let
         (ds @ List.concat dss @ [CallDec {var; fcn= fcn'; args= args'}])
         (Return (Var var))

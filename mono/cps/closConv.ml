@@ -25,39 +25,42 @@ let append_fundef fundef : unit = fundef_list := fundef :: !fundef_list
 
 let globals : id list ref = ref []
 
-let rec cc_val (escs : escapes) (lcls : locals) : value -> value * escapes =
+let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
   function
-  | Const c -> (Const c, escs)
-  | Var x when List.mem (fst x) lcls -> (Var x, escs)
-  | Var f when List.mem (fst f) !globals -> (Glb f, escs)
-  | Var x ->
-      let _, escs' = lookup_env escs x in
-      (Var x, escs')
-  | Glb _ -> failwith "unreahcble"
-  | Lam {vars; body} ->
+  | Const c, ty -> ((Const c, ty), escs)
+  | Var x, ty when List.mem x lcls -> ((Var x, ty), escs)
+  | Var f, ty when List.mem f !globals -> ((Glb f, ty), escs)
+  | Var x, ty ->
+      let _, escs' = lookup_env escs (x, ty) in
+      ((Var x, ty), escs')
+  | Glb _, _ -> failwith "unreahcble"
+  | Lam {vars; body}, _ ->
       let body', escs' = cc_exp [] (List.map fst vars) body in
-      let env_var = (Id.from_string "env", TupleTy (List.map snd vars)) in
+      let func_id = Id.from_string "func" in
       if escs' = [] then (
-        let var = (Id.from_string "func", ContTy (List.map snd vars)) in
-        append_fundef
-          {var; params= vars; body= mk_let (mk_projs (Var env_var) escs') body'};
-        (Glb var, escs) )
+        let func_ty = ContTy (List.map snd vars) in
+        append_fundef {var= (func_id, func_ty); params= vars; body= body'};
+        ((Glb func_id, func_ty), escs) )
       else
-        let var =
-          (Id.from_string "func", ContTy (List.map snd (env_var :: vars)))
-        in
+        let env_id = Id.from_string "env" in
+        let env_ty = TupleTy (List.map snd escs') in
+        let func_ty = ContTy (env_ty :: List.map snd vars) in
         append_fundef
-          { var
-          ; params= env_var :: vars
-          ; body= mk_let (mk_projs (Var env_var) escs') body' };
-        ( Tuple [Glb var; Tuple (List.map (fun var -> Var var) escs')]
+          { var= (func_id, func_ty)
+          ; params= (env_id, env_ty) :: vars
+          ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
+        ( ( Tuple
+              [ (Glb func_id, func_ty)
+              ; (Tuple (List.map (fun (id, ty) -> (Var id, ty)) escs'), env_ty)
+              ]
+          , TupleTy [func_ty; env_ty] )
         , remove_dup (escs @ escs') // lcls )
-  | Tuple vtys ->
-      let vals', escs' = cc_val_seq escs lcls vtys in
-      (Tuple vals', escs')
+  | Tuple vtys, _ ->
+      let vtys', escs' = cc_val_seq escs lcls vtys in
+      ((Tuple vtys', TupleTy (List.map snd vtys')), escs')
 
-and cc_val_seq (escs : escapes) (lcls : locals) (vals : value list) :
-    value list * escapes =
+and cc_val_seq (escs : escapes) (lcls : locals) (vals : valty list) :
+    valty list * escapes =
   let loop acc escs = function
     | [] -> (List.rev acc, escs)
     | val_ :: vals ->
@@ -76,11 +79,12 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let cc_fundef ({var; params; body} : fundef) : escapes =
         globals := List.map fst glbs;
         let body', escs' = cc_exp [] (List.map fst params) body in
-        let env_var = (Id.from_string "env", TupleTy (List.map snd params)) in
+        let env_id = Id.from_string "env" in
+        let env_ty = TupleTy (List.map snd params) in
         append_fundef
           { var
-          ; params= env_var :: params
-          ; body= mk_let (mk_projs (Var env_var) escs') body' };
+          ; params= (env_id, env_ty) :: params
+          ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
         escs'
       in
       let escs' = List.concat (List.map cc_fundef fundefs) in
@@ -92,16 +96,23 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let args', escs2 = cc_val_seq escs1 lcls args in
       match fcn' with
       (* tmp: closures are always tuple *)
-      | Tuple _ ->
-          let env_var = (Id.from_string "env", TupleTy (List.map snd escs2)) in
-          let code_var = (Id.from_string "code", ContTy [snd env_var]) in
-          let clos_var =
-            (Id.from_string "clos", TupleTy [snd code_var; snd env_var])
-          in
+      | Tuple _, _ ->
+          let env_id = Id.from_string "env" in
+          let env_ty = TupleTy (List.map snd escs2) in
+          let code_id = Id.from_string "code" in
+          let code_ty = ContTy (env_ty :: List.map snd args') in
+          let clos_id = Id.from_string "clos" in
+          let clos_ty = TupleTy [code_ty; env_ty] in
           ( mk_let
-              ( ValDec {var= clos_var; val_= fcn'}
-              :: mk_projs (Var clos_var) [code_var; env_var] )
-              (App {fcn= Var code_var; args= Var env_var :: args'})
+              [ ValDec {var= (clos_id, clos_ty); val_= fcn'}
+              ; ProjDec
+                  {var= (code_id, code_ty); val_= (Var clos_id, clos_ty); idx= 1}
+              ; ProjDec
+                  {var= (env_id, env_ty); val_= (Var clos_id, clos_ty); idx= 2}
+              ]
+              (App
+                 { fcn= (Var code_id, code_ty)
+                 ; args= (Var env_id, env_ty) :: args' } )
           , escs2 )
       | _ -> (App {fcn= fcn'; args= args'}, escs2) )
   | If {cond; then_; else_} ->

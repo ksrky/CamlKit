@@ -6,59 +6,82 @@ let rec c2k_ty : C.ty -> K.ty = function
   | BoolTy -> BoolTy
   | FunTy (ty1, ty2) -> ContTy [c2k_ty ty1; c2k_ty ty2]
 
-let c2k_cont ty : K.ty = ContTy [c2k_ty ty]
-
 let c2k_var (id, ty) : K.var = (id, c2k_ty ty)
 
 let varlist : C.var list ref = ref [] (* TODO: Hashtbl? *)
 
-let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
+let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
   match exp with
-  | Const c -> K.mk_app k (K.Const c)
+  | Const (Int _ as c) -> K.mk_app k (K.Const c, IntTy)
+  | Const (Bool _ as c) -> K.mk_app k (K.Const c, BoolTy)
   | Var id ->
       let ty = c2k_ty (List.assoc id !varlist) in
-      K.mk_app k (K.Var (id, ty))
+      K.mk_app k (K.Var id, ty)
   | App {fcn= fcn, fcn_ty; arg= arg, arg_ty} ->
-      let fcn_var = (Id.from_string "fcn", c2k_ty fcn_ty) in
-      let arg_var = (Id.from_string "arg", c2k_ty arg_ty) in
+      let fcn_ty' = c2k_ty fcn_ty in
+      let arg_ty' = c2k_ty arg_ty in
+      let fcn_id = Id.from_string "fcn" in
+      let arg_id = Id.from_string "arg" in
       c2k_exp fcn
-        (K.mk_lam fcn_var
-           (c2k_exp arg
-              (K.mk_lam arg_var (K.mk_apps (Var fcn_var) [K.Var arg_var; k])) ) )
+        ( K.mk_lam (fcn_id, fcn_ty')
+            (c2k_exp arg
+               ( K.mk_lam (arg_id, arg_ty')
+                   (K.App
+                      { fcn= (Var fcn_id, fcn_ty')
+                      ; args= [(K.Var arg_id, arg_ty'); k] } )
+               , ContTy [arg_ty'] ) )
+        , ContTy [fcn_ty'] )
   | Lam {var; body= body, body_ty} ->
       varlist := var :: !varlist;
-      let c_var = (Id.from_string "c", c2k_cont body_ty) in
-      K.mk_apps k [K.mk_lams [c2k_var var; c_var] (c2k_exp body (Var c_var))]
+      let body_ty' = c2k_ty body_ty in
+      let cont_id = Id.from_string "cont" in
+      K.App
+        { fcn= k
+        ; args=
+            [ ( K.mk_lams
+                  [c2k_var var; (cont_id, K.ContTy [body_ty'])]
+                  (c2k_exp body (Var cont_id, ContTy [body_ty']))
+              , ContTy [c2k_ty (snd var); ContTy [body_ty']] ) ] }
   | Prim {left= left, left_ty; oper; right= right, right_ty} ->
-      let var_ty =
+      let prim_ty =
         match oper with
         | Add | Sub | Mul | Div -> K.IntTy
         | Eq | Ne | Lt | Le | Gt | Ge -> K.BoolTy
       in
-      let var = (Id.from_string "prim", var_ty) in
-      let left_var = (Id.from_string "left", c2k_ty left_ty) in
-      let right_var = (Id.from_string "right", c2k_ty right_ty) in
+      let prim_id = Id.from_string "prim" in
+      let left_ty' = c2k_ty left_ty in
+      let right_ty' = c2k_ty right_ty in
+      let left_id = Id.from_string "left" in
+      let right_id = Id.from_string "right" in
       c2k_exp left
-        (K.mk_lam left_var
-           (c2k_exp right
-              (K.mk_lam right_var
-                 (K.Let
-                    { dec=
-                        K.PrimDec
-                          {var; left= Var left_var; oper; right= Var right_var}
-                    ; body= K.mk_app k (K.Var var) } ) ) ) )
+        ( K.mk_lam (left_id, left_ty')
+            (c2k_exp right
+               ( K.mk_lam (right_id, right_ty')
+                   (K.Let
+                      { dec=
+                          K.PrimDec
+                            { var= (prim_id, prim_ty)
+                            ; left= (Var left_id, left_ty')
+                            ; oper
+                            ; right= (Var right_id, right_ty') }
+                      ; body= K.mk_app k (K.Var prim_id, prim_ty) } )
+               , ContTy [right_ty'] ) )
+        , ContTy [left_ty'] )
   | If {cond= cond, cond_ty; then_= then_, _; else_= else_, _} ->
-      let cond_var = (Id.from_string "cond", c2k_ty cond_ty) in
+      let cond_ty' = c2k_ty cond_ty in
+      let cond_id = Id.from_string "cond" in
       c2k_exp cond
-        (K.mk_lam cond_var
-           (K.If
-              { cond= Var cond_var
-              ; then_= c2k_exp then_ k
-              ; else_= c2k_exp else_ k } ) )
+        ( K.mk_lam (cond_id, cond_ty')
+            (K.If
+               { cond= (Var cond_id, cond_ty')
+               ; then_= c2k_exp then_ k
+               ; else_= c2k_exp else_ k } )
+        , ContTy [cond_ty'] )
   | Let {isrec= false; vars; bnds; body= body, _} ->
       varlist := vars @ !varlist;
       List.fold_right2
-        (fun var (bnd, _) body -> c2k_exp bnd (K.mk_lam (c2k_var var) body))
+        (fun var (bnd, bnd_ty) body ->
+          c2k_exp bnd (K.mk_lam (c2k_var var) body, c2k_ty bnd_ty) )
         vars bnds (c2k_exp body k)
   | Let {isrec= true; vars; bnds; body= body, _} ->
       varlist := vars @ !varlist;
@@ -69,14 +92,20 @@ let rec c2k_exp (exp : C.exp) (k : K.value) : K.exp =
 and c2k_fundef (name : C.var) : C.expty -> K.fundef = function
   | C.Lam {var; body= body, body_ty}, _ ->
       varlist := var :: !varlist;
-      let c_var = (Id.from_string "c", c2k_cont body_ty) in
+      let body_ty' = c2k_ty body_ty in
+      let cont_id = Id.from_string "c" in
       { var= c2k_var name
-      ; params= [c2k_var var; c_var]
-      ; body= c2k_exp body (Var c_var) }
+      ; params= [c2k_var var; (cont_id, K.ContTy [body_ty'])]
+      ; body= c2k_exp body (Var cont_id, K.ContTy [body_ty']) }
   | exp, exp_ty ->
-      let c_var = (Id.from_string "c", c2k_cont exp_ty) in
-      {var= c2k_var name; params= [c_var]; body= c2k_exp exp (Var c_var)}
+      let exp_ty' = c2k_ty exp_ty in
+      let cont_id = Id.from_string "c" in
+      { var= c2k_var name
+      ; params= [(cont_id, K.ContTy [exp_ty'])]
+      ; body= c2k_exp exp (Var cont_id, K.ContTy [exp_ty']) }
 
 let c2k_prog ((exp, ty) : C.prog) : K.prog =
-  let var = (Id.from_string "x", c2k_ty ty) in
-  c2k_exp exp (K.mk_lam var (K.Halt (Var var)))
+  let exp_ty = c2k_ty ty in
+  let prog_id = Id.from_string "prog" in
+  c2k_exp exp
+    (K.mk_lam (prog_id, exp_ty) (K.Halt (Var prog_id, exp_ty)), ContTy [exp_ty])

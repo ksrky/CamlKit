@@ -10,24 +10,26 @@ type var = id * ty
 
 type value =
   | Const of const
-  | Var of var
-  | Glb of var
+  | Var of id
+  | Glb of id
   | Lam of {vars: var list; body: exp}
-  | Tuple of value list
+  | Tuple of valty list
+
+and valty = value * ty
 
 and exp =
   | Let of {dec: dec; body: exp}
   | Letrec of {fundefs: fundef list; body: exp}
-  | App of {fcn: value; args: value list}
-  | If of {cond: value; then_: exp; else_: exp}
-  | Halt of value
+  | App of {fcn: valty; args: valty list}
+  | If of {cond: valty; then_: exp; else_: exp}
+  | Halt of valty
 
 and fundef = {var: var; params: var list; body: exp}
 
 and dec =
-  | ValDec of {var: var; val_: value}
-  | PrimDec of {var: var; left: value; oper: oper; right: value}
-  | ProjDec of {var: var; val_: value; idx: int}
+  | ValDec of {var: var; val_: valty}
+  | PrimDec of {var: var; left: valty; oper: oper; right: valty}
+  | ProjDec of {var: var; val_: valty; idx: int}
 
 type prog = exp
 
@@ -35,13 +37,13 @@ val mk_lam : var -> exp -> value
 
 val mk_lams : var list -> exp -> value
 
-val mk_app : value -> value -> exp
+val mk_app : valty -> valty -> exp
 
-val mk_apps : value -> value list -> exp
+val mk_apps : valty -> valty list -> exp
 
 val mk_let : dec list -> exp -> exp
 
-val mk_projs : value -> var list -> dec list
+val mk_projs : valty -> var list -> dec list
 
 val pp_print_exp : Format.formatter -> exp -> unit
 
