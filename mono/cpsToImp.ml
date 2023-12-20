@@ -14,14 +14,6 @@ let rec c2i_ty : K.ty -> I.ty = function
 
 let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
 
-(*let rec typeof : K.valty -> I.ty = function
-  | Const (Int _) -> I32Ty
-  | Const (Bool _) -> I1Ty
-  | Var (_, ty) -> c2i_ty ty
-  | Glb (_, ty) -> c2i_ty ty
-  | Lam _ -> failwith "unreachable"
-  | Tuple vals -> PtrTy (StrctTy (List.map typeof vals))*)
-
 let rec c2i_val : K.valty -> I.dec list * I.value = function
   | Const c, _ -> ([], Const (c2i_const c))
   | Var x, ty -> ([], Var (c2i_var (x, ty)))

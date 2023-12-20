@@ -24,6 +24,10 @@ module Table : sig
   val find : key -> 'a t -> 'a
 
   val find_opt : key -> 'a t -> 'a option
+
+  val add_seq : (key * 'a) Seq.t -> 'a t -> 'a t
 end
+
+type 'a table = 'a Table.t
 
 val pp_print_id : Format.formatter -> t -> unit

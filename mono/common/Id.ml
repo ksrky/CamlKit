@@ -22,4 +22,6 @@ module Table = Map.Make (struct
   let compare (_, u1) (_, u2) = compare u1 u2
 end)
 
+type 'a table = 'a Table.t
+
 let pp_print_id ppf id = Format.fprintf ppf "%s" (name id)
