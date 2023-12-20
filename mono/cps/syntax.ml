@@ -64,7 +64,7 @@ let rec pp_print_ty ppf = function
   | IntTy -> fprintf ppf "int"
   | BoolTy -> fprintf ppf "bool"
   | ContTy tys ->
-      fprintf ppf "(%a) -> void"
+      fprintf ppf "[%a] -> void"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ",@ ") pp_print_ty)
         tys
   | TupleTy tys ->
@@ -81,7 +81,7 @@ let rec pp_print_val paren ppf = function
   | Glb f -> fprintf ppf "$%s" (Id.unique_name f)
   | Lam {vars; body} ->
       fprintf ppf
-        (if paren then "(@[<1>fun %a ->@ %a@])" else "@[<1>fun %a ->@ %a@]")
+        (if paren then "(@[<1>fun (%a) ->@ %a@])" else "@[<1>fun %a ->@ %a@]")
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
         vars pp_print_exp body
   | Tuple vals ->
@@ -106,7 +106,7 @@ and pp_print_exp ppf = function
   | App {fcn; args} ->
       fprintf ppf "@[<2>%a@ %a@]" (pp_print_valty true) fcn
         (pp_print_list
-           ~pp_sep:(fun ppf () -> fprintf ppf " ")
+           ~pp_sep:(fun ppf () -> fprintf ppf ", ")
            (pp_print_valty true) )
         args
   | If {cond; then_; else_} ->

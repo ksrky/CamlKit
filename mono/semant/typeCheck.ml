@@ -7,7 +7,8 @@ let rec check (env : E.env) (exp : A.exp) (exp_ty : A.ty) : A.expty =
   match exp with
   | VarExp id ->
       let ty = E.lookup_type id env in
-      U.unify ty exp_ty; (VarAExp id, ty)
+      U.unify ty exp_ty;
+      (VarAExp (id, ty), ty)
   | NilExp -> (NilAExp, NilTy)
   | BoolExp b -> U.unify A.BoolTy exp_ty; (BoolAExp b, BoolTy)
   | IntExp i -> U.unify A.IntTy exp_ty; (IntAExp i, IntTy)

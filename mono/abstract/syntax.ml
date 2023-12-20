@@ -32,15 +32,15 @@ type ty = NilTy | BoolTy | IntTy | FunTy of ty * ty | MetaTy of tyvar
 
 and tyvar = {uniq: int; mutable repres: ty option}
 
-type param = id * ty
+type var = id * ty
 
 type aexp =
-  | VarAExp of id
+  | VarAExp of var
   | NilAExp
   | BoolAExp of bool
   | IntAExp of int
   | AppAExp of {fcn: expty; arg: expty}
-  | LamAExp of {params: param list; body: expty}
+  | LamAExp of {params: var list; body: expty}
   | OpAExp of {left: expty; op: op; right: expty}
   | IfAExp of {cond: expty; then_: expty; else_: expty}
   | LetAExp of {bnds: abnd list; body: expty}
@@ -48,7 +48,7 @@ type aexp =
 
 and expty = aexp * ty
 
-and abnd = ABind of {name: id; params: param list; body: expty}
+and abnd = ABind of {name: id; params: var list; body: expty}
 
 type aprog = expty
 

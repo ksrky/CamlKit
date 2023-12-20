@@ -9,7 +9,7 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
   | Const (Bool b) -> LDC (Bool.to_int b) :: c
   | Const (Int i) -> LDC i :: c
-  | Var x ->
+  | Var (x, _) ->
       let i, j = index x n in
       LD (i, j) :: c
   | App {fcn= fcn, _; arg= arg, _} ->

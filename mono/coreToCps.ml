@@ -8,15 +8,11 @@ let rec c2k_ty : C.ty -> K.ty = function
 
 let c2k_var (id, ty) : K.var = (id, c2k_ty ty)
 
-let varlist : C.var list ref = ref [] (* TODO: Hashtbl? *)
-
 let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
   match exp with
   | Const (Int _ as c) -> K.mk_app k (K.Const c, IntTy)
   | Const (Bool _ as c) -> K.mk_app k (K.Const c, BoolTy)
-  | Var id ->
-      let ty = c2k_ty (List.assoc id !varlist) in
-      K.mk_app k (K.Var id, ty)
+  | Var (id, ty) -> K.mk_app k (K.Var id, c2k_ty ty)
   | App {fcn= fcn, fcn_ty; arg= arg, arg_ty} ->
       let fcn_ty' = c2k_ty fcn_ty in
       let arg_ty' = c2k_ty arg_ty in
@@ -32,7 +28,6 @@ let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
                , ContTy [arg_ty'] ) )
         , ContTy [fcn_ty'] )
   | Lam {var; body= body, body_ty} ->
-      varlist := var :: !varlist;
       let body_ty' = c2k_ty body_ty in
       let cont_id = Id.from_string "cont" in
       K.App
@@ -78,20 +73,17 @@ let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
                ; else_= c2k_exp else_ k } )
         , ContTy [cond_ty'] )
   | Let {isrec= false; vars; bnds; body= body, _} ->
-      varlist := vars @ !varlist;
       List.fold_right2
         (fun var (bnd, bnd_ty) body ->
-          c2k_exp bnd (K.mk_lam (c2k_var var) body, c2k_ty bnd_ty) )
+          c2k_exp bnd (K.mk_lam (c2k_var var) body, ContTy [c2k_ty bnd_ty]) )
         vars bnds (c2k_exp body k)
   | Let {isrec= true; vars; bnds; body= body, _} ->
-      varlist := vars @ !varlist;
       let fundefs = List.map2 c2k_fundef vars bnds in
       let body' = c2k_exp body k in
       Letrec {fundefs; body= body'}
 
 and c2k_fundef (name : C.var) : C.expty -> K.fundef = function
   | C.Lam {var; body= body, body_ty}, _ ->
-      varlist := var :: !varlist;
       let body_ty' = c2k_ty body_ty in
       let cont_id = Id.from_string "c" in
       { var= c2k_var name

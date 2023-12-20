@@ -3,16 +3,13 @@ open Format
 
 type tyctx = ty Id.table
 
+let empty = Id.Table.empty
+
 let check ty1 ty2 =
   if ty1 = ty2 then ()
   else
-    fprintf err_formatter "type mismatch: %a and %a" pp_print_ty ty1 pp_print_ty
-      ty2
-
-let check_const : const * ty -> unit = function
-  | Int _, IntTy -> ()
-  | Bool _, BoolTy -> ()
-  | _, _ -> failwith "type mismatch"
+    fprintf err_formatter "type mismatch: %a vs %a\n" pp_print_ty ty1
+      pp_print_ty ty2
 
 let rec check_val (ctx : tyctx) : valty -> unit = function
   | Const (Int _), IntTy | Const (Bool _), BoolTy -> ()
@@ -62,3 +59,5 @@ and check_dec (ctx : tyctx) : dec -> tyctx = function
       | _ -> failwith "tuple type required" );
       check_val ctx val_;
       Id.Table.add (fst var) (snd var) ctx
+
+let check_prog : tyctx -> prog -> unit = check_exp

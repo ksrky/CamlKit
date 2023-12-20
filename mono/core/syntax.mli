@@ -10,7 +10,7 @@ type var = id * ty
 
 type exp =
   | Const of const
-  | Var of id
+  | Var of var
   | App of {fcn: expty; arg: expty}
   | Lam of {var: var; body: expty}
   | Prim of {left: expty; oper: oper; right: expty}

@@ -10,7 +10,7 @@ type var = id * ty
 
 type exp =
   | Const of const
-  | Var of id
+  | Var of var
   | App of {fcn: expty; arg: expty}
   | Lam of {var: var; body: expty}
   | Prim of {left: expty; oper: oper; right: expty}
@@ -61,7 +61,7 @@ let pp_print_var ppf (id, ty) =
 
 let rec pp_print_exp outer ppf = function
   | Const c -> pp_print_const ppf c
-  | Var id -> Id.pp_print_id ppf id
+  | Var (id, _) -> Id.pp_print_id ppf id
   | App {fcn; arg} ->
       ( if outer > 8 then fprintf ppf "(@[<1>%a %a@])"
         else fprintf ppf "@[<1>%a %a@]" )

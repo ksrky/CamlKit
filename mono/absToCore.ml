@@ -8,19 +8,19 @@ let rec a2c_ty : A.ty -> C.ty = function
   | A.FunTy (t1, t2) -> C.FunTy (a2c_ty t1, a2c_ty t2)
   | A.MetaTy _ -> failwith "unreachable"
 
-let a2c_param ((id, ty) : A.param) : C.var = (id, a2c_ty ty)
+let a2c_var ((id, ty) : A.var) : C.var = (id, a2c_ty ty)
 
-let lambda_ty (params : A.param list) (body_ty : A.ty) : C.ty =
+let lambda_ty (params : A.var list) (body_ty : A.ty) : C.ty =
   C.fun_tys (List.map (fun (_, ty) -> a2c_ty ty) params) (a2c_ty body_ty)
 
 let rec a2c_exp : A.aexp -> C.exp = function
-  | VarAExp x -> Var x
+  | VarAExp x -> Var (a2c_var x)
   | NilAExp -> failwith "nil is not supported in core"
   | BoolAExp b -> Const (Bool b)
   | IntAExp i -> Const (Int i)
   | AppAExp {fcn; arg} -> App {fcn= a2c_expty fcn; arg= a2c_expty arg}
   | LamAExp {params; body} ->
-      C.lams (List.map a2c_param params) (a2c_expty body) |> fst
+      C.lams (List.map a2c_var params) (a2c_expty body) |> fst
   | OpAExp {left; op; right} ->
       let oper =
         List.assoc op
@@ -37,7 +37,7 @@ let rec a2c_exp : A.aexp -> C.exp = function
           (List.map
              (fun (A.ABind {name; params; body= _, body_ty}) ->
                ( (name, lambda_ty params body_ty)
-               , C.lams (List.map a2c_param params) (a2c_expty body) ) )
+               , C.lams (List.map a2c_var params) (a2c_expty body) ) )
              bnds )
       in
       Let {isrec= false; vars; bnds; body= a2c_expty body}
@@ -47,7 +47,7 @@ let rec a2c_exp : A.aexp -> C.exp = function
           (List.map
              (fun (A.ABind {name; params; body= _, body_ty}) ->
                ( (name, lambda_ty params body_ty)
-               , C.lams (List.map a2c_param params) (a2c_expty body) ) )
+               , C.lams (List.map a2c_var params) (a2c_expty body) ) )
              bnds )
       in
       Let {isrec= true; vars; bnds; body= a2c_expty body}
