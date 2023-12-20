@@ -45,8 +45,8 @@ let rec a2c_exp : A.aexp -> C.exp = function
       let vars, bnds =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body= _, body_ty}) ->
-               ( (name, lambda_ty params body_ty)
+             (fun (A.ABind {name; params; body}) ->
+               ( (name, lambda_ty params (snd body))
                , C.lams (List.map a2c_var params) (a2c_expty body) ) )
              bnds )
       in

@@ -11,7 +11,7 @@ ex/ex2.mlkit
   [5]
 ex/ex3.mlkit
   $ dune exec camlkit ../ex/ex3.mlkit
-  [492]
+  [48]
 ex/ex4.mlkit
   $ dune exec camlkit ../ex/ex4.mlkit
   [120]
