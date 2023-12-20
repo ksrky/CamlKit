@@ -1,5 +1,4 @@
 open Syntax
-open Format
 
 type tyctx = ty Id.table
 
@@ -8,8 +7,8 @@ let empty = Id.Table.empty
 let check ty1 ty2 =
   if ty1 = ty2 then ()
   else
-    fprintf err_formatter "type mismatch: %a vs %a\n" pp_print_ty ty1
-      pp_print_ty ty2
+    Format.fprintf Format.err_formatter "type mismatch: %a vs %a\n" pp_print_ty
+      ty1 pp_print_ty ty2
 
 let rec check_val (ctx : tyctx) : valty -> unit = function
   | Const (Int _), IntTy | Const (Bool _), BoolTy -> ()
