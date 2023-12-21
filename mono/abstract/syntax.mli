@@ -2,6 +2,18 @@ type id = Id.t
 
 type lit = IntLit of int | BoolLit of bool
 
+type op =
+  | PlusOp
+  | MinusOp
+  | TimesOp
+  | DivideOp
+  | EqOp
+  | NeqOp
+  | LtOp
+  | LeOp
+  | GtOp
+  | GeOp
+
 type exp =
   | VarExp of id
   | NilExp
@@ -16,17 +28,7 @@ type exp =
 
 and bnd = Bind of {name: id; params: id list; body: exp}
 
-and op =
-  | PlusOp
-  | MinusOp
-  | TimesOp
-  | DivideOp
-  | EqOp
-  | NeqOp
-  | LtOp
-  | LeOp
-  | GtOp
-  | GeOp
+type prog = exp
 
 type ty = NilTy | BoolTy | IntTy | FunTy of ty * ty | MetaTy of tyvar
 
@@ -51,9 +53,3 @@ and expty = aexp * ty
 and abnd = ABind of {name: id; params: var list; body: expty}
 
 type aprog = expty
-
-val pp_print_tyvar : Format.formatter -> tyvar -> unit
-
-val pp_print_ty0 : Format.formatter -> ty -> unit
-
-val pp_print_op : Format.formatter -> op -> unit

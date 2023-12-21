@@ -1,9 +1,9 @@
 let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aprog =
-  (* print_endline (Abstract.Syntax.ppr_exp abssyn); *)
+  (* print_endline (Abstract.Syntax.print_prog abssyn); *)
   let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.empty abssyn in
-  (* print_endline (Abstract.Syntax.ppr_exp abssyn'); *)
+  (* print_endline (Abstract.Syntax.print_prog abssyn'); *)
   let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  (* print_endline (Abstract.Syntax.ppr_aexp 0 _aabssyn); *)
+  (* print_endline (Abstract.Syntax.print_aprog aabssyn); *)
   aabssyn
 
 let run_secd instrs =
@@ -35,9 +35,9 @@ let eval (inp : string) =
 (** [compile path] compiles a source file to LLVM IR and output to a .ll file. *)
 let compile (path : string) : unit =
   let abssyn = Parse.parse path in
-  let abssyn' = semant abssyn in
+  let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let coresyn = AbsToCore.a2c_prog abssyn' in
+  let coresyn = AbsToCore.a2c_prog aabssyn in
   (* Core.Syntax.print_prog coresyn; *)
   let cpssyn = CoreToCps.c2k_prog coresyn in
   (* Cps.Syntax.print_prog cpssyn; *)

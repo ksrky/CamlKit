@@ -1,8 +1,5 @@
 open Abstract.Syntax
 
-let ( --> ) : ty list -> ty -> ty =
-  List.fold_right (fun ty1 ty2 -> FunTy (ty1, ty2))
-
 let rec zonk_ty : ty -> ty = function
   | NilTy -> NilTy
   | IntTy -> IntTy

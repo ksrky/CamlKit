@@ -1,4 +1,5 @@
 module A = Abstract.Syntax
+module A = Abstract.Pretty
 open Format
 
 let has_error : bool ref = ref false
