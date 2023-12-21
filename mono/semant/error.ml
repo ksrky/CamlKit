@@ -1,8 +1,11 @@
+open Format
+
 let has_error : bool ref = ref false
 
-let error (msg : string) =
+let error (fmt : ('a, Format.formatter, unit) format) : 'a =
   has_error := true;
-  print_endline ("error: " ^ msg)
+  fprintf std_formatter fmt;
+  print_newline ()
 
 exception Error
 

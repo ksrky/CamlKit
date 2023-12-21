@@ -52,18 +52,27 @@ and abnd = ABind of {name: id; params: var list; body: expty}
 
 type aprog = expty
 
-let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s
+open Format
 
-let ppr_ty (ty : ty) : string =
-  let parens ctx prec s = if ctx > prec then "(" ^ s ^ ")" else s in
-  let rec pretty ctx = function
-    | NilTy -> "nil"
-    | IntTy -> "int"
-    | BoolTy -> "bool"
-    | FunTy (fcn, arg) -> parens ctx 0 (pretty 1 fcn ^ " -> " ^ pretty 0 arg)
-    | MetaTy tv -> "$" ^ string_of_int tv.uniq
-  in
-  pretty 0 ty
+let rec pp_print_ty outer ppf : ty -> unit = function
+  | NilTy -> pp_print_string ppf "nil"
+  | IntTy -> pp_print_string ppf "int"
+  | BoolTy -> pp_print_string ppf "bool"
+  | FunTy (ty1, ty2) ->
+      Pp.with_prec outer 1
+        (fun ppf ->
+          fprintf ppf "%a ->@ %a" (pp_print_ty 2) ty1 (pp_print_ty 1) ty2 )
+        ppf
+  | MetaTy tv -> fprintf ppf "$%i" tv.uniq
+
+let pp_print_ty0 = pp_print_ty 0
+
+let pp_print_oper ppf oper : unit =
+  pp_print_string ppf
+    (List.assoc oper
+       [ (PlusOp, "+"); (MinusOp, "-"); (TimesOp, "*"); (DivideOp, "/")
+       ; (EqOp, "="); (NeqOp, "<>"); (LtOp, "<"); (LeOp, "<="); (GtOp, ">")
+       ; (GeOp, ">=") ] )
 
 (*
 

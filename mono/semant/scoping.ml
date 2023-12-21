@@ -12,7 +12,7 @@ let scoping id sc =
   match List.assoc_opt (Id.name id) sc with
   | Some id' -> id'
   | None ->
-      Error.error ("Not in scope " ^ Id.name id);
+      Error.error "Not in scope %a" Id.pp_print_id id;
       id
 
 let rec scoping_exp (sc : scope) : A.exp -> A.exp =

@@ -52,4 +52,4 @@ and abnd = ABind of {name: id; params: var list; body: expty}
 
 type aprog = expty
 
-val ppr_ty : ty -> string
+val pp_print_ty0 : Format.formatter -> ty -> unit

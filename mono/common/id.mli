@@ -8,10 +8,6 @@ val unique : t -> int
 
 val unique_name : t -> string
 
-val reassign_unique : t -> t
-
-val fresh : unit -> t
-
 module Table : sig
   type key = t
 

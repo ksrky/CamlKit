@@ -11,8 +11,8 @@ let rec unify (ty1 : A.ty) (ty2 : A.ty) : unit =
   | MetaTy tv1, _ -> unify_var tv1 ty2
   | _, MetaTy tv2 -> unify_var tv2 ty1
   | _, _ ->
-      Error.error
-        ("Cannot unify types: " ^ A.ppr_ty ty1 ^ " with " ^ A.ppr_ty ty2)
+      Error.error "Cannot unify types: %a with %a" A.pp_print_ty0 ty1
+        A.pp_print_ty0 ty2
 
 and unify_var (tv1 : A.tyvar) (ty2 : A.ty) : unit =
   match (tv1.repres, ty2) with
@@ -27,7 +27,7 @@ and unify_var (tv1 : A.tyvar) (ty2 : A.ty) : unit =
 
 and occurs_check (tv1 : A.tyvar) (ty2 : A.ty) : unit =
   let tvs2 = T.get_tyvars ty2 in
-  if List.mem tv1 tvs2 then Error.error ("Infinite type: " ^ A.ppr_ty ty2)
+  if List.mem tv1 tvs2 then Error.error "Infinite type: %a" A.pp_print_ty0 ty2
   else ()
 
 let unify_fun : A.ty -> A.ty * A.ty = function
