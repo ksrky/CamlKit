@@ -8,7 +8,7 @@ let rec pp_print_ty outer ppf : ty -> unit = function
   | IntTy -> pp_print_string ppf "int"
   | BoolTy -> pp_print_string ppf "bool"
   | FunTy (ty1, ty2) ->
-      Pretty.with_prec outer 1
+      PrinterUtils.with_prec outer 1
         (fun ppf ->
           fprintf ppf "%a ->@ %a" (pp_print_ty 2) ty1 (pp_print_ty 1) ty2 )
         ppf
@@ -102,6 +102,6 @@ and pp_print_abnd ppf (ABind {name; params; body}) =
     (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
     params pp_print_expty body
 
-let pp_print_aprog = pp_print_aexp
+let pp_print_aprog = pp_print_expty
 
 let print_aprog = pp_print_aprog std_formatter
