@@ -1,7 +1,5 @@
-exception Error
+let error () = ()
 
-let error (msg : string) = print_string ("error: " ^ msg ^ "\n")
+exception Bug_error
 
-let impossible msg =
-  print_endline ("Compiler bug: " ^ msg);
-  raise Error
+let bug () = raise Bug_error

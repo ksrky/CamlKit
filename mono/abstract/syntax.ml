@@ -54,6 +54,8 @@ type aprog = expty
 
 open Format
 
+let pp_print_tyvar ppf tv = fprintf ppf "'%i" tv.uniq
+
 let rec pp_print_ty outer ppf : ty -> unit = function
   | NilTy -> pp_print_string ppf "nil"
   | IntTy -> pp_print_string ppf "int"
@@ -63,13 +65,13 @@ let rec pp_print_ty outer ppf : ty -> unit = function
         (fun ppf ->
           fprintf ppf "%a ->@ %a" (pp_print_ty 2) ty1 (pp_print_ty 1) ty2 )
         ppf
-  | MetaTy tv -> fprintf ppf "$%i" tv.uniq
+  | MetaTy tv -> pp_print_tyvar ppf tv
 
 let pp_print_ty0 = pp_print_ty 0
 
-let pp_print_oper ppf oper : unit =
+let pp_print_op ppf op =
   pp_print_string ppf
-    (List.assoc oper
+    (List.assoc op
        [ (PlusOp, "+"); (MinusOp, "-"); (TimesOp, "*"); (DivideOp, "/")
        ; (EqOp, "="); (NeqOp, "<>"); (LtOp, "<"); (LeOp, "<="); (GtOp, ">")
        ; (GeOp, ">=") ] )

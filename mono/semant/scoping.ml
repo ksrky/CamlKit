@@ -11,9 +11,7 @@ let extend_list : Id.t list -> scope -> scope = List.fold_right extend
 let scoping id sc =
   match List.assoc_opt (Id.name id) sc with
   | Some id' -> id'
-  | None ->
-      Error.error "Not in scope %a" Id.pp_print_id id;
-      id
+  | None -> Error.scope_error id; id
 
 let rec scoping_exp (sc : scope) : A.exp -> A.exp =
   let rec scexp : A.exp -> A.exp = function

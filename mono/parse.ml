@@ -4,12 +4,12 @@ let parse (filename : string) : Abstract.Syntax.exp =
   let linebuf = Lexing.from_string inp in
   try Parser.Grammar.prog Parser.Lexer.token linebuf
   with Parser.Grammar.Error ->
-    ErrorMsg.error "parse error";
+    Format.print_string "parse error";
     Abstract.Syntax.NilExp
 
 let parse_line (inp : string) : Abstract.Syntax.exp =
   let linebuf = Lexing.from_string inp in
   try Parser.Grammar.prog Parser.Lexer.token linebuf
   with Parser.Grammar.Error ->
-    ErrorMsg.error "parse error";
+    Format.print_string "parse error";
     Abstract.Syntax.NilExp
