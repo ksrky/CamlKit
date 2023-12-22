@@ -21,3 +21,13 @@ ex/ex5.mlkit
 ex/ex6.mlkit
   $ dune exec camlkit ../ex/ex6.mlkit
   [6]
+ex/ex7.mlkit
+  $ dune exec camlkit ../ex/ex7.mlkit
+  Fatal error: exception Invalid_argument("index out of bounds")
+  [2]
+ex/ex8.mlkit
+  $ dune exec camlkit ../ex/ex8.mlkit
+  [4]
+ex/ex9.mlkit
+  $ dune exec camlkit ../ex/ex9.mlkit
+  [5]
