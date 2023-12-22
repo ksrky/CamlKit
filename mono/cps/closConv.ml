@@ -58,6 +58,7 @@ let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
   | Tuple vtys, _ ->
       let vtys', escs' = cc_val_seq escs lcls vtys in
       ((Tuple vtys', TupleTy (List.map snd vtys')), escs')
+  | Pack _, _ -> failwith "unreachable"
 
 and cc_val_seq (escs : escapes) (lcls : locals) (vals : valty list) :
     valty list * escapes =
@@ -94,8 +95,8 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let fcn', escs1 = cc_val escs lcls fcn in
       let args', escs2 = cc_val_seq escs1 lcls args in
       match fcn' with
-      (** A closure is always of tuple type with two elements
-          TODO: replace TupleTy with ClosTy  *)
+      (** TODO: A closure is always of tuple type with two elements.
+          Replace TupleTy with ClosTy if the source language has tuple syntax. *)
       | _, TupleTy [code_ty; env_ty] ->
           let env_id = Id.from_string "env" in
           let code_id = Id.from_string "code" in
@@ -131,7 +132,8 @@ and cc_dec (escs : escapes) (lcls : locals) : dec -> dec * escapes * locals =
       let left', escs1 = cc_val escs lcls left in
       let right', escs2 = cc_val escs1 lcls right in
       (PrimDec {var; left= left'; oper; right= right'}, escs2, fst var :: lcls)
-  | ProjDec _ -> failwith "not implemented"
+  | ProjDec _ -> failwith "unreachable"
+  | UnpackDec _ -> failwith "unreachable"
 
 let cc_prog (exp : exp) : fundef list * exp =
   fundef_list := [];

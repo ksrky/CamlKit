@@ -6,7 +6,12 @@ type oper = C.oper
 
 type const = C.const
 
-type ty = IntTy | BoolTy | ContTy of ty list | TupleTy of ty list
+type ty =
+  | IntTy
+  | BoolTy
+  | ContTy of ty list
+  | TupleTy of ty list
+  | ExistsTy of id * ty
 
 type var = id * ty
 
@@ -16,6 +21,7 @@ type value =
   | Glb of id
   | Lam of {vars: var list; body: exp}
   | Tuple of valty list
+  | Pack of {ty: ty; val_: valty; exty: ty}
 
 and valty = value * ty
 
@@ -32,6 +38,7 @@ and dec =
   | ValDec of {var: var; val_: valty}
   | PrimDec of {var: var; left: valty; oper: oper; right: valty}
   | ProjDec of {var: var; val_: valty; idx: int}
+  | UnpackDec of {tyvar: var; var: var; val_: valty}
 
 type prog = exp
 
@@ -53,6 +60,7 @@ let parens (outer : int) (prec : int) s =
   if outer > prec then "(" ^ s ^ ")" else s
 
 open Format
+open PrinterUtils
 
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
 
@@ -71,8 +79,8 @@ let rec pp_print_ty ppf = function
       fprintf ppf "(%a)"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ",@ ") pp_print_ty)
         tys
-
-let with_paren ppr ppf = fprintf ppf "(%a)" ppr (* TODO: move to Common *)
+  | ExistsTy (id, ty) ->
+      fprintf ppf "exists %a. %a]" pp_print_id id pp_print_ty ty
 
 let pp_print_var ppf (id, ty) =
   fprintf ppf "%a : %a" pp_print_id id pp_print_ty ty
@@ -82,19 +90,27 @@ let rec pp_print_val paren ppf = function
   | Var x -> pp_print_id ppf x
   | Glb f -> fprintf ppf "$%s" (Id.unique_name f)
   | Lam {vars; body} ->
-      fprintf ppf
-        (if paren then "(@[<1>fun (%a) ->@ %a@])" else "@[<1>fun %a ->@ %a@]")
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
-        vars pp_print_exp body
+      with_paren ?b:paren
+        (fun ppf ->
+          fprintf ppf "@[<1>fun %a ->@ %a@]"
+            (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
+            vars pp_print_exp body )
+        ppf
   | Tuple vals ->
       fprintf ppf "(%a)"
         (pp_print_list
            ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
            (pp_print_valty false) )
         vals
+  | Pack {ty; val_; exty} ->
+      with_paren ?b:paren
+        (fun ppf ->
+          fprintf ppf "@[<1>pack [%a, %a] as@ %a@]" pp_print_ty ty
+            (pp_print_valty false) val_ pp_print_ty exty )
+        ppf
 
 and pp_print_valty paren ppf (val_, _) =
-  fprintf ppf "%a" (pp_print_val paren) val_
+  fprintf ppf "%a" (pp_print_val (Some paren)) val_
 
 and pp_print_exp ppf = function
   | Let {dec; body} ->
@@ -120,8 +136,7 @@ and pp_print_fundef ppf {var; params; body} =
   fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id (fst var)
     (pp_print_list
        ~pp_sep:(fun ppf () -> fprintf ppf " ")
-       (with_paren pp_print_var) )
-    (* tmp: fprintf with paren *)
+       (fun ppf x -> with_paren (fun ppf -> pp_print_var ppf x) ppf) )
     params pp_print_exp body
 
 and pp_print_dec ppf : dec -> unit = function
@@ -136,6 +151,9 @@ and pp_print_dec ppf : dec -> unit = function
         (pp_print_valty true) right
   | ProjDec {var; val_; idx} ->
       fprintf ppf "%a =@ %a.%i" pp_print_var var (pp_print_valty true) val_ idx
+  | UnpackDec {tyvar; var; val_} ->
+      fprintf ppf "[%a, %a] =@ unpack %a" pp_print_var tyvar pp_print_var var
+        (pp_print_valty false) val_
 
 let pp_print_prog ppf exp = pp_print_exp ppf exp; print_newline ()
 

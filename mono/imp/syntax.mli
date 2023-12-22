@@ -3,7 +3,7 @@ type id = Id.t
 type ty =
   | I1Ty
   | I32Ty
-  | PtrTy of ty
+  | PtrTy of ty option
   | FunTy of ty * ty list
   | StrctTy of ty list
 

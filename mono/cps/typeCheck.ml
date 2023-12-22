@@ -62,6 +62,7 @@ and check_dec (ctx : tyctx) : dec -> tyctx = function
       | _ -> failwith "tuple type required" );
       check_val ctx val_;
       Id.Table.add (fst var) (snd var) ctx
+  | UnpackDec {tyvar; var; val_} -> failwith "not implemented"
 
 let check_prog : tyctx -> prog -> unit = check_exp
 

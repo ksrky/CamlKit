@@ -8,7 +8,7 @@ let rec pp_print_ty outer ppf : ty -> unit = function
   | IntTy -> pp_print_string ppf "int"
   | BoolTy -> pp_print_string ppf "bool"
   | FunTy (ty1, ty2) ->
-      PrinterUtils.with_prec outer 1
+      PrinterUtils.with_paren ~b:(outer > 1)
         (fun ppf ->
           fprintf ppf "%a ->@ %a" (pp_print_ty 2) ty1 (pp_print_ty 1) ty2 )
         ppf
