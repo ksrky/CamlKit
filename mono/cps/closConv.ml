@@ -76,8 +76,8 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       (Let {dec= dec'; body= body'}, escs2)
   | Letrec {fundefs; body} ->
       let glbs = List.map (fun {var} -> var) fundefs in
+      globals := List.map fst glbs;
       let cc_fundef ({var; params; body} : fundef) : escapes =
-        globals := List.map fst glbs;
         let body', escs' = cc_exp [] (List.map fst params) body in
         let env_id = Id.from_string "env" in
         let env_ty = TupleTy (List.map snd params) in
@@ -87,16 +87,16 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
           ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
         escs'
       in
-      let escs' = List.concat (List.map cc_fundef fundefs) in
-      let escs' = remove_dup (escs @ escs') // lcls in
-      let body', escs'' = cc_exp escs' lcls body in
-      (body', escs'')
+      let escs1 = List.concat (List.map cc_fundef fundefs) in
+      let escs2 = remove_dup (escs @ escs1) // lcls in
+      cc_exp escs2 lcls body
   | App {fcn; args} -> (
       let fcn', escs1 = cc_val escs lcls fcn in
       let args', escs2 = cc_val_seq escs1 lcls args in
       match fcn' with
-      (* tmp: closures are always tuple *)
-      | Tuple _, TupleTy [code_ty; env_ty] ->
+      (** A closure is always of tuple type with two elements
+          TODO: replace TupleTy with ClosTy  *)
+      | _, TupleTy [code_ty; env_ty] ->
           let env_id = Id.from_string "env" in
           let code_id = Id.from_string "code" in
           let clos_id = Id.from_string "clos" in
