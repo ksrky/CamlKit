@@ -1,5 +1,6 @@
 open State
 
+(* Instructions *)
 type t =
   | NIL
   | LDC of int
@@ -27,8 +28,12 @@ type t =
   | READI
   | PRINTI
 
+(** Load a command to code stack. First argument is a pointer to the top of the
+    code stack and second argument is a command number. *)
 let load_command (i : int) (n : int) : int = make_cons (make_int n) i
 
+(** Load an instruction. First argument is a pointer to the top of the code
+    stack and second argument is an instruction [t]. *)
 let rec load_instr i = function
   | NIL -> load_command i 0
   | LDC x ->
@@ -65,10 +70,13 @@ let rec load_instr i = function
   | READI -> load_command i 23
   | PRINTI -> load_command i 24
 
+(** Instruction loading proceeds backward. *)
 and load_instrs instrs = List.fold_left load_instr 0 (List.rev instrs)
 
+(** Load an instrcution sequence *)
 let load_instrs instrs : unit = c := load_instrs instrs
 
+(** Run a command. *)
 let run_command () : unit =
   match get_int (pop c) with
   | 0 (* NIL *) -> push (make_int 0) s
@@ -147,6 +155,8 @@ let run_command () : unit =
       print_int (get_int x)
   | _ -> raise Utils.Unreachable
 
+(** Run a command sequence. It terminates when there are no more commands left
+    in code stack. *)
 let rec run_commands () : unit =
   if !c = 0 then ()
   else (
@@ -154,12 +164,14 @@ let rec run_commands () : unit =
       with Runtime_error msg -> print_string ("error: " ^ msg) );
     run_commands () )
 
+(** Return string of an instruction sequence. *)
 let rec show_instrs (instrs : t list) : string =
   match instrs with
   | [] -> ""
   | [instr] -> show_instr instr
   | instr :: rest -> show_instr instr ^ " " ^ show_instrs rest
 
+(** Return string of an instruction. *)
 and show_instr : t -> string = function
   | NIL -> "NIL"
   | LDC x -> "LDC " ^ string_of_int x
