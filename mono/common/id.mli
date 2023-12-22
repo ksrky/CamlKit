@@ -21,7 +21,7 @@ module Table : sig
 
   val find_opt : key -> 'a t -> 'a option
 
-  val add_seq : (key * 'a) Seq.t -> 'a t -> 'a t
+  val add_list : (key * 'a) list -> 'a t -> 'a t
 end
 
 type 'a table = 'a Table.t

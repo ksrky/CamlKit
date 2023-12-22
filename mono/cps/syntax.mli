@@ -4,7 +4,12 @@ type oper = Core.Syntax.oper
 
 type const = Core.Syntax.const
 
-type ty = IntTy | BoolTy | ContTy of ty list | TupleTy of ty list
+type ty =
+  | IntTy
+  | BoolTy
+  | ContTy of ty list
+  | TupleTy of ty list
+  | ExistsTy of id * ty
 
 type var = id * ty
 
@@ -14,6 +19,7 @@ type value =
   | Glb of id
   | Lam of {vars: var list; body: exp}
   | Tuple of valty list
+  | Pack of {ty: ty; val_: valty; exty: ty}
 
 and valty = value * ty
 
@@ -30,6 +36,7 @@ and dec =
   | ValDec of {var: var; val_: valty}
   | PrimDec of {var: var; left: valty; oper: oper; right: valty}
   | ProjDec of {var: var; val_: valty; idx: int}
+  | UnpackDec of {tyvar: var; var: var; val_: valty}
 
 type prog = exp
 

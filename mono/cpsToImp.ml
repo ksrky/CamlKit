@@ -9,8 +9,9 @@ let c2i_const : K.const -> I.const = function
 let rec c2i_ty : K.ty -> I.ty = function
   | IntTy -> I32Ty
   | BoolTy -> I1Ty
-  | ContTy tys -> PtrTy (FunTy (I.return_type, List.map c2i_ty tys))
-  | TupleTy tys -> PtrTy (StrctTy (List.map c2i_ty tys))
+  | ContTy tys -> PtrTy (Some (FunTy (I.return_type, List.map c2i_ty tys)))
+  | TupleTy tys -> PtrTy (Some (StrctTy (List.map c2i_ty tys)))
+  | ExistsTy (id, ty) -> PtrTy (Some (StrctTy [PtrTy None; StrctTy [c2i_ty ty]]))
 
 let c2i_var ((id, ty) : K.var) : I.var = (id, c2i_ty ty)
 
@@ -21,7 +22,7 @@ let rec c2i_val : K.valty -> I.dec list * I.value = function
   | Lam _, _ -> failwith "unreachable"
   | Tuple vals, _ ->
       let tuple_ty =
-        I.PtrTy (StrctTy (List.map (fun v -> c2i_ty (snd v)) vals))
+        I.PtrTy (Some (StrctTy (List.map (fun v -> c2i_ty (snd v)) vals)))
       in
       let var0 = (Id.from_string "y0", tuple_ty) in
       let vars =
@@ -46,6 +47,7 @@ let rec c2i_val : K.valty -> I.dec list * I.value = function
       in
       ( !decs @ List.rev (mk_tuple (List.length vals))
       , Var (List.hd (List.rev vars)) )
+  | Pack _, _ -> failwith "not implemented"
 
 let rec c2i_exp : K.exp -> I.exp = function
   | Let {dec= PrimDec {var; left; oper; right}; body}
@@ -111,6 +113,7 @@ and c2i_dec : K.dec -> I.dec list = function
   | ProjDec {var; val_; idx} ->
       let ds, val' = c2i_val val_ in
       ds @ [SubscrDec {var= c2i_var var; val_= val'; idx}]
+  | UnpackDec _ -> failwith "not implemented"
 
 let c2i_heap ({var; params; body} : K.fundef) : I.heap =
   let params' = List.map (fun (x, ty) -> (x, c2i_ty ty)) params in

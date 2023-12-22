@@ -4,7 +4,9 @@ module K = Cps.Syntax
 let rec c2k_ty : C.ty -> K.ty = function
   | IntTy -> IntTy
   | BoolTy -> BoolTy
-  | FunTy (ty1, ty2) -> ContTy [c2k_ty ty1; c2k_ty ty2]
+  | FunTy (ty1, ty2) -> ContTy [c2k_ty ty1; c2k_cont ty2]
+
+and c2k_cont ty : K.ty = ContTy [c2k_ty ty]
 
 let c2k_var (id, ty) : K.var = (id, c2k_ty ty)
 

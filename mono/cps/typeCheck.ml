@@ -16,7 +16,7 @@ let rec check_val (ctx : tyctx) : valty -> unit = function
   | Glb f, ty -> check (Id.Table.find f ctx) ty
   | Lam {vars; body}, ty ->
       check (ContTy (List.map snd vars)) ty;
-      let ctx' = Id.Table.add_seq (List.to_seq vars) ctx in
+      let ctx' = Id.Table.add_list vars ctx in
       check_exp ctx' body
   | Tuple vtys, TupleTy tys ->
       List.iter2 (fun (_, ty1) ty2 -> check ty1 ty2) vtys tys
@@ -41,7 +41,7 @@ and check_exp (ctx : tyctx) : exp -> unit = function
 
 and check_fundef (ctx : tyctx) ({var; params; body} : fundef) : unit =
   check (ContTy (List.map snd params)) (snd var);
-  let ctx' = Id.Table.add_seq (List.to_seq params) ctx in
+  let ctx' = Id.Table.add_list params ctx in
   check_exp ctx' body
 
 and check_dec (ctx : tyctx) : dec -> tyctx = function
@@ -62,6 +62,7 @@ and check_dec (ctx : tyctx) : dec -> tyctx = function
       | _ -> failwith "tuple type required" );
       check_val ctx val_;
       Id.Table.add (fst var) (snd var) ctx
+  | UnpackDec {tyvar; var; val_} -> failwith "not implemented"
 
 let check_prog : tyctx -> prog -> unit = check_exp
 

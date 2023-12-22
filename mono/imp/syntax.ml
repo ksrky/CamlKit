@@ -3,7 +3,7 @@ type id = Id.t
 type ty =
   | I1Ty
   | I32Ty
-  | PtrTy of ty
+  | PtrTy of ty option
   | FunTy of ty * ty list
   | StrctTy of ty list
 
@@ -41,7 +41,10 @@ let mk_let decs body =
 
 let return_type = I32Ty
 
-let deref_type = function PtrTy ty -> ty | _ -> failwith "not a pointer"
+let deref_type = function
+  | PtrTy (Some ty) -> ty
+  | PtrTy None -> failwith "actual type is unknown"
+  | _ -> failwith "not a pointer"
 
 open Format
 
@@ -51,7 +54,8 @@ let pp_print_ty ppf : ty -> unit =
   let rec pp_print_ty ppf : ty -> unit = function
     | I1Ty -> fprintf ppf "i1"
     | I32Ty -> fprintf ppf "i32"
-    | PtrTy ty -> fprintf ppf "%a*" pp_print_ty ty
+    | PtrTy (Some ty) -> fprintf ppf "%a*" pp_print_ty ty
+    | PtrTy None -> fprintf ppf "ptr"
     | FunTy (res_ty, arg_tys) ->
         fprintf ppf "%a(%a)" pp_print_ty res_ty
           (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
