@@ -48,7 +48,7 @@ and index (x : Id.t) (n : Id.t list list) : int * int =
     if n = [] then (
       Format.fprintf Format.err_formatter
         "Occurance of '%a' must be scope-checked" Id.pp_print_id x;
-      ErrorMsg.bug () )
+      Utils.bug () )
     else
       let rec indx2 (x : Id.t) (n : Id.t list) (j : int) =
         if n = [] then 0

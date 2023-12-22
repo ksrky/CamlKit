@@ -1,19 +1,19 @@
-(** Abstract types of identifier *)
+(** Abstract type of identifiers *)
 type t = string * int
 
-(** Unique id of identifier *)
+(** Unique id supplier for identifiers *)
 let uniq = ref (-1)
 
 (** Construct an identifier from string *)
 let from_string (name : string) : t = incr uniq; (name, !uniq)
 
-(** Get actual string of an identifier *)
+(** Get the actual string from an identifier *)
 let name : t -> string = fst
 
-(** Get unique id of an identifier *)
+(** Get the unique id from an identifier *)
 let unique : t -> int = snd
 
-(** Generate unique string of an identifier *)
+(** Generate the unique string from an identifier *)
 let unique_name (id : t) : string = fst id ^ "_" ^ string_of_int (snd id)
 
 module Table = Map.Make (struct
@@ -25,5 +25,5 @@ end)
 (** Map type using identifiers as the keys *)
 type 'a table = 'a Table.t
 
-(** Pretty print name of an identifier *)
+(** Pretty print the name of an identifier *)
 let pp_print_id ppf id = Format.fprintf ppf "%s" (name id)
