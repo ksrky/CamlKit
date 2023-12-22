@@ -1,7 +1,9 @@
 type id = Id.t
 
+(** Literal *)
 type lit = IntLit of int | BoolLit of bool
 
+(** Binary operator *)
 type op =
   | PlusOp
   | MinusOp
@@ -14,6 +16,7 @@ type op =
   | GtOp
   | GeOp
 
+(** Expression *)
 type exp =
   | VarExp of id
   | NilExp
@@ -26,16 +29,26 @@ type exp =
   | LetExp of {bnds: bnd list; body: exp}
   | LetrecExp of {bnds: bnd list; body: exp}
 
+(** Binding *)
 and bnd = Bind of {name: id; params: id list; body: exp}
 
+(** Program *)
 type prog = exp
 
+(** Note: Type checker translates [prog] (without type annotations) into [aprog]
+    (explicitly typed representation) *)
+
+(** Type *)
 type ty = NilTy | BoolTy | IntTy | FunTy of ty * ty | MetaTy of tyvar
 
+(** Meta type variable that will be replaced by an actual type after type
+    checking *)
 and tyvar = {uniq: int; mutable repres: ty option}
 
+(** Variable *)
 type var = id * ty
 
+(** Annotated expression *)
 type aexp =
   | VarAExp of var
   | NilAExp
@@ -48,8 +61,11 @@ type aexp =
   | LetAExp of {bnds: abnd list; body: expty}
   | LetrecAExp of {bnds: abnd list; body: expty}
 
+(** Pair of annotaed expression and type *)
 and expty = aexp * ty
 
+(** Annotaed binding *)
 and abnd = ABind of {name: id; params: var list; body: expty}
 
+(** Annotated program *)
 type aprog = expty

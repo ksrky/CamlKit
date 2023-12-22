@@ -1,16 +1,19 @@
 let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aprog =
-  (* print_endline (Abstract.Syntax.print_prog abssyn); *)
-  let abssyn' = Semant.Scoping.scoping_exp Semant.Scoping.empty abssyn in
-  (* print_endline (Abstract.Syntax.print_prog abssyn'); *)
-  let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  (* print_endline (Abstract.Syntax.print_aprog aabssyn); *)
+  let open Abstract in
+  let open Semant in
+  (* print_endline (Syntax.print_prog abssyn); *)
+  let abssyn' = Scoping.scoping_prog Scoping.empty abssyn in
+  (* print_endline (Syntax.print_prog abssyn'); *)
+  let aabssyn = TypeCheck.check_prog Env.empty abssyn' in
+  (* print_endline (Syntax.print_aprog aabssyn); *)
   aabssyn
 
 let run_secd instrs =
-  (* print_endline (Secd.Operation.show_instrs instrs); *)
-  Secd.State.init ();
-  Secd.Operation.load_instrs instrs;
-  Secd.Operation.run_commands ()
+  let open Secd in
+  (* print_endline (Operation.show_instrs instrs); *)
+  State.init ();
+  Operation.load_instrs instrs;
+  Operation.run_commands ()
 
 (** [run path] evaluates a source file on the virtual machine. *)
 let run (path : string) =
@@ -46,4 +49,4 @@ let compile (path : string) : unit =
   let impsyn = CpsToImp.c2i_prog cpssyn' in
   (* Imp.Syntax.print_prog impsyn; *)
   let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
-  Imp.LlvmGen.format path llmod
+  Imp.LlvmGen.emit path llmod

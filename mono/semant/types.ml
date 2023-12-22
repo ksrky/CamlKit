@@ -46,11 +46,11 @@ and zonk_abnd (ABind {name; params; body= body, body_ty}) : abnd =
   let params' = List.map (fun (x, ty) -> (x, zonk_ty ty)) params in
   ABind {name; params= params'; body= (zonk_aexp body, zonk_ty body_ty)}
 
-let unique = ref (-1)
+let uniq = ref (-1)
 
 let new_tyvar () : ty =
-  incr unique;
-  MetaTy {uniq= !unique; repres= None}
+  incr uniq;
+  MetaTy {uniq= !uniq; repres= None}
 
 let rec metatvs : ty -> tyvar list = function
   | NilTy -> []

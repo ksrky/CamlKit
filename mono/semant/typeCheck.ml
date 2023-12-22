@@ -42,7 +42,7 @@ let rec check (env : E.env) (exp : A.exp) (exp_ty : A.ty) : A.expty =
           and right' = check env right A.BoolTy in
           (OpAExp {left= left'; op; right= right'}, BoolTy)
         with _ ->
-          let left_ty = infer env left and right_ty = infer env right in
+          let left_ty = typeof env left and right_ty = typeof env right in
           Error.binop_error op left_ty right_ty;
           (NilAExp, NilTy) ) )
   | IfExp {cond; then_; else_} ->
@@ -69,9 +69,8 @@ let rec check (env : E.env) (exp : A.exp) (exp_ty : A.ty) : A.expty =
       let bnds' = check_bnds env' bnds bnd_tys in
       (LetrecAExp {bnds= bnds'; body= check env' body exp_ty}, exp_ty)
 
-and infer (env : E.env) (exp : A.exp) =
-  let ty = Types.new_tyvar () in
-  ignore (check env exp ty);
+and typeof (env : E.env) (exp : A.exp) : A.ty =
+  let _, ty = check env exp (Types.new_tyvar ()) in
   Types.zonk_ty ty
 
 and check_bnds (env : E.env) (bnds : A.bnd list) (exp_tys : A.ty list) :

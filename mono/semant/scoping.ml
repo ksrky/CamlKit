@@ -41,3 +41,5 @@ and scoping_bnds (sc : scope) (bnds : A.bnd list) : A.bnd list =
     Bind {name; params; body= scoping_exp sc' body}
   in
   List.map scbnd bnds
+
+let scoping_prog : scope -> A.prog -> A.prog = scoping_exp

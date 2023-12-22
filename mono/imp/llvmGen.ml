@@ -172,5 +172,5 @@ let codegen (modid : string) ((heaps, exp) : S.prog) : llmodule =
   codegen_main llmod exp;
   llmod
 
-let format (path : string) (llmod : llmodule) : unit =
+let emit (path : string) (llmod : llmodule) : unit =
   Llvm.print_module (Filename.remove_extension path ^ ".ll") llmod

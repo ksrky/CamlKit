@@ -1,6 +1,6 @@
 type binding = ValBind of Abstract.Syntax.ty
 
-type env = binding Id.Table.t
+type env = binding Id.table
 
 exception Out_of_scope of Id.t
 
