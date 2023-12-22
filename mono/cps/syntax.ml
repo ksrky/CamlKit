@@ -60,7 +60,6 @@ let parens (outer : int) (prec : int) s =
   if outer > prec then "(" ^ s ^ ")" else s
 
 open Format
-open PrinterUtils
 
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
 
@@ -90,7 +89,7 @@ let rec pp_print_val paren ppf = function
   | Var x -> pp_print_id ppf x
   | Glb f -> fprintf ppf "$%s" (Id.unique_name f)
   | Lam {vars; body} ->
-      with_paren ?b:paren
+      Utils.with_paren ?b:paren
         (fun ppf ->
           fprintf ppf "@[<1>fun %a ->@ %a@]"
             (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
@@ -103,7 +102,7 @@ let rec pp_print_val paren ppf = function
            (pp_print_valty false) )
         vals
   | Pack {ty; val_; exty} ->
-      with_paren ?b:paren
+      Utils.with_paren ?b:paren
         (fun ppf ->
           fprintf ppf "@[<1>pack [%a, %a] as@ %a@]" pp_print_ty ty
             (pp_print_valty false) val_ pp_print_ty exty )
@@ -136,7 +135,7 @@ and pp_print_fundef ppf {var; params; body} =
   fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id (fst var)
     (pp_print_list
        ~pp_sep:(fun ppf () -> fprintf ppf " ")
-       (fun ppf x -> with_paren (fun ppf -> pp_print_var ppf x) ppf) )
+       (fun ppf x -> Utils.with_paren (fun ppf -> pp_print_var ppf x) ppf) )
     params pp_print_exp body
 
 and pp_print_dec ppf : dec -> unit = function
