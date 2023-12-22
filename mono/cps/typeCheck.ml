@@ -20,7 +20,9 @@ let rec check_val (ctx : tyctx) : valty -> unit = function
       check_exp ctx' body
   | Tuple vtys, TupleTy tys ->
       List.iter2 (fun (_, ty1) ty2 -> check ty1 ty2) vtys tys
-  | _, _ -> failwith "type mismatch"
+  | val_, ty ->
+      Format.eprintf "given expression '%a'@ does not have type %a@."
+        pp_print_val0 val_ pp_print_ty ty
 
 and check_exp (ctx : tyctx) : exp -> unit = function
   | Let {dec; body} ->
@@ -59,7 +61,7 @@ and check_dec (ctx : tyctx) : dec -> tyctx = function
   | ProjDec {var; val_; idx} ->
       ( match snd var with
       | TupleTy tys -> check (snd var) (List.nth tys idx)
-      | _ -> failwith "tuple type required" );
+      | ty -> Format.eprintf "Expected tuplt type but got %a" pp_print_ty ty );
       check_val ctx val_;
       Id.Table.add (fst var) (snd var) ctx
   | UnpackDec {tyvar; var; val_} -> failwith "not implemented"

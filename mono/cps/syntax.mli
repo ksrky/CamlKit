@@ -54,6 +54,8 @@ val mk_projs : valty -> var list -> dec list
 
 val pp_print_ty : Format.formatter -> ty -> unit
 
+val pp_print_val0 : Format.formatter -> value -> unit
+
 val pp_print_exp : Format.formatter -> exp -> unit
 
 val pp_print_fundef : Format.formatter -> fundef -> unit

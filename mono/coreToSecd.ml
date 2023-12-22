@@ -46,9 +46,9 @@ and c2s_app (args : C.exp list) n c =
 and index (x : Id.t) (n : Id.t list list) : int * int =
   let rec indx (x : Id.t) (n : Id.t list list) (i : int) : int * int =
     if n = [] then (
-      Format.fprintf Format.err_formatter
+      Format.fprintf Format.str_formatter
         "Occurance of '%a' must be scope-checked" Id.pp_print_id x;
-      Utils.bug () )
+      raise Utils.Bug_error )
     else
       let rec indx2 (x : Id.t) (n : Id.t list) (j : int) =
         if n = [] then 0

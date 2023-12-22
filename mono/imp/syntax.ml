@@ -43,8 +43,12 @@ let return_type = I32Ty
 
 let deref_type = function
   | PtrTy (Some ty) -> ty
-  | PtrTy None -> failwith "actual type is unknown"
-  | _ -> failwith "not a pointer"
+  | PtrTy None ->
+      Format.eprintf "actual type is unknown";
+      raise Utils.Bug_error
+  | _ ->
+      Format.eprintf "not a pointer";
+      raise Utils.Bug_error
 
 open Format
 

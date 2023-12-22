@@ -29,7 +29,7 @@ module Table = struct
     try M.find id t
     with Not_found ->
       Format.eprintf "Not found: %s@." (unique_name id);
-      Utils.bug ()
+      raise Utils.Bug_error
 
   let add_list l t = M.add_seq (List.to_seq l) t
 end

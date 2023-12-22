@@ -7,8 +7,7 @@ let empty = Id.Table.empty
 let check ty1 ty2 =
   if ty1 = ty2 then ()
   else
-    Format.fprintf Format.err_formatter "type mismatch: %a vs %a\n"
-      (pp_print_ty 0) ty1 (pp_print_ty 0) ty2
+    Format.eprintf "type mismatch: %a vs %a@." pp_print_ty0 ty1 pp_print_ty0 ty2
 
 let rec check_exp (ctx : tyctx) : expty -> unit = function
   | Const (Int _), IntTy | Const (Bool _), BoolTy -> ()
@@ -22,7 +21,9 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       | FunTy (arg_ty, res_ty) ->
           check arg_ty (snd arg);
           check res_ty ty
-      | _ -> failwith "function type required" )
+      | ty ->
+          Format.eprintf "Expected function type but got %a" pp_print_ty0 ty;
+          raise Utils.Bug_error )
   | Lam {var; body}, FunTy (arg_ty, res_ty) ->
       check (snd var) arg_ty;
       check_exp (Id.Table.add (fst var) arg_ty ctx) body;
@@ -47,6 +48,8 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       List.iter (check_exp ctx') bnds;
       check_exp ctx' body;
       check (snd body) ty
-  | _ -> failwith "type mismatch"
+  | exp, ty ->
+      Format.eprintf "given expression '%a'@ does not have type %a@."
+        pp_print_exp0 exp pp_print_ty0 ty
 
 let check_prog : tyctx -> prog -> unit = check_exp

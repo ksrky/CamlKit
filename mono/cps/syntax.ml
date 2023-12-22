@@ -108,6 +108,8 @@ let rec pp_print_val paren ppf = function
             (pp_print_valty false) val_ pp_print_ty exty )
         ppf
 
+and pp_print_val0 ppf : value -> unit = pp_print_val None ppf
+
 and pp_print_valty paren ppf (val_, _) =
   fprintf ppf "%a" (pp_print_val (Some paren)) val_
 

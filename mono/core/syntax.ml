@@ -56,8 +56,10 @@ let rec pp_print_ty outer ppf = function
       (if outer > 1 then fprintf ppf "(%a ->@ %a)" else fprintf ppf "%a ->@ %a")
         (pp_print_ty 2) ty1 (pp_print_ty 1) ty2
 
+let pp_print_ty0 : Format.formatter -> ty -> unit = pp_print_ty 0
+
 let pp_print_var ppf (id, ty) =
-  fprintf ppf "%a: %a" Id.pp_print_id id (pp_print_ty 0) ty
+  fprintf ppf "%a: %a" Id.pp_print_id id pp_print_ty0 ty
 
 let rec pp_print_exp outer ppf = function
   | Const c -> pp_print_const ppf c
@@ -94,6 +96,8 @@ let rec pp_print_exp outer ppf = function
            ~pp_sep:(fun ppf () -> fprintf ppf "@ and ")
            pp_print_bnd )
         (List.combine vars bnds) (pp_print_expty 0) body
+
+and pp_print_exp0 ppf : exp -> unit = pp_print_exp 0 ppf
 
 and pp_print_expty outer ppf (exp, ty) = pp_print_exp outer ppf exp
 

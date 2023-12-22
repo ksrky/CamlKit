@@ -29,6 +29,8 @@ val lams : var list -> expty -> expty
 
 val unlam : expty -> var option * expty
 
-val pp_print_ty : int -> Format.formatter -> ty -> unit
+val pp_print_ty0 : Format.formatter -> ty -> unit
+
+val pp_print_exp0 : Format.formatter -> exp -> unit
 
 val print_prog : prog -> unit

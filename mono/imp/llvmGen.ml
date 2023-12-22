@@ -26,11 +26,15 @@ let codegen_valty (llmod : llmodule) : S.value -> llvalue * S.ty = function
   | Const c -> codegen_const c
   | Var (x, ty) -> (
     try (Hashtbl.find named_values x, ty)
-    with _ -> failwith ("no such variable " ^ Id.unique_name x) )
+    with _ ->
+      Format.eprintf "no such variable %a" Id.pp_print_id x;
+      raise Utils.Bug_error )
   | Glb (f, ty) -> (
     match lookup_function (Id.unique_name f) llmod with
     | Some func -> (func, ty)
-    | None -> failwith ("no such function " ^ Id.unique_name f) )
+    | None ->
+        Format.eprintf "no such function %a" Id.pp_print_id f;
+        raise Utils.Bug_error )
 
 let codegen_val (llmod : llmodule) (val_ : S.value) : llvalue =
   fst (codegen_valty llmod val_)
@@ -131,7 +135,9 @@ let codegen_proto (llmod : llmodule) ((id, ty) : S.var) (params : S.var list) =
   let func =
     match lookup_function name llmod with
     | None -> declare_function name func_ty llmod
-    | Some _ -> failwith "redefinition of function"
+    | Some _ ->
+        Format.eprintf "redefinition of function: %s@." name;
+        raise Utils.Bug_error
   in
   set_params func (List.map fst params)
 
