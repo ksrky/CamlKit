@@ -19,7 +19,7 @@ let rec c2i_val : K.valty -> I.dec list * I.value = function
   | Const c, _ -> ([], Const (c2i_const c))
   | Var x, ty -> ([], Var (c2i_var (x, ty)))
   | Glb f, ty -> ([], Glb (c2i_var (f, ty)))
-  | Lam _, _ -> failwith "unreachable"
+  | Lam _, _ -> raise Utils.Unreachable
   | Tuple vals, _ ->
       let tuple_ty =
         I.PtrTy (Some (StrctTy (List.map (fun v -> c2i_ty (snd v)) vals)))
@@ -72,7 +72,7 @@ let rec c2i_exp : K.exp -> I.exp = function
                  { dec= ValDec {var= c2i_var var; val_= Const (I1 0)}
                  ; body= body' } } )
   | Let {dec; body} -> I.mk_let (c2i_dec dec) (c2i_exp body)
-  | Letrec _ -> failwith "unreachable"
+  | Letrec _ -> raise Utils.Unreachable
   | App {fcn; args} ->
       let ds, fcn' = c2i_val fcn in
       let dss, args' = List.split (List.map c2i_val args) in

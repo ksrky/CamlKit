@@ -145,7 +145,7 @@ let run_command () : unit =
   | 24 (* PRINTI *) ->
       let x = pop s in
       print_int (get_int x)
-  | _ -> failwith "bug: Invalid number of operation"
+  | _ -> raise Utils.Unreachable
 
 let rec run_commands () : unit =
   if !c = 0 then ()

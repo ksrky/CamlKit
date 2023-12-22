@@ -1,5 +1,7 @@
 (library
- (name secd))
+ (name secd)
+ (libraries common)
+ (flags -open Common))
 
 (env
  (dev
