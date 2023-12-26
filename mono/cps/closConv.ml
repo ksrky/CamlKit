@@ -76,6 +76,7 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let body', escs2 = cc_exp escs1 lcls' body in
       (Let {dec= dec'; body= body'}, escs2)
   | Letrec {fundefs; body} ->
+      (* TODO: bug in closure conversion of letrec. implement cyclic closure. *)
       let glbs = List.map (fun {var} -> var) fundefs in
       globals := List.map fst glbs;
       let cc_fundef ({var; params; body} : fundef) : escapes =
