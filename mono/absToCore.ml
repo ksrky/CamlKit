@@ -32,25 +32,49 @@ let rec a2c_exp : A.aexp -> C.exp = function
   | IfAExp {cond; then_; else_} ->
       If {cond= a2c_expty cond; then_= a2c_expty then_; else_= a2c_expty else_}
   | LetAExp {bnds; body} ->
-      let vars, bnds' =
-        List.split
-          (List.map
-             (fun (A.ABind {name; params; body}) ->
-               ( (name, lambda_ty params (snd body))
-               , C.lams (List.map a2c_var params) (a2c_expty body) ) )
-             bnds )
+      let decs =
+        List.map
+          (fun (A.ABind {name; params; body}) ->
+            ( (name, lambda_ty params (snd body))
+            , C.lams (List.map a2c_var params) (a2c_expty body) |> fst ) )
+          bnds
       in
-      Let {isrec= false; vars; bnds= bnds'; body= a2c_expty body}
+      C.mk_let decs (a2c_expty body) |> fst
   | LetrecAExp {bnds; body} ->
       let vars, bnds =
         List.split
           (List.map
-             (fun (A.ABind {name; params; body}) ->
-               ( (name, lambda_ty params (snd body))
-               , C.lams (List.map a2c_var params) (a2c_expty body) ) )
+             (function
+               | A.ABind {params= []; _} ->
+                   Format.eprintf
+                     "right-hand side of let rec must be a function";
+                   raise Utils.Bug_error
+               | A.ABind {name; params= p :: ps; body} ->
+                   ( (name, lambda_ty (p :: ps) (snd body))
+                   , C.lams (List.map a2c_var ps) (a2c_expty body) ) )
              bnds )
       in
-      Let {isrec= true; vars; bnds; body= a2c_expty body}
+      let tuple_ty = C.TupleTy (List.map snd vars) in
+      let fix_var = (Id.from_string "ff", C.FunTy (tuple_ty, tuple_ty)) in
+      let arg_var = (Id.from_string "x", tuple_ty) in
+      let let_var = (Id.from_string "r", tuple_ty) in
+      let bnds' =
+        List.map
+          (C.subst
+             (List.mapi
+                (fun idx (id, _) ->
+                  (id, C.Proj {tup= (Var fix_var, snd fix_var); idx}) )
+                vars ) )
+          bnds
+      in
+      let decs =
+        ( let_var
+        , C.Fix {name= fix_var; var= arg_var; body= (Tuple bnds', tuple_ty)} )
+        :: List.mapi
+             (fun i x -> (x, C.Proj {tup= (Var let_var, tuple_ty); idx= i + 1}))
+             vars
+      in
+      C.mk_let decs (a2c_expty body) |> fst
 
 and a2c_expty ((exp, ty) : A.expty) : C.expty = (a2c_exp exp, a2c_ty ty)
 
