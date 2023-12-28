@@ -1,5 +1,5 @@
 (library
- (name lambda)
+ (name sexp)
  (libraries common)
  (flags -open Common))
 
