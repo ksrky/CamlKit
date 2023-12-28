@@ -17,17 +17,19 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Lam {var; body= body, _} ->
       let n' = [fst var] :: n in
       c2s_lambda body n' c
+  | Fix {var; body= body, _} -> failwith ""
   | Prim {left= left, _; oper; right= right, _} ->
       c2s_prim [left; right] n (List.assoc oper prims :: c)
   | If {cond= cond, _; then_= then_, _; else_= else_, _} ->
       c2s_if cond then_ else_ n c
-  | Let {isrec= false; vars; bnds; body= body, _} ->
-      let newn = List.map fst vars :: n in
-      NIL :: c2s_app (List.map fst bnds) n (c2s_lambda body newn (AP :: c))
-  | Let {isrec= true; vars; bnds; body= body, _} ->
-      let newn = List.map fst vars :: n in
-      DUM :: NIL
-      :: c2s_app (List.map fst bnds) newn (c2s_lambda body newn (RAP :: c))
+  | Let {var; bnd= Fix {body= bnd, _; _}; body= body, _} ->
+      let newn = [fst var] :: n in
+      DUM :: NIL :: c2s_app [bnd] newn (c2s_lambda body newn (RAP :: c))
+  | Let {var; bnd; body= body, _} ->
+      let newn = [fst var] :: n in
+      NIL :: c2s_app [bnd] n (c2s_lambda body newn (AP :: c))
+  | Tuple _ -> failwith "Tuple not implemented"
+  | Proj _ -> failwith "Proj not implemented"
 
 and c2s_prim (args : C.exp list) (n : C.id list list) (c : S.t list) =
   if args = [] then c

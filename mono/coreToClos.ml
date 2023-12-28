@@ -45,6 +45,7 @@ let rec c2cl_exp (escs : escapes) (lcls : locals) :
           , escs2 )
       | _ -> ((TailApp {fcn= fcn'; arg= arg'}, res_ty), escs2) )
   | Lam {var; body}, _ -> failwith "not implemented"
+  | Fix _, _ -> failwith "not implemented"
   | Prim {left; oper; right}, ty ->
       let left', escs1 = c2cl_exp escs lcls left in
       let right', escs2 = c2cl_exp escs1 lcls right in
@@ -54,5 +55,6 @@ let rec c2cl_exp (escs : escapes) (lcls : locals) :
       let then', escs2 = c2cl_exp escs1 lcls then_ in
       let else', escs3 = c2cl_exp escs2 lcls else_ in
       ((If {cond= cond'; then_= then'; else_= else'}, c2cl_ty ty), escs3)
-  | Let {isrec= false; vars; bnds; body}, _ -> failwith "not implemented"
-  | Let {isrec= true; vars; bnds; body}, _ -> failwith "not implemented"
+  | Let {var; bnd; body}, _ -> failwith "not implemented"
+  | Tuple _, _ -> failwith "not implemented"
+  | Proj _, _ -> failwith "not implemented"

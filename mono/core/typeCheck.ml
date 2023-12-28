@@ -41,11 +41,9 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       check BoolTy (snd cond);
       check (snd then_) ty;
       check (snd else_) ty
-  | Let {vars; bnds; body}, ty ->
-      let ctx' =
-        List.fold_left (fun ctx (x, ty) -> Id.Table.add x ty ctx) ctx vars
-      in
-      List.iter (check_exp ctx') bnds;
+  | Let {var= x, var_ty; bnd; body}, ty ->
+      let ctx' = Id.Table.add x var_ty ctx in
+      check_exp ctx' (bnd, var_ty);
       check_exp ctx' body;
       check (snd body) ty
   | exp, ty ->
