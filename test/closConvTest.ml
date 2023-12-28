@@ -2,8 +2,8 @@ let test_line inp =
   let abssyn = Parse.parse_line inp in
   let abssyn' = Semant.Scoping.scoping_prog Semant.Scoping.empty abssyn in
   let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  let coresyn = AbsToCore.a2c_prog aabssyn in
-  let cpssyn = CoreToCps.c2k_prog coresyn in
+  let lamsyn = AbsToCore.a2c_prog aabssyn in
+  let cpssyn = LamToCps.c2k_prog lamsyn in
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in
   Cps.TypeCheck.check_prog_cc Cps.TypeCheck.empty cpssyn'
 

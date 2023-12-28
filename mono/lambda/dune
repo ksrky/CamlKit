@@ -1,5 +1,5 @@
 (library
- (name core)
+ (name lambda)
  (libraries common abstract)
  (flags -open Common))
 

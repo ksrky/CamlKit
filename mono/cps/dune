@@ -1,6 +1,6 @@
 (library
  (name cps)
- (libraries common core)
+ (libraries common lambda)
  (flags -open Common))
 
 (env

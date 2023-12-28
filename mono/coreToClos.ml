@@ -1,22 +1,22 @@
-module C = Lambda.Syntax
-module Cl = Closure.Syntax
+module L = Lambda.Syntax
+module C = Closure.Syntax
 
-type escapes = Cl.var list
+type escapes = C.var list
 
-type locals = Cl.id list
+type locals = C.id list
 
-let globals : Cl.id list ref = ref []
+let globals : C.id list ref = ref []
 
-let rec c2cl_ty : C.ty -> Cl.ty = function
+let rec c2cl_ty : L.ty -> C.ty = function
   | IntTy -> IntTy
   | BoolTy -> BoolTy
   | FunTy (ty1, ty2) -> FunTy (c2cl_ty ty1, c2cl_ty ty2)
   | _ -> failwith "not implemented"
 
-let c2k_var (id, ty) : Cl.var = (id, c2cl_ty ty)
+let c2k_var (id, ty) : C.var = (id, c2cl_ty ty)
 
 let rec c2cl_exp (escs : escapes) (lcls : locals) :
-    C.expty -> Cl.expty * escapes = function
+    L.expty -> C.expty * escapes = function
   | Const c, ty -> ((Const c, c2cl_ty ty), escs)
   | Var (x, _), ty -> ((Var x, c2cl_ty ty), escs)
   | App {fcn; arg}, ty -> (
@@ -28,7 +28,7 @@ let rec c2cl_exp (escs : escapes) (lcls : locals) :
           let env_id = Id.from_string "env" in
           let code_id = Id.from_string "code" in
           let clos_id = Id.from_string "clos" in
-          let clos_ty = Cl.ClosTy (code_ty, env_ty) in
+          let clos_ty = C.ClosTy (code_ty, env_ty) in
           ( ( Let
                 { isrec= false
                 ; vars=

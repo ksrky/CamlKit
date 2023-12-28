@@ -1,4 +1,4 @@
-module C = Core.Syntax
+module C = Lambda.Syntax
 module S = Secd.Operation
 
 let prims : (C.oper * S.t) list =

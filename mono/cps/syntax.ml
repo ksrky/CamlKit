@@ -1,4 +1,4 @@
-module C = Core.Syntax
+module C = Lambda.Syntax
 
 type id = Id.t
 
@@ -64,8 +64,8 @@ open Format
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)
 
 let pp_print_const ppf = function
-  | Core.Syntax.Int i -> fprintf ppf "%i" i
-  | Core.Syntax.Bool b -> fprintf ppf "%b" b
+  | Lambda.Syntax.Int i -> fprintf ppf "%i" i
+  | Lambda.Syntax.Bool b -> fprintf ppf "%b" b
 
 let rec pp_print_ty ppf = function
   | IntTy -> fprintf ppf "int"

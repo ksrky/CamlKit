@@ -1,6 +1,6 @@
 (library
  (name mono)
- (libraries common abstract parser semant core closure cps secd imp)
+ (libraries common abstract parser semant lambda closure cps secd imp)
  (flags -open Common))
 
 (env

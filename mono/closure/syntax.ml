@@ -1,4 +1,4 @@
-module C = Core.Syntax
+module C = Lambda.Syntax
 
 type id = Id.t
 

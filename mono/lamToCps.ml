@@ -1,10 +1,11 @@
-module C = Core.Syntax
+module C = Lambda.Syntax
 module K = Cps.Syntax
 
 let rec c2k_ty : C.ty -> K.ty = function
   | IntTy -> IntTy
   | BoolTy -> BoolTy
   | FunTy (ty1, ty2) -> ContTy [c2k_ty ty1; c2k_cont ty2]
+  | _ -> failwith ""
 
 and c2k_cont ty : K.ty = ContTy [c2k_ty ty]
 
@@ -74,15 +75,16 @@ let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
                ; then_= c2k_exp then_ k
                ; else_= c2k_exp else_ k } )
         , ContTy [cond_ty'] )
-  | Let {isrec= false; vars; bnds; body= body, _} ->
-      List.fold_right2
-        (fun var (bnd, bnd_ty) body ->
-          c2k_exp bnd (K.mk_lam (c2k_var var) body, ContTy [c2k_ty bnd_ty]) )
-        vars bnds (c2k_exp body k)
-  | Let {isrec= true; vars; bnds; body= body, _} ->
-      let fundefs = List.map2 c2k_fundef vars bnds in
-      let body' = c2k_exp body k in
-      Letrec {fundefs; body= body'}
+  (* | Let {vars; bnds; body= body, _} ->
+         List.fold_right2
+           (fun var (bnd, bnd_ty) body ->
+             c2k_exp bnd (K.mk_lam (c2k_var var) body, ContTy [c2k_ty bnd_ty]) )
+           vars bnds (c2k_exp body k)
+     | Let {vars; bnds; body= body, _} ->
+         let fundefs = List.map2 c2k_fundef vars bnds in
+         let body' = c2k_exp body k in
+         Letrec {fundefs; body= body'} *)
+  | _ -> failwith ""
 
 and c2k_fundef (name : C.var) : C.expty -> K.fundef = function
   | C.Lam {var; body= body, body_ty}, _ ->

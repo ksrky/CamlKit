@@ -1,8 +1,8 @@
 type id = Id.t
 
-type oper = Core.Syntax.oper
+type oper = Lambda.Syntax.oper
 
-type const = Core.Syntax.const
+type const = Lambda.Syntax.const
 
 type ty =
   | IntTy

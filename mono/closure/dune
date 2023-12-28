@@ -1,6 +1,6 @@
 (library
  (name closure)
- (libraries common core)
+ (libraries common lambda)
  (flags -open Common))
 
 (env
