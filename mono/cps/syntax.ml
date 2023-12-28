@@ -1,10 +1,10 @@
-module C = Lambda.Syntax
+module L = Lambda.Syntax
 
 type id = Id.t
 
-type oper = C.oper
+type oper = L.oper
 
-type const = C.const
+type const = L.const
 
 type ty =
   | IntTy
@@ -146,8 +146,8 @@ and pp_print_dec ppf : dec -> unit = function
   | PrimDec {var; left; oper; right} ->
       fprintf ppf "%a =@ %a %s %a" pp_print_var var (pp_print_valty true) left
         (List.assoc oper
-           [ (C.Add, "+"); (C.Sub, "-"); (C.Mul, "*"); (C.Div, "/"); (C.Eq, "=")
-           ; (C.Ne, "<>"); (C.Lt, "<"); (C.Le, "<="); (C.Gt, ">"); (C.Ge, ">=")
+           [ (L.Add, "+"); (L.Sub, "-"); (L.Mul, "*"); (L.Div, "/"); (L.Eq, "=")
+           ; (L.Ne, "<>"); (L.Lt, "<"); (L.Le, "<="); (L.Gt, ">"); (L.Ge, ">=")
            ] )
         (pp_print_valty true) right
   | ProjDec {var; val_; idx} ->

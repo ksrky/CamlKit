@@ -1,10 +1,10 @@
-module C = Lambda.Syntax
+module L = Lambda.Syntax
 
 type id = Id.t
 
-type oper = C.oper
+type oper = L.oper
 
-type const = C.const
+type const = L.const
 
 type ty = IntTy | BoolTy | FunTy of ty * ty | ClosTy of ty * ty
 

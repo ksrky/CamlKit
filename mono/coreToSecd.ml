@@ -1,11 +1,11 @@
-module C = Lambda.Syntax
+module L = Lambda.Syntax
 module S = Secd.Operation
 
-let prims : (C.oper * S.t) list =
+let prims : (L.oper * S.t) list =
   [ (Add, ADD); (Sub, SUB); (Mul, MUL); (Div, DIV); (Eq, EQ); (Ne, NE); (Lt, LT)
   ; (Le, LE) ]
 
-let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
+let rec c2s_exp (e : L.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   match e with
   | Const (Bool b) -> LDC (Bool.to_int b) :: c
   | Const (Int i) -> LDC i :: c
@@ -31,17 +31,17 @@ let rec c2s_exp (e : C.exp) (n : Id.t list list) (c : S.t list) : S.t list =
   | Tuple _ -> failwith "Tuple not implemented"
   | Proj _ -> failwith "Proj not implemented"
 
-and c2s_prim (args : C.exp list) (n : C.id list list) (c : S.t list) =
+and c2s_prim (args : L.exp list) (n : L.id list list) (c : S.t list) =
   if args = [] then c
   else c2s_prim (List.tl args) n (c2s_exp (List.hd args) n c)
 
-and c2s_lambda (body : C.exp) (n : C.id list list) (c : S.t list) : S.t list =
+and c2s_lambda (body : L.exp) (n : L.id list list) (c : S.t list) : S.t list =
   LDF (c2s_exp body n [RTN]) :: c
 
 and c2s_if test tr fa n c =
   c2s_exp test n [SEL (c2s_exp tr n [JOIN], c2s_exp fa n [JOIN])] @ c
 
-and c2s_app (args : C.exp list) n c =
+and c2s_app (args : L.exp list) n c =
   if args = [] then c
   else c2s_app (List.tl args) n (c2s_exp (List.hd args) n (CONS :: c))
 
@@ -62,4 +62,4 @@ and index (x : Id.t) (n : Id.t list list) : int * int =
   in
   indx x n 1
 
-let c2s_prog ((e, _) : C.prog) : S.t list = c2s_exp e [] [S.STOP]
+let c2s_prog ((e, _) : L.prog) : S.t list = c2s_exp e [] [S.STOP]
