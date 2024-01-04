@@ -28,6 +28,10 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       check (snd var) arg_ty;
       check_exp (Id.Table.add (fst var) arg_ty ctx) body;
       check res_ty (snd body)
+  | Fix {var; body}, ty ->
+      check (snd var) ty;
+      check_exp (Id.Table.add (fst var) ty ctx) body;
+      check ty (snd body)
   | Prim {left; oper; right}, ty -> (
       check_exp ctx left;
       check_exp ctx right;

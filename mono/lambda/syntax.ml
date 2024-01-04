@@ -13,7 +13,7 @@ type exp =
   | Var of var
   | App of {fcn: expty; arg: expty}
   | Lam of {var: var; body: expty}
-  | Fix of {name: var; var: var; body: expty}
+  | Fix of {var: var; body: expty}
   | Prim of {left: expty; oper: oper; right: expty}
   | If of {cond: expty; then_: expty; else_: expty}
   | Let of {var: var; bnd: exp; body: expty}
@@ -53,7 +53,7 @@ and subst' (s : (id * exp) list) : exp -> exp = function
     match List.assoc_opt id s with Some exp -> exp | None -> Var (id, ty) )
   | App {fcn; arg} -> App {fcn= subst s fcn; arg= subst s arg}
   | Lam {var; body} -> Lam {var; body= subst s body}
-  | Fix {name; var; body} -> Fix {name; var; body= subst s body}
+  | Fix {var; body} -> Fix {var; body= subst s body}
   | Prim {left; oper; right} ->
       Prim {left= subst s left; oper; right= subst s right}
   | If {cond; then_; else_} ->
@@ -104,14 +104,14 @@ let rec pp_print_exp outer ppf = function
   | Lam {var; body} ->
       Utils.with_paren ~b:(outer > 0)
         (fun ppf ->
-          fprintf ppf "fun %a ->@;<1 2>%a" pp_print_var var (pp_print_expty 0)
+          fprintf ppf "fun (%a) ->@;<1 2>%a" pp_print_var var (pp_print_expty 0)
             body )
         ppf
-  | Fix {name; var; body} ->
+  | Fix {var; body} ->
       Utils.with_paren ~b:(outer > 0)
         (fun ppf ->
-          fprintf ppf "fix %a %a ->@;<1 2>%a" pp_print_var name pp_print_var var
-            (pp_print_expty 0) body )
+          fprintf ppf "fix (%a) ->@;<1 2>%a" pp_print_var var (pp_print_expty 0)
+            body )
         ppf
   | Prim {left; oper= (Add | Sub) as oper; right} ->
       Utils.with_paren ~b:(outer > 6)

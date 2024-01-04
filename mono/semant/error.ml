@@ -15,6 +15,12 @@ let binop_error op ty1 ty2 =
     AP.pp_print_op op AP.pp_print_ty0 ty1 AP.pp_print_ty0 ty2;
   print_newline ()
 
+let letrec_error id =
+  has_error := true;
+  fprintf std_formatter "right-hand side of let rec must be a function: %a"
+    Id.pp_print_id id;
+  print_newline ()
+
 let unification_error ty1 ty2 =
   has_error := true;
   fprintf std_formatter "Cannot unify types: %a with %a" AP.pp_print_ty0 ty1

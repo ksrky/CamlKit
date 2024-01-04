@@ -66,17 +66,18 @@ let rec check (env : E.env) (exp : A.exp) (exp_ty : A.ty) : A.expty =
           (List.map (fun (A.Bind {name; _}) -> name) bnds)
           bnd_tys env
       in
-      let bnds' = check_bnds env' bnds bnd_tys in
+      let bnds' = check_bnds ~isrec:true env' bnds bnd_tys in
       (LetrecAExp {bnds= bnds'; body= check env' body exp_ty}, exp_ty)
 
 and typeof (env : E.env) (exp : A.exp) : A.ty =
   let _, ty = check env exp (Types.new_tyvar ()) in
   Types.zonk_ty ty
 
-and check_bnds (env : E.env) (bnds : A.bnd list) (exp_tys : A.ty list) :
-    A.abnd list =
+and check_bnds ?(isrec = false) (env : E.env) (bnds : A.bnd list)
+    (exp_tys : A.ty list) : A.abnd list =
   List.map2
     (fun (A.Bind {name; params; body}) exp_ty ->
+      if isrec && params = [] then Error.letrec_error name;
       let param_tys, body_ty = U.unify_funs params exp_ty in
       let env' = E.extend_vals params param_tys env in
       A.ABind

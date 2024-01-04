@@ -13,7 +13,7 @@ type exp =
   | Var of var
   | App of {fcn: expty; arg: expty}
   | Lam of {var: var; body: expty}
-  | Fix of {name: var; var: var; body: expty}
+  | Fix of {var: var; body: expty}
   | Prim of {left: expty; oper: oper; right: expty}
   | If of {cond: expty; then_: expty; else_: expty}
   | Let of {var: var; bnd: exp; body: expty}
