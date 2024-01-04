@@ -40,7 +40,7 @@ let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
                   [c2k_var var; (cont_id, K.ContTy [body_ty'])]
                   (c2k_exp body (Var cont_id, ContTy [body_ty']))
               , ContTy [c2k_ty (snd var); ContTy [body_ty']] ) ] }
-  | Fix {var; body} -> failwith "" (* K.App {fcn= k; args= [(Fix _, _)]} *)
+  | Fix _ -> failwith "TODO"
   | Prim {left= left, left_ty; oper; right= right, right_ty} ->
       let prim_ty =
         match oper with

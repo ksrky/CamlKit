@@ -13,14 +13,16 @@ type exp =
   | Var of var
   | App of {fcn: expty; arg: expty}
   | Lam of {var: var; body: expty}
-  | Fix of {var: var; body: expty}
   | Prim of {left: expty; oper: oper; right: expty}
   | If of {cond: expty; then_: expty; else_: expty}
   | Let of {var: var; bnd: exp; body: expty}
+  | Fix of {defs: def list; body: expty}
   | Tuple of expty list
   | Proj of {tup: expty; idx: int}
 
 and expty = exp * ty
+
+and def = {name: var; vars: var list; body: expty}
 
 type prog = expty
 
@@ -33,8 +35,6 @@ val lams : var list -> expty -> expty
 val unlam : expty -> var option * expty
 
 val mk_let : (var * exp) list -> expty -> expty
-
-val subst : (id * exp) list -> expty -> expty
 
 val pp_print_ty0 : Format.formatter -> ty -> unit
 

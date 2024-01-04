@@ -13,14 +13,16 @@ type exp =
   | Var of var
   | App of {fcn: expty; arg: expty}
   | Lam of {var: var; body: expty}
-  | Fix of {var: var; body: expty}
   | Prim of {left: expty; oper: oper; right: expty}
   | If of {cond: expty; then_: expty; else_: expty}
   | Let of {var: var; bnd: exp; body: expty}
+  | Fix of {defs: def list; body: expty}
   | Tuple of expty list
   | Proj of {tup: expty; idx: int}
 
 and expty = exp * ty
+
+and def = {name: var; vars: var list; body: expty}
 
 type prog = expty
 
@@ -44,23 +46,6 @@ let mk_let (decs : (var * exp) list) (body : expty) : expty =
   List.fold_right
     (fun (var, bnd) body -> (Let {var; bnd; body}, snd body))
     decs body
-
-let rec subst (s : (id * exp) list) (exp, ty) : expty = (subst' s exp, ty)
-
-and subst' (s : (id * exp) list) : exp -> exp = function
-  | Const c -> Const c
-  | Var (id, ty) -> (
-    match List.assoc_opt id s with Some exp -> exp | None -> Var (id, ty) )
-  | App {fcn; arg} -> App {fcn= subst s fcn; arg= subst s arg}
-  | Lam {var; body} -> Lam {var; body= subst s body}
-  | Fix {var; body} -> Fix {var; body= subst s body}
-  | Prim {left; oper; right} ->
-      Prim {left= subst s left; oper; right= subst s right}
-  | If {cond; then_; else_} ->
-      If {cond= subst s cond; then_= subst s then_; else_}
-  | Let {var; bnd; body} -> Let {var; bnd= subst' s bnd; body= subst s body}
-  | Tuple exps -> Tuple (List.map (subst s) exps)
-  | Proj {tup; idx} -> Proj {tup= subst s tup; idx}
 
 open Format
 
@@ -107,12 +92,6 @@ let rec pp_print_exp outer ppf = function
           fprintf ppf "fun (%a) ->@;<1 2>%a" pp_print_var var (pp_print_expty 0)
             body )
         ppf
-  | Fix {var; body} ->
-      Utils.with_paren ~b:(outer > 0)
-        (fun ppf ->
-          fprintf ppf "fix (%a) ->@;<1 2>%a" pp_print_var var (pp_print_expty 0)
-            body )
-        ppf
   | Prim {left; oper= (Add | Sub) as oper; right} ->
       Utils.with_paren ~b:(outer > 6)
         (fun ppf ->
@@ -141,6 +120,17 @@ let rec pp_print_exp outer ppf = function
   | Let {var; bnd; body} ->
       fprintf ppf "let@ %a = %a@ in@;%a" pp_print_var var (pp_print_exp 0) bnd
         (pp_print_expty 0) body
+  | Fix {defs; body} ->
+      fprintf ppf "fix@ %a@ in@;%a"
+        (pp_print_list
+           ~pp_sep:(fun ppf () -> fprintf ppf "@ ")
+           (fun ppf {name= id, _; vars; body} ->
+             fprintf ppf "%a (%a) =@ %a" Id.pp_print_id id
+               (pp_print_list
+                  ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
+                  pp_print_var )
+               vars (pp_print_expty 0) body ) )
+        defs (pp_print_expty 0) body
   | Tuple exps ->
       fprintf ppf "(%a)"
         (pp_print_list

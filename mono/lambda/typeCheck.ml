@@ -28,10 +28,6 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       check (snd var) arg_ty;
       check_exp (Id.Table.add (fst var) arg_ty ctx) body;
       check res_ty (snd body)
-  | Fix {var; body}, ty ->
-      check (snd var) ty;
-      check_exp (Id.Table.add (fst var) ty ctx) body;
-      check ty (snd body)
   | Prim {left; oper; right}, ty -> (
       check_exp ctx left;
       check_exp ctx right;
@@ -48,6 +44,17 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
   | Let {var= x, var_ty; bnd; body}, ty ->
       let ctx' = Id.Table.add x var_ty ctx in
       check_exp ctx' (bnd, var_ty);
+      check_exp ctx' body;
+      check (snd body) ty
+  | Fix {defs; body}, ty ->
+      let ctx' =
+        List.fold_right
+          (fun {name= id, ty; body} -> Id.Table.add id ty)
+          defs ctx
+      in
+      List.iter
+        (fun {vars} -> check_exp (Id.Table.add_list vars ctx') body)
+        defs;
       check_exp ctx' body;
       check (snd body) ty
   | exp, ty ->
