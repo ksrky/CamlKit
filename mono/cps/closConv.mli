@@ -1,4 +1,4 @@
-type prog = Syntax.fundef list * Syntax.exp
+type prog = Syntax.def list * Syntax.exp
 
 val cc_prog : Syntax.exp -> prog
 

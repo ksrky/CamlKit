@@ -1,17 +1,17 @@
-module C = Lambda.Syntax
+module L = Lambda.Syntax
 module K = Cps.Syntax
 
-let rec c2k_ty : C.ty -> K.ty = function
+let rec c2k_ty : L.ty -> K.ty = function
   | IntTy -> IntTy
   | BoolTy -> BoolTy
   | FunTy (ty1, ty2) -> ContTy [c2k_ty ty1; c2k_cont ty2]
-  | _ -> failwith ""
+  | _ -> failwith "TODO"
 
 and c2k_cont ty : K.ty = ContTy [c2k_ty ty]
 
 let c2k_var (id, ty) : K.var = (id, c2k_ty ty)
 
-let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
+let rec c2k_exp (exp : L.exp) (k : K.valty) : K.exp =
   match exp with
   | Const (Int _ as c) -> K.mk_app k (K.Const c, IntTy)
   | Const (Bool _ as c) -> K.mk_app k (K.Const c, BoolTy)
@@ -40,7 +40,7 @@ let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
                   [c2k_var var; (cont_id, K.ContTy [body_ty'])]
                   (c2k_exp body (Var cont_id, ContTy [body_ty']))
               , ContTy [c2k_ty (snd var); ContTy [body_ty']] ) ] }
-  | Fix _ -> failwith "TODO"
+  | Fix {defs; body} -> failwith "TODO"
   | Prim {left= left, left_ty; oper; right= right, right_ty} ->
       let prim_ty =
         match oper with
@@ -82,8 +82,8 @@ let rec c2k_exp (exp : C.exp) (k : K.valty) : K.exp =
   | Tuple _ -> raise Utils.Unreachable
   | Proj _ -> raise Utils.Unreachable
 
-and c2k_fundef (name : C.var) : C.expty -> K.fundef = function
-  | C.Lam {var; body= body, body_ty}, _ ->
+and c2k_fundef (name : L.var) : L.expty -> K.def = function
+  | Lam {var; body= body, body_ty}, _ ->
       let body_ty' = c2k_ty body_ty in
       let cont_id = Id.from_string "c" in
       { var= c2k_var name
@@ -96,7 +96,7 @@ and c2k_fundef (name : C.var) : C.expty -> K.fundef = function
       ; params= [(cont_id, K.ContTy [exp_ty'])]
       ; body= c2k_exp exp (Var cont_id, K.ContTy [exp_ty']) }
 
-let c2k_prog ((exp, ty) : C.prog) : K.prog =
+let c2k_prog ((exp, ty) : L.prog) : K.prog =
   let exp_ty = c2k_ty ty in
   let prog_id = Id.from_string "prog" in
   c2k_exp exp

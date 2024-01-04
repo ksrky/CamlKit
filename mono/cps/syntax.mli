@@ -18,7 +18,6 @@ type value =
   | Var of id
   | Glb of id
   | Lam of {vars: var list; body: exp}
-  | Fix of {var: var; body: valty}
   | Tuple of valty list
   | Pack of {ty: ty; val_: valty; exty: ty}
 
@@ -26,12 +25,12 @@ and valty = value * ty
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | Letrec of {fundefs: fundef list; body: exp}
+  | Letrec of {defs: def list; body: exp}
   | App of {fcn: valty; args: valty list}
   | If of {cond: valty; then_: exp; else_: exp}
   | Halt of valty
 
-and fundef = {var: var; params: var list; body: exp}
+and def = {var: var; params: var list; body: exp}
 
 and dec =
   | ValDec of {var: var; val_: valty}
@@ -59,6 +58,6 @@ val pp_print_val0 : Format.formatter -> value -> unit
 
 val pp_print_exp : Format.formatter -> exp -> unit
 
-val pp_print_fundef : Format.formatter -> fundef -> unit
+val pp_print_def : Format.formatter -> def -> unit
 
 val print_prog : prog -> unit

@@ -20,7 +20,6 @@ type value =
   | Var of id
   | Glb of id
   | Lam of {vars: var list; body: exp}
-  | Fix of {var: var; body: valty}
   | Tuple of valty list
   | Pack of {ty: ty; val_: valty; exty: ty}
 
@@ -28,12 +27,12 @@ and valty = value * ty
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | Letrec of {fundefs: fundef list; body: exp}
+  | Letrec of {defs: def list; body: exp}
   | App of {fcn: valty; args: valty list}
   | If of {cond: valty; then_: exp; else_: exp}
   | Halt of valty
 
-and fundef = {var: var; params: var list; body: exp}
+and def = {var: var; params: var list; body: exp}
 
 and dec =
   | ValDec of {var: var; val_: valty}
@@ -96,12 +95,6 @@ let rec pp_print_val paren ppf = function
             (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
             vars pp_print_exp body )
         ppf
-  | Fix {var; body} ->
-      Utils.with_paren ?b:paren
-        (fun ppf ->
-          fprintf ppf "@[<1>fix (%a) ->@ %a@]" pp_print_var var
-            (pp_print_valty false) body )
-        ppf
   | Tuple vals ->
       fprintf ppf "(%a)"
         (pp_print_list
@@ -123,12 +116,12 @@ and pp_print_valty paren ppf (val_, _) =
 and pp_print_exp ppf = function
   | Let {dec; body} ->
       fprintf ppf "@[<2>let@ %a@]@ in@ %a" pp_print_dec dec pp_print_exp body
-  | Letrec {fundefs; body} ->
+  | Letrec {defs; body} ->
       fprintf ppf "let rec@ %a@ in@ %a"
         (pp_print_list
            ~pp_sep:(fun ppf () -> fprintf ppf "@ and ")
-           pp_print_fundef )
-        fundefs pp_print_exp body
+           pp_print_def )
+        defs pp_print_exp body
   | App {fcn; args} ->
       fprintf ppf "@[<2>%a@ %a@]" (pp_print_valty true) fcn
         (pp_print_list
@@ -140,7 +133,7 @@ and pp_print_exp ppf = function
         (pp_print_valty true) cond pp_print_exp then_ pp_print_exp else_
   | Halt val_ -> fprintf ppf "halt %a" (pp_print_valty true) val_
 
-and pp_print_fundef ppf {var; params; body} =
+and pp_print_def ppf {var; params; body} =
   fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id (fst var)
     (pp_print_list
        ~pp_sep:(fun ppf () -> fprintf ppf " ")

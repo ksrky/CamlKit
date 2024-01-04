@@ -20,7 +20,6 @@ let rec c2i_val : K.valty -> I.dec list * I.value = function
   | Var x, ty -> ([], Var (c2i_var (x, ty)))
   | Glb f, ty -> ([], Glb (c2i_var (f, ty)))
   | Lam _, _ -> raise Utils.Unreachable
-  | Fix _, _ -> failwith "not implemented"
   | Tuple vals, _ ->
       let tuple_ty =
         I.PtrTy (Some (StrctTy (List.map (fun v -> c2i_ty (snd v)) vals)))
@@ -116,7 +115,7 @@ and c2i_dec : K.dec -> I.dec list = function
       ds @ [SubscrDec {var= c2i_var var; val_= val'; idx}]
   | UnpackDec _ -> failwith "not implemented"
 
-let c2i_heap ({var; params; body} : K.fundef) : I.heap =
+let c2i_heap ({var; params; body} : K.def) : I.heap =
   let params' = List.map (fun (x, ty) -> (x, c2i_ty ty)) params in
   Code {var= c2i_var var; params= params'; body= c2i_exp body}
 

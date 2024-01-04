@@ -28,11 +28,11 @@ and check_exp (ctx : tyctx) : exp -> unit = function
   | Let {dec; body} ->
       let ctx' = check_dec ctx dec in
       check_exp ctx' body
-  | Letrec {fundefs; body} ->
+  | Letrec {defs; body} ->
       let ctx' =
-        List.fold_right (fun {var= id, ty} -> Id.Table.add id ty) fundefs ctx
+        List.fold_right (fun {var= id, ty} -> Id.Table.add id ty) defs ctx
       in
-      List.iter (check_fundef ctx) fundefs;
+      List.iter (check_fundef ctx) defs;
       check_exp ctx' body
   | App {fcn; args} ->
       check_val ctx fcn;
@@ -41,7 +41,7 @@ and check_exp (ctx : tyctx) : exp -> unit = function
       check_val ctx cond; check_exp ctx then_; check_exp ctx else_
   | Halt vty -> check_val ctx vty
 
-and check_fundef (ctx : tyctx) ({var; params; body} : fundef) : unit =
+and check_fundef (ctx : tyctx) ({var; params; body} : def) : unit =
   check (ContTy (List.map snd params)) (snd var);
   let ctx' = Id.Table.add_list params ctx in
   check_exp ctx' body

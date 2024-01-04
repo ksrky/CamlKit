@@ -22,7 +22,7 @@ type exp =
 
 and expty = exp * ty
 
-and def = {name: var; vars: var list; body: expty}
+and def = {var: var; params: var list; body: expty}
 
 type prog = expty
 
@@ -124,12 +124,12 @@ let rec pp_print_exp outer ppf = function
       fprintf ppf "fix@ %a@ in@;%a"
         (pp_print_list
            ~pp_sep:(fun ppf () -> fprintf ppf "@ ")
-           (fun ppf {name= id, _; vars; body} ->
+           (fun ppf {var= id, _; params; body} ->
              fprintf ppf "%a (%a) =@ %a" Id.pp_print_id id
                (pp_print_list
                   ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
                   pp_print_var )
-               vars (pp_print_expty 0) body ) )
+               params (pp_print_expty 0) body ) )
         defs (pp_print_expty 0) body
   | Tuple exps ->
       fprintf ppf "(%a)"

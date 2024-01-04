@@ -48,12 +48,10 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       check (snd body) ty
   | Fix {defs; body}, ty ->
       let ctx' =
-        List.fold_right
-          (fun {name= id, ty; body} -> Id.Table.add id ty)
-          defs ctx
+        List.fold_right (fun {var= id, ty; body} -> Id.Table.add id ty) defs ctx
       in
       List.iter
-        (fun {vars} -> check_exp (Id.Table.add_list vars ctx') body)
+        (fun {params} -> check_exp (Id.Table.add_list params ctx') body)
         defs;
       check_exp ctx' body;
       check (snd body) ty

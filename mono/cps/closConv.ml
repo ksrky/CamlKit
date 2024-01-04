@@ -1,6 +1,6 @@
 open Syntax
 
-type prog = fundef list * exp
+type prog = def list * exp
 
 type escapes = var list
 
@@ -19,9 +19,9 @@ let lookup_env (escs : escapes) (x : var) : int * escapes =
   in
   find_idx 1 escs
 
-let fundef_list : fundef list ref = ref []
+let def_list : def list ref = ref []
 
-let append_fundef fundef : unit = fundef_list := fundef :: !fundef_list
+let append_def def : unit = def_list := def :: !def_list
 
 let globals : id list ref = ref []
 
@@ -39,13 +39,13 @@ let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
       let func_id = Id.from_string "func" in
       if escs' = [] then (
         let func_ty = ContTy (List.map snd vars) in
-        append_fundef {var= (func_id, func_ty); params= vars; body= body'};
+        append_def {var= (func_id, func_ty); params= vars; body= body'};
         ((Glb func_id, func_ty), escs) )
       else
         let env_id = Id.from_string "env" in
         let env_ty = TupleTy (List.map snd escs') in
         let func_ty = ContTy (env_ty :: List.map snd vars) in
-        append_fundef
+        append_def
           { var= (func_id, func_ty)
           ; params= (env_id, env_ty) :: vars
           ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
@@ -55,7 +55,6 @@ let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
               ]
           , TupleTy [func_ty; env_ty] )
         , remove_dup (escs @ escs') // lcls )
-  | Fix _, _ -> failwith "not implemented"
   | Tuple vtys, _ ->
       let vtys', escs' = cc_val_seq escs lcls vtys in
       ((Tuple vtys', TupleTy (List.map snd vtys')), escs')
@@ -76,21 +75,21 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let dec', escs1, lcls' = cc_dec escs lcls dec in
       let body', escs2 = cc_exp escs1 lcls' body in
       (Let {dec= dec'; body= body'}, escs2)
-  | Letrec {fundefs; body} ->
+  | Letrec {defs; body} ->
       (* TODO: bug in closure conversion of letrec. implement cyclic closure. *)
-      let glbs = List.map (fun {var} -> var) fundefs in
+      let glbs = List.map (fun {var} -> var) defs in
       globals := List.map fst glbs;
-      let cc_fundef ({var; params; body} : fundef) : escapes =
+      let cc_def ({var; params; body} : def) : escapes =
         let body', escs' = cc_exp [] (List.map fst params) body in
         let env_id = Id.from_string "env" in
         let env_ty = TupleTy (List.map snd params) in
-        append_fundef
+        append_def
           { var
           ; params= (env_id, env_ty) :: params
           ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
         escs'
       in
-      let escs1 = List.concat (List.map cc_fundef fundefs) in
+      let escs1 = List.concat (List.map cc_def defs) in
       let escs2 = remove_dup (escs @ escs1) // lcls in
       cc_exp escs2 lcls body
   | App {fcn; args} -> (
@@ -137,17 +136,17 @@ and cc_dec (escs : escapes) (lcls : locals) : dec -> dec * escapes * locals =
   | ProjDec _ -> raise Utils.Unreachable
   | UnpackDec _ -> raise Utils.Unreachable
 
-let cc_prog (exp : exp) : fundef list * exp =
-  fundef_list := [];
+let cc_prog (exp : exp) : def list * exp =
+  def_list := [];
   let exp = cc_exp [] [] exp |> fst in
-  (!fundef_list, exp)
+  (!def_list, exp)
 
 open Format
 
-let pp_print_prog ppf (fundefs, exp) =
+let pp_print_prog ppf (defs, exp) =
   fprintf ppf "letrec@;<1 2>@[<v 0>%a@]@.in@;<1 2>@[<v 0>%a@]@."
-    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@ and ") pp_print_fundef)
-    fundefs pp_print_exp exp;
+    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@ and ") pp_print_def)
+    defs pp_print_exp exp;
   print_newline ()
 
 let print_prog = pp_print_prog std_formatter
