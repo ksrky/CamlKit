@@ -60,7 +60,9 @@ and pp_print_bnd ppf (Bind {name; params; body}) =
 
 let pp_print_prog = pp_print_exp
 
-let print_prog = pp_print_prog std_formatter
+let print_prog exp =
+  pp_print_prog std_formatter exp;
+  print_newline ()
 
 let pp_print_var ppf (id, ty) =
   fprintf ppf "(%a : %a)" Id.pp_print_id id pp_print_ty0 ty
@@ -98,10 +100,12 @@ let rec pp_print_aexp ppf : aexp -> unit = function
 and pp_print_expty ppf (exp, _) = pp_print_aexp ppf exp
 
 and pp_print_abnd ppf (ABind {name; params; body}) =
-  fprintf ppf "[<v 2>%a %a =@;%a]" Id.pp_print_id name
+  fprintf ppf "@[<v 2>%a %a =@;%a@]" Id.pp_print_id name
     (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
     params pp_print_expty body
 
 let pp_print_aprog = pp_print_expty
 
-let print_aprog = pp_print_aprog std_formatter
+let print_aprog aexp =
+  pp_print_aprog std_formatter aexp;
+  print_newline ()

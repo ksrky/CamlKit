@@ -53,4 +53,6 @@ let rec pp_print_exp ppf = function
 
 let pp_print_prog ppf prog = pp_print_exp ppf prog
 
-let print_prog prog = pp_print_prog std_formatter prog
+let print_prog prog =
+  pp_print_prog std_formatter prog;
+  print_newline ()

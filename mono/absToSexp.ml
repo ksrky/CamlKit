@@ -20,23 +20,15 @@ let rec a2s_exp : A.aexp -> S.exp = function
   | IfAExp {cond; then_; else_} ->
       If {cond= a2s_expty cond; then_= a2s_expty then_; else_= a2s_expty else_}
   | LetAExp {bnds; body} ->
-      let vars, bnds' =
-        List.map
-          (fun (A.ABind {name; params; body}) ->
-            (name, S.Lam {vars= List.map fst params; body= a2s_expty body}) )
-          bnds
-        |> List.split
-      in
+      let vars, bnds' = List.map a2s_bnd bnds |> List.split in
       Let {isrec= false; vars; bnds= bnds'; body= a2s_expty body}
   | LetrecAExp {bnds; body} ->
-      let vars, bnds' =
-        List.map
-          (fun (A.ABind {name; params; body}) ->
-            (name, S.Lam {vars= List.map fst params; body= a2s_expty body}) )
-          bnds
-        |> List.split
-      in
+      let vars, bnds' = List.map a2s_bnd bnds |> List.split in
       Let {isrec= true; vars; bnds= bnds'; body= a2s_expty body}
+
+and a2s_bnd (A.ABind {name; params; body}) =
+  if params = [] then (name, a2s_expty body)
+  else (name, S.Lam {vars= List.map fst params; body= a2s_expty body})
 
 and a2s_expty (exp, _) = a2s_exp exp
 

@@ -4,7 +4,7 @@ type cell = Int of int | Cons of int * int
 (** Stack model. SECD machine uses one stack for results, arguments, code and
     data but for users it can be seen as separate stacks, so this value is
     hidden from users. *)
-let cells : cell array = Array.make Sys.max_array_length (Int 0)
+let cells : cell array = Array.make 100000 (Int 0)
 
 (** Stack registers indicating a top of each stack. [s]: return stack. [e]:
     environment stack. [c]: code stack. [d]: dump stack. *)
