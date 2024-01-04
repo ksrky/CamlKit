@@ -1,11 +1,11 @@
 let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aprog =
   let open Abstract in
   let open Semant in
-  (* print_endline (Syntax.print_prog abssyn); *)
+  (* Printer.print_prog abssyn; *)
   let abssyn' = Scoping.scoping_prog Scoping.empty abssyn in
-  (* print_endline (Syntax.print_prog abssyn'); *)
+  (* Printer.print_prog abssyn'; *)
   let aabssyn = TypeCheck.check_prog Env.empty abssyn' in
-  (* print_endline (Syntax.print_aprog aabssyn); *)
+  (* Printer.print_aprog aabssyn; *)
   aabssyn
 
 let run_secd instrs =
@@ -21,7 +21,7 @@ let run (path : string) =
   let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
   let sexpsyn = AbsToSexp.a2s_prog aabssyn in
-  (* Lambda.Syntax.print_prog lamsyn; *)
+  (* Sexp.Syntax.print_prog sexpsyn; *)
   let instrs = SexpToSecd.sx2s_prog sexpsyn in
   run_secd instrs
 
