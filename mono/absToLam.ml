@@ -40,7 +40,7 @@ let rec a2c_exp : A.aexp -> L.exp = function
           (fun bnd ->
             let var, exp = a2c_bnd bnd in
             match exp with
-            | Lam {var= var'; body} -> {L.var; params= [var']; body}
+            | Lam {var= param; body} -> {L.var; param; body}
             | _ -> raise Utils.Unreachable )
           bnds
       in

@@ -22,7 +22,7 @@ type exp =
 
 and expty = exp * ty
 
-and def = {var: var; params: var list; body: expty}
+and def = {var: var; param: var; body: expty}
 
 type prog = expty
 
