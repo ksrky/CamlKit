@@ -20,6 +20,7 @@ type value =
   | Var of id
   | Glb of id
   | Lam of {vars: var list; body: exp}
+  | Fix of {var: var; body: valty}
   | Tuple of valty list
   | Pack of {ty: ty; val_: valty; exty: ty}
 
@@ -91,9 +92,15 @@ let rec pp_print_val paren ppf = function
   | Lam {vars; body} ->
       Utils.with_paren ?b:paren
         (fun ppf ->
-          fprintf ppf "@[<1>fun %a ->@ %a@]"
+          fprintf ppf "@[<1>fun (%a) ->@ %a@]"
             (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
             vars pp_print_exp body )
+        ppf
+  | Fix {var; body} ->
+      Utils.with_paren ?b:paren
+        (fun ppf ->
+          fprintf ppf "@[<1>fix (%a) ->@ %a@]" pp_print_var var
+            (pp_print_valty false) body )
         ppf
   | Tuple vals ->
       fprintf ppf "(%a)"

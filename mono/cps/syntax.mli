@@ -18,6 +18,7 @@ type value =
   | Var of id
   | Glb of id
   | Lam of {vars: var list; body: exp}
+  | Fix of {var: var; body: valty}
   | Tuple of valty list
   | Pack of {ty: ty; val_: valty; exty: ty}
 

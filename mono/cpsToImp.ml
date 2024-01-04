@@ -20,6 +20,7 @@ let rec c2i_val : K.valty -> I.dec list * I.value = function
   | Var x, ty -> ([], Var (c2i_var (x, ty)))
   | Glb f, ty -> ([], Glb (c2i_var (f, ty)))
   | Lam _, _ -> raise Utils.Unreachable
+  | Fix _, _ -> failwith "not implemented"
   | Tuple vals, _ ->
       let tuple_ty =
         I.PtrTy (Some (StrctTy (List.map (fun v -> c2i_ty (snd v)) vals)))

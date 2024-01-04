@@ -55,6 +55,7 @@ let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
               ]
           , TupleTy [func_ty; env_ty] )
         , remove_dup (escs @ escs') // lcls )
+  | Fix _, _ -> failwith "not implemented"
   | Tuple vtys, _ ->
       let vtys', escs' = cc_val_seq escs lcls vtys in
       ((Tuple vtys', TupleTy (List.map snd vtys')), escs')
