@@ -72,14 +72,14 @@ let rec pp_print_ty ppf = function
   | BoolTy -> fprintf ppf "bool"
   | ContTy tys ->
       fprintf ppf "[%a] -> void"
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ",@ ") pp_print_ty)
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
         tys
   | TupleTy tys ->
       fprintf ppf "(%a)"
-        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ",@ ") pp_print_ty)
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
         tys
   | ExistsTy (id, ty) ->
-      fprintf ppf "exists %a. %a]" pp_print_id id pp_print_ty ty
+      fprintf ppf "exists %a. %a" pp_print_id id pp_print_ty ty
 
 let pp_print_var ppf (id, ty) =
   fprintf ppf "%a : %a" pp_print_id id pp_print_ty ty

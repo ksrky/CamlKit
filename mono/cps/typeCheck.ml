@@ -32,7 +32,7 @@ and check_exp (ctx : tyctx) : exp -> unit = function
       let ctx' =
         List.fold_right (fun {var= id, ty} -> Id.Table.add id ty) defs ctx
       in
-      List.iter (check_fundef ctx) defs;
+      List.iter (check_fundef ctx') defs;
       check_exp ctx' body
   | App {fcn; args} ->
       check_val ctx fcn;
@@ -61,7 +61,9 @@ and check_dec (ctx : tyctx) : dec -> tyctx = function
   | ProjDec {var; val_; idx} ->
       ( match snd var with
       | TupleTy tys -> check (snd var) (List.nth tys idx)
-      | ty -> Format.eprintf "Expected tuplt type but got %a" pp_print_ty ty );
+      | ty ->
+          Format.eprintf "Expected tuple type,@ but got %a@." pp_print_ty ty;
+          raise Utils.Bug_error );
       check_val ctx val_;
       Id.Table.add (fst var) (snd var) ctx
   | UnpackDec {tyvar; var; val_} -> failwith "not implemented"
