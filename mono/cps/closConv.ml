@@ -23,16 +23,18 @@ let def_list : def list ref = ref []
 
 let append_def def : unit = def_list := def :: !def_list
 
-let globals : id list ref = ref []
+let globals : var list ref = ref []
 
 let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
   function
   | Const c, ty -> ((Const c, ty), escs)
   | Var x, ty when List.mem x lcls -> ((Var x, ty), escs)
-  | Var f, ty when List.mem f !globals -> ((Glb f, ty), escs)
-  | Var x, ty ->
-      let _, escs' = lookup_env escs (x, ty) in
-      ((Var x, ty), escs')
+  | Var x, ty -> (
+    match List.assoc_opt x !globals with
+    | Some ty' -> ((Glb x, ty'), escs)
+    | None ->
+        let _, escs' = lookup_env escs (x, ty) in
+        ((Var x, ty), escs') )
   | Glb _, _ -> raise Utils.Unreachable
   | Lam {vars; body}, _ ->
       let body', escs' = cc_exp [] (List.map fst vars) body in
@@ -78,13 +80,13 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
   | Letrec {defs; body} ->
       (* TODO: bug in closure conversion of letrec. implement cyclic closure. *)
       let glbs = List.map (fun {var} -> var) defs in
-      globals := List.map fst glbs;
+      globals := glbs;
       let cc_def ({var; params; body} : def) : escapes =
         let body', escs' = cc_exp [] (List.map fst params) body in
         let env_id = Id.from_string "env" in
         let env_ty = TupleTy (List.map snd params) in
         append_def
-          { var
+          { var= (fst var, ContTy (env_ty :: List.map snd params))
           ; params= (env_id, env_ty) :: params
           ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
         escs'
@@ -145,7 +147,7 @@ open Format
 
 let pp_print_prog ppf (defs, exp) =
   fprintf ppf "letrec@;<1 2>@[<v 0>%a@]@.in@;<1 2>@[<v 0>%a@]@."
-    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@ and ") pp_print_def)
+    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@;") pp_print_def)
     defs pp_print_exp exp;
   print_newline ()
 
