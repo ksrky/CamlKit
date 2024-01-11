@@ -46,7 +46,7 @@ let compile (path : string) : unit =
   (* Cps.Syntax.print_prog cpssyn; *)
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in
   (* Cps.ClosConv.print_prog cpssyn'; *)
-  let impsyn = CpsToImp.c2i_prog cpssyn' in
-  (* Imp.Syntax.print_prog impsyn; *)
-  let llmod = Imp.LlvmGen.codegen (Filename.basename path) impsyn in
-  Imp.LlvmGen.emit path llmod
+  let impsyn = CpsToAlloc.c2i_prog cpssyn' in
+  (* Alloc.Syntax.print_prog impsyn; *)
+  let llmod = Alloc.LlvmGen.codegen (Filename.basename path) impsyn in
+  Alloc.LlvmGen.emit path llmod

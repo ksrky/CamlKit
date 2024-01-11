@@ -1,5 +1,5 @@
 (library
- (name imp)
+ (name alloc)
  (libraries common cps llvm llvm.analysis)
  (flags -open Common))
 
