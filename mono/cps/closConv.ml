@@ -77,23 +77,6 @@ and cc_exp (escs : escapes) (lcls : locals) : exp -> exp * escapes = function
       let dec', escs1, lcls' = cc_dec escs lcls dec in
       let body', escs2 = cc_exp escs1 lcls' body in
       (Let {dec= dec'; body= body'}, escs2)
-  | Letrec {defs; body} ->
-      (* TODO: bug in closure conversion of letrec. implement cyclic closure. *)
-      let glbs = List.map (fun {var} -> var) defs in
-      globals := glbs;
-      let cc_def ({var; params; body} : def) : escapes =
-        let body', escs' = cc_exp [] (List.map fst params) body in
-        let env_id = Id.from_string "env" in
-        let env_ty = TupleTy (List.map snd params) in
-        append_def
-          { var= (fst var, ContTy (env_ty :: List.map snd params))
-          ; params= (env_id, env_ty) :: params
-          ; body= mk_let (mk_projs (Var env_id, env_ty) escs') body' };
-        escs'
-      in
-      let escs1 = List.concat (List.map cc_def defs) in
-      let escs2 = remove_dup (escs @ escs1) // lcls in
-      cc_exp escs2 lcls body
   | App {fcn; args} -> (
       let fcn', escs1 = cc_val escs lcls fcn in
       let args', escs2 = cc_val_seq escs1 lcls args in

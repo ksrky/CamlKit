@@ -25,7 +25,6 @@ and valty = value * ty
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | Letrec of {defs: def list; body: exp}
   | App of {fcn: valty; args: valty list}
   | If of {cond: valty; then_: exp; else_: exp}
   | Halt of valty

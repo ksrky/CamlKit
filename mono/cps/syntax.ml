@@ -27,7 +27,6 @@ and valty = value * ty
 
 and exp =
   | Let of {dec: dec; body: exp}
-  | Letrec of {defs: def list; body: exp}
   | App of {fcn: valty; args: valty list}
   | If of {cond: valty; then_: exp; else_: exp}
   | Halt of valty
@@ -116,12 +115,6 @@ and pp_print_valty paren ppf (val_, _) =
 and pp_print_exp ppf = function
   | Let {dec; body} ->
       fprintf ppf "@[<2>let@ %a@]@ in@ %a" pp_print_dec dec pp_print_exp body
-  | Letrec {defs; body} ->
-      fprintf ppf "let rec@ %a@ in@ %a"
-        (pp_print_list
-           ~pp_sep:(fun ppf () -> fprintf ppf "@ and ")
-           pp_print_def )
-        defs pp_print_exp body
   | App {fcn; args} ->
       fprintf ppf "@[<2>%a@ %a@]" (pp_print_valty true) fcn
         (pp_print_list

@@ -72,7 +72,6 @@ let rec c2i_exp : K.exp -> A.exp = function
                  { dec= ValDec {var= c2i_var var; val_= Const (I1 0)}
                  ; body= body' } } )
   | Let {dec; body} -> A.mk_let (c2i_dec dec) (c2i_exp body)
-  | Letrec _ -> raise Utils.Unreachable
   | App {fcn; args} ->
       let ds, fcn' = c2i_val fcn in
       let dss, args' = List.split (List.map c2i_val args) in

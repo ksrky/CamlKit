@@ -28,12 +28,6 @@ and check_exp (ctx : tyctx) : exp -> unit = function
   | Let {dec; body} ->
       let ctx' = check_dec ctx dec in
       check_exp ctx' body
-  | Letrec {defs; body} ->
-      let ctx' =
-        List.fold_right (fun {var= id, ty} -> Id.Table.add id ty) defs ctx
-      in
-      List.iter (check_def ctx') defs;
-      check_exp ctx' body
   | App {fcn; args} ->
       check_val ctx fcn;
       List.iter (check_val ctx) args
