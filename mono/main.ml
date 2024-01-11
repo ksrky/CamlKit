@@ -43,7 +43,7 @@ let compile (path : string) : unit =
   let lamsyn = AbsToLam.a2c_prog aabssyn in
   (* Lambda.Syntax.print_prog lamsyn; *)
   let cpssyn = LamToCps.c2k_prog lamsyn in
-  (* Cps.Syntax.print_prog cpssyn; *)
+  Cps.Syntax.print_prog cpssyn;
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in
   (* Cps.ClosConv.print_prog cpssyn'; *)
   let impsyn = CpsToAlloc.c2i_prog cpssyn' in

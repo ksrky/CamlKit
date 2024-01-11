@@ -88,19 +88,6 @@ and c2k_def ({var; param; body= body, body_ty} : L.def) : K.def =
   ; params= [c2k_var param; (cont_id, K.ContTy [body_ty'])]
   ; body= c2k_exp body (Var cont_id, K.ContTy [body_ty']) }
 
-(* | Lam {var; body= body, body_ty}, _ ->
-       let body_ty' = c2k_ty body_ty in
-       let cont_id = Id.from_string "c" in
-       { var= c2k_var name
-       ; params= [c2k_var var; (cont_id, K.ContTy [body_ty'])]
-       ; body= c2k_exp body (Var cont_id, K.ContTy [body_ty']) }
-   | exp, exp_ty ->
-       let exp_ty' = c2k_ty exp_ty in
-       let cont_id = Id.from_string "c" in
-       { var= c2k_var name
-       ; params= [(cont_id, K.ContTy [exp_ty'])]
-       ; body= c2k_exp exp (Var cont_id, K.ContTy [exp_ty']) } *)
-
 let c2k_prog ((exp, ty) : L.prog) : K.prog =
   let exp_ty = c2k_ty ty in
   let prog_id = Id.from_string "prog" in
