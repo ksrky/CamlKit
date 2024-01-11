@@ -42,4 +42,6 @@ val return_type : ty
 
 val deref_type : ty -> ty
 
+val pp_print_ty : Format.formatter -> ty -> unit
+
 val print_prog : prog -> unit
