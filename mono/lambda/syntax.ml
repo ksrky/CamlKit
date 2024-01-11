@@ -16,7 +16,6 @@ type exp =
   | Prim of {left: expty; oper: oper; right: expty}
   | If of {cond: expty; then_: expty; else_: expty}
   | Let of {var: var; bnd: exp; body: expty}
-  | Fix of {defs: def list; body: expty}
   | Tuple of expty list
   | Proj of {tup: expty; idx: int}
 
@@ -120,14 +119,6 @@ let rec pp_print_exp outer ppf = function
   | Let {var; bnd; body} ->
       fprintf ppf "let@ %a = %a@ in@;%a" pp_print_var var (pp_print_exp 0) bnd
         (pp_print_expty 0) body
-  | Fix {defs; body} ->
-      fprintf ppf "fix@ %a@ in@;%a"
-        (pp_print_list
-           ~pp_sep:(fun ppf () -> fprintf ppf "@ ")
-           (fun ppf {var= id, _; param; body} ->
-             fprintf ppf "%a (%a) =@ %a" Id.pp_print_id id pp_print_var param
-               (pp_print_expty 0) body ) )
-        defs (pp_print_expty 0) body
   | Tuple exps ->
       fprintf ppf "(%a)"
         (pp_print_list

@@ -46,15 +46,6 @@ let rec check_exp (ctx : tyctx) : expty -> unit = function
       check_exp ctx' (bnd, var_ty);
       check_exp ctx' body;
       check (snd body) ty
-  | Fix {defs; body}, ty ->
-      let ctx' =
-        List.fold_right (fun {var= id, ty; body} -> Id.Table.add id ty) defs ctx
-      in
-      List.iter
-        (fun {param= id, ty} -> check_exp (Id.Table.add id ty ctx') body)
-        defs;
-      check_exp ctx' body;
-      check (snd body) ty
   | exp, ty ->
       Format.eprintf "given expression '%a'@ does not have type %a@."
         pp_print_exp0 exp pp_print_ty0 ty

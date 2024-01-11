@@ -16,7 +16,6 @@ type exp =
   | Prim of {left: expty; oper: oper; right: expty}
   | If of {cond: expty; then_: expty; else_: expty}
   | Let of {var: var; bnd: exp; body: expty}
-  | Fix of {defs: def list; body: expty}
   | Tuple of expty list
   | Proj of {tup: expty; idx: int}
 

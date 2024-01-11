@@ -46,7 +46,6 @@ let rec c2cl_exp (escs : escapes) (lcls : locals) :
           , escs2 )
       | _ -> ((TailApp {fcn= fcn'; arg= arg'}, res_ty), escs2) )
   | Lam {var; body}, _ -> failwith "not implemented"
-  | Fix _, _ -> failwith "not implemented"
   | Prim {left; oper; right}, ty ->
       let left', escs1 = c2cl_exp escs lcls left in
       let right', escs2 = c2cl_exp escs1 lcls right in

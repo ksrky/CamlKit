@@ -34,17 +34,7 @@ let rec a2c_exp : A.aexp -> L.exp = function
   | LetAExp {bnds; body} ->
       let decs = List.map a2c_bnd bnds in
       L.mk_let decs (a2c_expty body) |> fst
-  | LetrecAExp {bnds; body} ->
-      let defs =
-        List.map
-          (fun bnd ->
-            let var, exp = a2c_bnd bnd in
-            match exp with
-            | Lam {var= param; body} -> {L.var; param; body}
-            | _ -> raise Utils.Unreachable )
-          bnds
-      in
-      Fix {defs; body= a2c_expty body}
+  | LetrecAExp {bnds; body} -> failwith "TODO"
 
 and a2c_bnd (A.ABind {name; params; body}) =
   ( (name, lambda_ty params (snd body))
