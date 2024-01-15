@@ -55,9 +55,6 @@ let mk_let (decs : dec list) (body : exp) : exp =
 let mk_projs val_ (vars : var list) : dec list =
   List.mapi (fun i var -> ProjDec {var; val_; idx= i + 1}) vars
 
-let parens (outer : int) (prec : int) s =
-  if outer > prec then "(" ^ s ^ ")" else s
-
 open Format
 
 let pp_print_id ppf id = fprintf ppf "%s" (Id.unique_name id)

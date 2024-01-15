@@ -9,7 +9,7 @@ type const = L.const
 type ty =
   | IntTy
   | BoolTy
-  | ContTy of ty list
+  | FunTy of ty list * ty
   | TupleTy of ty list
   | ExistsTy of id * ty
 
@@ -28,8 +28,8 @@ type value =
 and valty = value * ty
 
 and exp =
-  | Let of {var: var; params: var list; bind: expty; body: expty}
-  | Unpack of {tyvar: var; var: var; bind: expty; body: expty}
+  | Let of {var: var; bind: valty; body: expty}
+  | Unpack of {tyvar: var; var: var; bind: valty; body: expty}
   | If of {cond: valty; then_: expty; else_: expty}
   | Ret of valty
 
@@ -45,8 +45,10 @@ let mk_call fcn arg = Call {fcn; args= [arg]}
 
 let mk_apps fcn args = Call {fcn; args}
 
-let parens (outer : int) (prec : int) s =
-  if outer > prec then "(" ^ s ^ ")" else s
+let mk_let decs body =
+  List.fold_right
+    (fun (var, bind) body -> (Let {var; bind; body}, snd body))
+    decs body
 
 open Format
 
@@ -59,10 +61,10 @@ let pp_print_const ppf = function
 let rec pp_print_ty ppf = function
   | IntTy -> fprintf ppf "int"
   | BoolTy -> fprintf ppf "bool"
-  | ContTy tys ->
-      fprintf ppf "[%a] -> void"
+  | FunTy (tys1, ty2) ->
+      fprintf ppf "(%a) -> %a"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
-        tys
+        tys1 pp_print_ty ty2
   | TupleTy tys ->
       fprintf ppf "(%a)"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
@@ -116,16 +118,16 @@ and pp_print_valty paren ppf (val_, _) =
   fprintf ppf "%a" (pp_print_val (Some paren)) val_
 
 and pp_print_exp ppf = function
-  | Let {var; params; bind; body} ->
-      fprintf ppf "@[<2>let %a = %a@]@ in@ %a" pp_print_var var pp_print_expty
+  | Let {var; bind; body} ->
+      fprintf ppf "let %a = %a in@;%a" pp_print_var var (pp_print_valty false)
         bind pp_print_expty body
   | Unpack {tyvar; var; bind; body} ->
-      fprintf ppf "[%a, %a] =@ unpack %a in@ %a" pp_print_var tyvar pp_print_var
-        var pp_print_expty bind pp_print_expty body
+      fprintf ppf "unpack [%a, %a] = %a in@;%a" pp_print_var tyvar pp_print_var
+        var (pp_print_valty false) bind pp_print_expty body
   | If {cond; then_; else_} ->
-      fprintf ppf "@[<v 2>if %a then@ %a@]@;@[<v 2>else@ %a@]"
-        (pp_print_valty true) cond pp_print_expty then_ pp_print_expty else_
-  | Ret val_ -> fprintf ppf "halt %a" (pp_print_valty true) val_
+      fprintf ppf "if %a then %a@;else %a" (pp_print_valty true) cond
+        pp_print_expty then_ pp_print_expty else_
+  | Ret val_ -> fprintf ppf "ret %a" (pp_print_valty true) val_
 
 and pp_print_expty ppf (exp, _) = pp_print_exp ppf exp
 

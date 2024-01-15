@@ -9,7 +9,7 @@ type const = L.const
 type ty =
   | IntTy
   | BoolTy
-  | ContTy of ty list
+  | FunTy of ty list * ty
   | TupleTy of ty list
   | ExistsTy of id * ty
 
@@ -28,11 +28,15 @@ type value =
 and valty = value * ty
 
 and exp =
-  | Let of {var: var; params: var list; bind: expty; body: expty}
-  | Unpack of {tyvar: var; var: var; bind: expty; body: expty}
+  | Let of {var: var; bind: valty; body: expty}
+  | Unpack of {tyvar: var; var: var; bind: valty; body: expty}
   | If of {cond: valty; then_: expty; else_: expty}
   | Ret of valty
 
 and expty = exp * ty
 
 type prog = exp
+
+val mk_let : (var * valty) list -> expty -> expty
+
+val print_prog : exp -> unit
