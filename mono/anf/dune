@@ -1,0 +1,9 @@
+(library
+ (name anf)
+ (libraries common lambda)
+ (flags -open Common))
+
+(env
+ (dev
+  (flags
+   (:standard -w "-8-30-39"))))
