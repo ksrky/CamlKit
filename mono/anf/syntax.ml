@@ -18,37 +18,37 @@ type var = id * ty
 type value =
   | Const of const
   | Var of id
+  | Glb of id
   | Lam of {vars: var list; body: expty}
-  | Call of {fcn: valty; args: valty list}
-  | Prim of {left: valty; oper: oper; right: valty}
   | Tuple of valty list
-  | Proj of {val_: valty; idx: int}
   | Pack of {ty: ty; val_: valty; exty: ty}
 
 and valty = value * ty
 
 and exp =
-  | Let of {var: var; bind: valty; body: expty}
-  | Unpack of {tyvar: var; var: var; bind: valty; body: expty}
+  | Let of {dec: dec; body: expty}
   | If of {cond: valty; then_: expty; else_: expty}
   | Ret of valty
+
+and dec =
+  | ValDec of {var: var; val_: valty}
+  | CallDec of {var: var; fcn: valty; args: valty list}
+  | PrimDec of {var: var; left: valty; oper: oper; right: valty}
+  | ProjDec of {var: var; val_: valty; idx: int}
+  | UnpackDec of {tyvar: var; var: var; val_: valty}
 
 and expty = exp * ty
 
 type prog = exp
 
+type def = {var: var; params: var list; body: expty}
+
 let mk_lam var body = Lam {vars= [var]; body}
 
 let mk_lams vars body = Lam {vars; body}
 
-let mk_call fcn arg = Call {fcn; args= [arg]}
-
-let mk_apps fcn args = Call {fcn; args}
-
-let mk_let decs body =
-  List.fold_right
-    (fun (var, bind) body -> (Let {var; bind; body}, snd body))
-    decs body
+let mk_let (decs : dec list) (body : expty) : expty =
+  List.fold_right (fun d e -> (Let {dec= d; body= e}, snd e)) decs body
 
 open Format
 
@@ -78,6 +78,7 @@ let pp_print_var ppf (id, ty) =
 let rec pp_print_val paren ppf = function
   | Const c -> pp_print_const ppf c
   | Var x -> pp_print_id ppf x
+  | Glb f -> fprintf ppf "$%s" (Id.unique_name f)
   | Lam {vars; body} ->
       Utils.with_paren ?b:paren
         (fun ppf ->
@@ -85,19 +86,6 @@ let rec pp_print_val paren ppf = function
             (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf " ") pp_print_var)
             vars pp_print_expty body )
         ppf
-  | Call {fcn; args} ->
-      fprintf ppf "@[<2>%a@ %a@]" (pp_print_valty true) fcn
-        (pp_print_list
-           ~pp_sep:(fun ppf () -> fprintf ppf ", ")
-           (pp_print_valty true) )
-        args
-  | Prim {left; oper; right} ->
-      fprintf ppf "%a %s %a" (pp_print_valty true) left
-        (List.assoc oper
-           [ (L.Add, "+"); (L.Sub, "-"); (L.Mul, "*"); (L.Div, "/"); (L.Eq, "=")
-           ; (L.Ne, "<>"); (L.Lt, "<"); (L.Le, "<="); (L.Gt, ">"); (L.Ge, ">=")
-           ] )
-        (pp_print_valty true) right
   | Tuple vals ->
       fprintf ppf "(%a)"
         (pp_print_list
@@ -110,7 +98,6 @@ let rec pp_print_val paren ppf = function
           fprintf ppf "@[<1>pack [%a, %a] as@ %a@]" pp_print_ty ty
             (pp_print_valty false) val_ pp_print_ty exty )
         ppf
-  | Proj {val_; idx} -> fprintf ppf "%a.%i" (pp_print_valty true) val_ idx
 
 and pp_print_val0 ppf : value -> unit = pp_print_val None ppf
 
@@ -118,16 +105,34 @@ and pp_print_valty paren ppf (val_, _) =
   fprintf ppf "%a" (pp_print_val (Some paren)) val_
 
 and pp_print_exp ppf = function
-  | Let {var; bind; body} ->
-      fprintf ppf "let %a = %a in@;%a" pp_print_var var (pp_print_valty false)
-        bind pp_print_expty body
-  | Unpack {tyvar; var; bind; body} ->
-      fprintf ppf "unpack [%a, %a] = %a in@;%a" pp_print_var tyvar pp_print_var
-        var (pp_print_valty false) bind pp_print_expty body
+  | Let {dec; body} ->
+      fprintf ppf "let %a in@;%a" pp_print_dec dec pp_print_expty body
   | If {cond; then_; else_} ->
       fprintf ppf "if %a then %a@;else %a" (pp_print_valty true) cond
         pp_print_expty then_ pp_print_expty else_
   | Ret val_ -> fprintf ppf "ret %a" (pp_print_valty true) val_
+
+and pp_print_dec ppf : dec -> unit = function
+  | ValDec {var; val_} ->
+      fprintf ppf "%a = %a" pp_print_var var (pp_print_valty false) val_
+  | CallDec {var; fcn; args} ->
+      fprintf ppf "%a = %a(%a)" pp_print_var var (pp_print_valty true) fcn
+        (pp_print_list
+           ~pp_sep:(fun ppf () -> fprintf ppf ", ")
+           (pp_print_valty true) )
+        args
+  | PrimDec {var; left; oper; right} ->
+      fprintf ppf "%a = %a %s %a" pp_print_var var (pp_print_valty true) left
+        (List.assoc oper
+           [ (L.Add, "+"); (L.Sub, "-"); (L.Mul, "*"); (L.Div, "/"); (L.Eq, "=")
+           ; (L.Ne, "<>"); (L.Lt, "<"); (L.Le, "<="); (L.Gt, ">"); (L.Ge, ">=")
+           ] )
+        (pp_print_valty true) right
+  | ProjDec {var; val_; idx} ->
+      fprintf ppf "%a = %a.%i" pp_print_var var (pp_print_valty true) val_ idx
+  | UnpackDec {tyvar; var; val_} ->
+      fprintf ppf "[%a, %a] = unpack %a" pp_print_var tyvar pp_print_var var
+        (pp_print_valty false) val_
 
 and pp_print_expty ppf (exp, _) = pp_print_exp ppf exp
 

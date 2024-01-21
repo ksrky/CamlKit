@@ -18,25 +18,33 @@ type var = id * ty
 type value =
   | Const of const
   | Var of id
+  | Glb of id
   | Lam of {vars: var list; body: expty}
-  | Call of {fcn: valty; args: valty list}
-  | Prim of {left: valty; oper: oper; right: valty}
   | Tuple of valty list
-  | Proj of {val_: valty; idx: int}
   | Pack of {ty: ty; val_: valty; exty: ty}
 
 and valty = value * ty
 
 and exp =
-  | Let of {var: var; bind: valty; body: expty}
-  | Unpack of {tyvar: var; var: var; bind: valty; body: expty}
+  | Let of {dec: dec; body: expty}
   | If of {cond: valty; then_: expty; else_: expty}
   | Ret of valty
+
+and dec =
+  | ValDec of {var: var; val_: valty}
+  | CallDec of {var: var; fcn: valty; args: valty list}
+  | PrimDec of {var: var; left: valty; oper: oper; right: valty}
+  | ProjDec of {var: var; val_: valty; idx: int}
+  | UnpackDec of {tyvar: var; var: var; val_: valty}
 
 and expty = exp * ty
 
 type prog = exp
 
-val mk_let : (var * valty) list -> expty -> expty
+type def = {var: var; params: var list; body: expty}
+
+val mk_let : dec list -> expty -> expty
+
+val pp_print_exp : Format.formatter -> exp -> unit
 
 val print_prog : exp -> unit
