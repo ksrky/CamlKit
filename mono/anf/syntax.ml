@@ -11,7 +11,7 @@ type ty =
   | BoolTy
   | FunTy of ty list * ty
   | TupleTy of ty list
-  | ExistsTy of id * ty
+  | CodeTy of ty * ty list * ty
 
 type var = id * ty
 
@@ -21,7 +21,6 @@ type value =
   | Glb of id
   | Lam of {vars: var list; body: expty}
   | Tuple of valty list
-  | Pack of {ty: ty; val_: valty; exty: ty}
 
 and valty = value * ty
 
@@ -35,7 +34,6 @@ and dec =
   | CallDec of {var: var; fcn: valty; args: valty list}
   | PrimDec of {var: var; left: valty; oper: oper; right: valty}
   | ProjDec of {var: var; val_: valty; idx: int}
-  | UnpackDec of {tyvar: var; var: var; val_: valty}
 
 and expty = exp * ty
 
@@ -69,8 +67,10 @@ let rec pp_print_ty ppf = function
       fprintf ppf "(%a)"
         (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
         tys
-  | ExistsTy (id, ty) ->
-      fprintf ppf "exists %a. %a" pp_print_id id pp_print_ty ty
+  | CodeTy (ty1, tys, ty2) ->
+      fprintf ppf "code(%a, %a) -> %a"
+        (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf ", ") pp_print_ty)
+        tys pp_print_ty ty1 pp_print_ty ty2
 
 let pp_print_var ppf (id, ty) =
   fprintf ppf "%a : %a" pp_print_id id pp_print_ty ty
@@ -92,12 +92,6 @@ let rec pp_print_val paren ppf = function
            ~pp_sep:(fun ppf () -> fprintf ppf ",@ ")
            (pp_print_valty false) )
         vals
-  | Pack {ty; val_; exty} ->
-      Utils.with_paren ?b:paren
-        (fun ppf ->
-          fprintf ppf "@[<1>pack [%a, %a] as@ %a@]" pp_print_ty ty
-            (pp_print_valty false) val_ pp_print_ty exty )
-        ppf
 
 and pp_print_val0 ppf : value -> unit = pp_print_val None ppf
 
@@ -130,9 +124,6 @@ and pp_print_dec ppf : dec -> unit = function
         (pp_print_valty true) right
   | ProjDec {var; val_; idx} ->
       fprintf ppf "%a = %a.%i" pp_print_var var (pp_print_valty true) val_ idx
-  | UnpackDec {tyvar; var; val_} ->
-      fprintf ppf "[%a, %a] = unpack %a" pp_print_var tyvar pp_print_var var
-        (pp_print_valty false) val_
 
 and pp_print_expty ppf (exp, _) = pp_print_exp ppf exp
 

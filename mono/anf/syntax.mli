@@ -11,7 +11,7 @@ type ty =
   | BoolTy
   | FunTy of ty list * ty
   | TupleTy of ty list
-  | ExistsTy of id * ty
+  | CodeTy of ty * ty list * ty
 
 type var = id * ty
 
@@ -21,7 +21,6 @@ type value =
   | Glb of id
   | Lam of {vars: var list; body: expty}
   | Tuple of valty list
-  | Pack of {ty: ty; val_: valty; exty: ty}
 
 and valty = value * ty
 
@@ -35,7 +34,6 @@ and dec =
   | CallDec of {var: var; fcn: valty; args: valty list}
   | PrimDec of {var: var; left: valty; oper: oper; right: valty}
   | ProjDec of {var: var; val_: valty; idx: int}
-  | UnpackDec of {tyvar: var; var: var; val_: valty}
 
 and expty = exp * ty
 
