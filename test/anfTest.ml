@@ -2,7 +2,7 @@ let test_line inp =
   let abssyn = Parse.parse_line inp in
   let abssyn' = Semant.Scoping.scoping_prog Semant.Scoping.empty abssyn in
   let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  let lamsyn = AbsToLam.a2c_prog aabssyn in
+  let lamsyn = AbsToLam.a2l_prog aabssyn in
   let anfsyn = LamToAnf.l2a_prog lamsyn in
   Anf.TypeCheck.check_prog Anf.TypeCheck.empty anfsyn
 
@@ -19,7 +19,7 @@ let test_line inp =
   let abssyn = Parse.parse_line inp in
   let abssyn' = Semant.Scoping.scoping_prog Semant.Scoping.empty abssyn in
   let aabssyn = Semant.TypeCheck.check_prog Semant.Env.empty abssyn' in
-  let lamsyn = AbsToLam.a2c_prog aabssyn in
+  let lamsyn = AbsToLam.a2l_prog aabssyn in
   let anfsyn = LamToAnf.l2a_prog lamsyn in
   let anfsyn' = Anf.ClosConv.cc_prog anfsyn in
   Anf.TypeCheck.check_prog_cc Anf.TypeCheck.empty anfsyn'

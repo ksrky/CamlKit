@@ -40,13 +40,13 @@ let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let aabssyn = semant abssyn in
   if !Semant.Error.has_error then exit 1;
-  let lamsyn = AbsToLam.a2c_prog aabssyn in
+  let lamsyn = AbsToLam.a2l_prog aabssyn in
   (* Lambda.Syntax.print_prog lamsyn; *)
-  let cpssyn = LamToCps.c2k_prog lamsyn in
+  let cpssyn = LamToCps.l2k_prog lamsyn in
   (* Cps.Syntax.print_prog cpssyn; *)
   let cpssyn' = Cps.ClosConv.cc_prog cpssyn in
   (* Cps.ClosConv.print_prog cpssyn'; *)
-  let impsyn = CpsToAlloc.c2i_prog cpssyn' in
+  let impsyn = CpsToAlloc.k2i_prog cpssyn' in
   (* Alloc.Syntax.print_prog impsyn; *)
   let llmod = Alloc.LlvmGen.codegen (Filename.basename path) impsyn in
   Alloc.LlvmGen.emit path llmod
@@ -58,7 +58,7 @@ let compile (path : string) : unit =
    let lamsyn = AbsToLam.a2c_prog aabssyn in
    (* Lambda.Syntax.print_prog lamsyn; *)
    let anfsyn = LamToAnf.l2a_prog lamsyn in
-    Anf.Syntax.print_prog anfsyn; 
+    Anf.Syntax.print_prog anfsyn;
    let anfsyn' = Anf.ClosConv.cc_prog anfsyn in
    Anf.ClosConv.print_prog anfsyn';
 *)
