@@ -4,11 +4,17 @@ type tyctx = ty Id.table
 
 let empty = Id.Table.empty
 
-let check ty1 ty2 =
+let rec check ty1 ty2 =
   if ty1 = ty2 then ()
-  else (
-    Format.eprintf "type mismatch: %a vs %a\n" pp_print_ty ty1 pp_print_ty ty2;
-    raise Utils.Bug_error )
+  else
+    match (ty1, ty2) with
+    | CodeTy (ety1, atys1, rty1), CodeTy (ety2, atys2, rty2) ->
+        List.iter2 check atys1 atys2;
+        check rty1 rty2
+    | _ ->
+        Format.eprintf "type mismatch: %a vs %a\n" pp_print_ty ty1 pp_print_ty
+          ty2;
+        raise Utils.Bug_error
 
 let rec check_val (ctx : tyctx) : valty -> unit = function
   | Const (Int _), IntTy | Const (Bool _), BoolTy -> ()
@@ -70,10 +76,15 @@ and check_dec (ctx : tyctx) : dec -> tyctx = function
       check_val ctx val_;
       Id.Table.add (fst var) (snd var) ctx
 
-and check_def (ctx : tyctx) ({var; params; body} : def) : unit =
-  check (FunTy (List.map snd params, snd body)) (snd var);
-  let ctx' = Id.Table.add_list params ctx in
-  check_exp ctx' body
+and check_def (ctx : tyctx) : def -> unit = function
+  | {var; env= None; params; body} ->
+      check (FunTy (List.map snd params, snd body)) (snd var);
+      let ctx' = Id.Table.add_list params ctx in
+      check_exp ctx' body
+  | {var; env= Some env; params; body} ->
+      check (CodeTy (snd env, List.map snd params, snd body)) (snd var);
+      let ctx' = Id.Table.add_list params ctx in
+      check_exp ctx' body
 
 let check_prog : tyctx -> prog -> unit = check_exp
 

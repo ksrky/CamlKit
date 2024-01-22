@@ -41,7 +41,8 @@ let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
       let func_id = Id.from_string "func" in
       if escs' = [] then (
         let func_ty = FunTy (List.map snd vars, snd body) in
-        append_def {var= (func_id, func_ty); params= vars; body= body'};
+        append_def
+          {var= (func_id, func_ty); env= None; params= vars; body= body'};
         ((Glb func_id, func_ty), escs) )
       else
         let env_id = Id.from_string "env" in
@@ -54,7 +55,8 @@ let rec cc_val (escs : escapes) (lcls : locals) : valty -> valty * escapes =
         in
         append_def
           { var= (func_id, func_ty)
-          ; params= (env_id, env_ty) :: vars
+          ; env= Some (env_id, env_ty)
+          ; params= vars
           ; body= mk_let proj_decs body' };
         ( ( Tuple
               [ (Glb func_id, func_ty)
@@ -76,7 +78,7 @@ and cc_vals escs lcls vals : valty list * escapes =
 and cc_exp escs lcls : exp -> exp * escapes = function
   | Let {dec; body} ->
       let decs, escs1, lcls' = cc_dec escs lcls dec in
-      let body', escs2 = cc_expty escs1 lcls body in
+      let body', escs2 = cc_expty escs1 lcls' body in
       (mk_let decs body' |> fst, escs2)
   | If {cond; then_; else_} ->
       let cond', escs1 = cc_val escs lcls cond in
@@ -127,3 +129,13 @@ let cc_prog (expty : expty) : prog =
   def_list := [];
   let expty', _ = cc_expty [] [] expty in
   (!def_list, expty')
+
+open Format
+
+let pp_print_prog ppf (defs, expty) =
+  fprintf ppf "letrec@;<1 2>@[<v 0>%a@]@.in@;<1 2>@[<v 0>%a@]@."
+    (pp_print_list ~pp_sep:(fun ppf () -> fprintf ppf "@;") pp_print_def)
+    defs pp_print_expty expty;
+  print_newline ()
+
+let print_prog = pp_print_prog std_formatter

@@ -39,7 +39,7 @@ and expty = exp * ty
 
 type prog = expty
 
-type def = {var: var; params: var list; body: expty}
+type def = {var: var; env: var option; params: var list; body: expty}
 
 let mk_lam var body = Lam {vars= [var]; body}
 
@@ -126,6 +126,13 @@ and pp_print_dec ppf : dec -> unit = function
       fprintf ppf "%a = %a.%i" pp_print_var var (pp_print_valty true) val_ idx
 
 and pp_print_expty ppf (exp, _) = pp_print_exp ppf exp
+
+and pp_print_def ppf {var; params; body} =
+  fprintf ppf "@[<2>%a %a =@ %a@]" pp_print_id (fst var)
+    (pp_print_list
+       ~pp_sep:(fun ppf () -> fprintf ppf " ")
+       (fun ppf x -> Utils.with_paren (fun ppf -> pp_print_var ppf x) ppf) )
+    params pp_print_expty body
 
 let pp_print_prog ppf expty = pp_print_expty ppf expty; print_newline ()
 
