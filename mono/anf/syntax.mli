@@ -37,12 +37,16 @@ and dec =
 
 and expty = exp * ty
 
-type prog = exp
+type prog = expty
 
 type def = {var: var; params: var list; body: expty}
 
 val mk_let : dec list -> expty -> expty
 
+val pp_print_ty : Format.formatter -> ty -> unit
+
+val pp_print_val0 : Format.formatter -> value -> unit
+
 val pp_print_exp : Format.formatter -> exp -> unit
 
-val print_prog : exp -> unit
+val print_prog : prog -> unit

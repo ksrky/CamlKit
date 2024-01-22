@@ -1,6 +1,6 @@
 open Syntax
 
-type prog = def list * exp
+type prog = def list * expty
 
 type escapes = var list
 
@@ -123,7 +123,7 @@ and cc_dec (escs : escapes) (lcls : locals) : dec -> dec list * escapes * locals
       ([PrimDec {var; left= left'; oper; right= right'}], escs2, fst var :: lcls)
   | ProjDec _ -> raise Utils.Unreachable
 
-let cc_prog (exp : exp) : prog =
+let cc_prog (expty : expty) : prog =
   def_list := [];
-  let exp = cc_exp [] [] exp |> fst in
-  (!def_list, exp)
+  let expty', _ = cc_expty [] [] expty in
+  (!def_list, expty')

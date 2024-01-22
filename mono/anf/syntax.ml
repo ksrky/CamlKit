@@ -37,7 +37,7 @@ and dec =
 
 and expty = exp * ty
 
-type prog = exp
+type prog = expty
 
 type def = {var: var; params: var list; body: expty}
 
@@ -127,6 +127,6 @@ and pp_print_dec ppf : dec -> unit = function
 
 and pp_print_expty ppf (exp, _) = pp_print_exp ppf exp
 
-let pp_print_prog ppf exp = pp_print_exp ppf exp; print_newline ()
+let pp_print_prog ppf expty = pp_print_expty ppf expty; print_newline ()
 
-let print_prog exp = pp_print_prog std_formatter exp
+let print_prog expty = pp_print_prog std_formatter expty

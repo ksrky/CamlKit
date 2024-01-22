@@ -54,4 +54,4 @@ let rec l2a_exp ((exp, ty) : L.expty) (k : kont) : A.expty =
   | Proj _ -> raise Utils.Unreachable
 
 let l2a_prog (expty : L.prog) : A.prog =
-  l2a_exp expty (fun x -> (A.Ret x, snd x)) |> fst
+  l2a_exp expty (fun x -> (A.Ret x, snd x))
