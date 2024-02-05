@@ -5,16 +5,18 @@ type tyctx = ty Id.table
 let empty = Id.Table.empty
 
 let rec check ty1 ty2 =
-  if ty1 = ty2 then ()
-  else
-    match (ty1, ty2) with
-    | CodeTy (ety1, atys1, rty1), CodeTy (ety2, atys2, rty2) ->
-        List.iter2 check atys1 atys2;
-        check rty1 rty2
-    | _ ->
+  match (ty1, ty2) with
+  | CodeTy (_, atys1, rty1), CodeTy (_, atys2, rty2)
+   |FunTy (atys1, rty1), CodeTy (_, atys2, rty2)
+   |CodeTy (_, atys1, rty1), FunTy (atys2, rty2) ->
+      List.iter2 check atys1 atys2;
+      check rty1 rty2
+  | _ ->
+      if ty1 = ty2 then ()
+      else (
         Format.eprintf "type mismatch: %a vs %a\n" pp_print_ty ty1 pp_print_ty
           ty2;
-        raise Utils.Bug_error
+        raise Utils.Bug_error )
 
 let rec check_val (ctx : tyctx) : valty -> unit = function
   | Const (Int _), IntTy | Const (Bool _), BoolTy -> ()

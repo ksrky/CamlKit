@@ -32,3 +32,5 @@ let _ = test_line "let x = let y = 5 in y in x"
 
 let _ =
   test_line "let quad x = let double x = x + x in double (double x) in quad 12"
+
+(* let _ = test_line "let a = 5 in if true then fun x -> x + 5 else fun x -> x + a" *)

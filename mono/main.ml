@@ -5,7 +5,7 @@ let semant (abssyn : Abstract.Syntax.exp) : Abstract.Syntax.aprog =
   let abssyn' = Scoping.scoping_prog Scoping.empty abssyn in
   (* Printer.print_prog abssyn'; *)
   let aabssyn = TypeCheck.check_prog Env.empty abssyn' in
-  (* Printer.print_aprog aabssyn; *)
+  Printer.print_aprog aabssyn;
   aabssyn
 
 let run_secd instrs =
@@ -19,7 +19,7 @@ let run_secd instrs =
 let run (path : string) =
   let abssyn = Parse.parse path in
   let aabssyn = semant abssyn in
-  if !Semant.Error.has_error then exit 1;
+  if !Parse.has_error || !Semant.Error.has_error then exit 1;
   let sexpsyn = AbsToSexp.a2s_prog aabssyn in
   (* Sexp.Syntax.print_prog sexpsyn; *)
   let instrs = SexpToSecd.sx2s_prog sexpsyn in
@@ -29,7 +29,7 @@ let run (path : string) =
 let eval (inp : string) =
   let abssyn = Parse.parse_line inp in
   let aabssyn = semant abssyn in
-  if !Semant.Error.has_error then exit 1;
+  if !Parse.has_error || !Semant.Error.has_error then exit 1;
   let sexpsyn = AbsToSexp.a2s_prog aabssyn in
   (* Sexp.Syntax.print_prog lamsyn; *)
   let instrs = SexpToSecd.sx2s_prog sexpsyn in
@@ -39,7 +39,7 @@ let eval (inp : string) =
 let compile (path : string) : unit =
   let abssyn = Parse.parse path in
   let aabssyn = semant abssyn in
-  if !Semant.Error.has_error then exit 1;
+  if !Parse.has_error || !Semant.Error.has_error then exit 1;
   let lamsyn = AbsToLam.a2l_prog aabssyn in
   (* Lambda.Syntax.print_prog lamsyn; *)
   let anfsyn = LamToAnf.l2a_prog lamsyn in
